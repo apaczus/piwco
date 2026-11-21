@@ -101,11 +101,14 @@ export type InfoLessonCard = {
   title: string;
   // 2–3 short sentences.
   text: string;
-  // Optional mini visual: Return / Risk bars, one big number, or a few label + text rows.
+  // Optional mini visual: Return / Risk bars, one big number, a few label + text rows, or "melt": money losing
+  // value year by year (animated: the amount rolls down from `from` to `to`, a purchasing-power bar shrinks, a
+  // loss stamp lands; the card becomes a red "Watch out" card). from / to are PLN amounts (placeholders allowed).
   visual?:
     | { type: "bars"; returnLevel: number; riskLevel: number }
     | { type: "number"; value: string; label: string }
-    | { type: "rows"; rows: { label: string; text: string }[] };
+    | { type: "rows"; rows: { label: string; text: string }[] }
+    | { type: "melt"; from: string; to: string; years: number; label: string };
   // Longer text behind a collapsed "Read more ▾" on the same card.
   readMore?: string;
 };

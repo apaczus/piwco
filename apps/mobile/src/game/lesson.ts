@@ -36,6 +36,8 @@ export function fillCards(cards: SwipeCard[], values: Record<string, string>): S
         visual:
           v?.type === "number"
             ? { ...v, value: f(v.value), label: f(v.label) }
+            : v?.type === "melt"
+              ? { ...v, from: f(v.from), to: f(v.to), label: f(v.label) }
             : v?.type === "rows"
               ? { ...v, rows: v.rows.map((r) => ({ label: f(r.label), text: f(r.text) })) }
               : v,

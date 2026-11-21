@@ -4,8 +4,9 @@
 // - choice: two options on the card's left / right half; swipe towards one or tap it.
 // Every answer gets an explanation; no penalty. Ends with a "Lesson complete" screen.
 import type { ChoiceLessonCard, InfoLessonCard, SwipeCard } from "@piwco/content";
-import { ScrollView } from "react-native";
+import { Pressable, ScrollView } from "react-native";
 import { LevelBars } from "../invest/LevelBars";
+import { MeltVisual } from "../invest/MeltVisual";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
@@ -141,11 +142,11 @@ function CardFace({
   );
 }
 
-function CardTop({ chip, number }: { chip: string; number: number }) {
+function CardTop({ chip, number, warn }: { chip: string; number: number; warn?: boolean }) {
   return (
     <View style={styles.cardTop}>
-      <View style={styles.chip}>
-        <Text style={styles.chipText}>{chip}</Text>
+      <View style={[styles.chip, warn ? { backgroundColor: colors.danger } : null]}>
+        <Text style={[styles.chipText, warn ? { color: colors.surface } : null]}>{chip}</Text>
       </View>
       <Text style={styles.cardNo}>{`#${number}`}</Text>
     </View>
@@ -169,6 +170,7 @@ function InfoVisual({ visual }: { visual: NonNullable<InfoLessonCard["visual"]> 
       </View>
     );
   }
+  if (visual.type === "melt") return <MeltVisual from={visual.from} to={visual.to} years={visual.years} label={visual.label} />;
   return (
     <View style={[styles.visual, { gap: 8 }]}>
       {visual.rows.map((r) => (
@@ -184,11 +186,14 @@ function InfoVisual({ visual }: { visual: NonNullable<InfoLessonCard["visual"]> 
 // Info card: title, 2–3 sentences, optional visual, optional "Read more ▾" (scrolls inside the card when open).
 function InfoFace({ card, number }: { card: InfoLessonCard; number: number }) {
   const [more, setMore] = useState(false);
+  // The "money melts" card is a red warning card (decided: the cost of not investing must stick).
+  const warn = card.visual?.type === "melt";
   return (
     <>
-      <CardTop chip="GOOD TO KNOW" number={number} />
+      {warn ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.tint, styles.warnTint]} /> : null}
+      <CardTop chip={warn ? "WATCH OUT" : "GOOD TO KNOW"} number={number} warn={warn} />
       <ScrollView style={{ flex: 1, marginVertical: 12 }} contentContainerStyle={styles.infoBody} showsVerticalScrollIndicator={false}>
-        <Text style={styles.infoTitle}>{card.title}</Text>
+        <Text style={[styles.infoTitle, warn ? { color: colors.danger } : null]}>{card.title}</Text>
         <Text style={styles.infoText}>{card.text}</Text>
         {card.visual ? <InfoVisual visual={card.visual} /> : null}
         {card.readMore ? (
@@ -233,13 +238,20 @@ function ChoiceFace({
   const half = (side: "left" | "right") => {
     const o = card[side];
     const glow = side === "right" ? right : left;
+    // A plain Pressable that fills its half (PressScale sizes to its content, which squeezed the halves).
     return (
-      <PressScale key={side} onPress={() => onPick(side === "right")} accessibilityLabel={o.title} style={styles.half}>
+      <Pressable
+        key={side}
+        onPress={() => onPick(side === "right")}
+        accessibilityRole="button"
+        accessibilityLabel={o.title}
+        style={({ pressed }) => [styles.half, pressed ? { transform: [{ scale: 0.97 }] } : null]}
+      >
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.halfGlow, { opacity: glow }]} />
         <Text style={styles.halfTag}>{side === "left" ? "← A" : "B →"}</Text>
         <Text style={styles.halfTitle}>{o.title}</Text>
         <Text style={styles.halfText}>{o.text}</Text>
-      </PressScale>
+      </Pressable>
     );
   };
   return (
@@ -653,6 +665,7 @@ const styles = StyleSheet.create({
   },
   answerText: { fontFamily: font.extrabold, fontSize: 18, letterSpacing: 1.6, color: colors.onPetrol },
   answerTextSmall: { fontSize: 15, letterSpacing: 0.4, paddingHorizontal: 10 },
+  warnTint: { backgroundColor: colors.danger, opacity: 0.05 },
   infoBody: { gap: 12, flexGrow: 1, justifyContent: "center" },
   infoTitle: { fontFamily: font.extrabold, fontSize: 27, lineHeight: 34, color: colors.petrol950 },
   infoText: { fontFamily: font.medium, fontSize: 17, lineHeight: 25, color: colors.ink },
@@ -664,9 +677,9 @@ const styles = StyleSheet.create({
   visualRowText: { fontFamily: font.medium, fontSize: 14, color: colors.muted },
   readMore: { fontFamily: font.extrabold, fontSize: 14.5, color: colors.petrol700 },
   readMoreText: { fontFamily: font.regular, fontSize: 14.5, lineHeight: 21, color: colors.ink },
-  question: { fontFamily: font.extrabold, fontSize: 24, lineHeight: 31, color: colors.petrol950, marginTop: 14 },
-  halves: { flex: 1, flexDirection: "row", gap: 10, marginVertical: 14 },
-  half: { flex: 1, borderRadius: 18, borderWidth: 1.5, borderColor: colors.line, padding: 12, gap: 6, overflow: "hidden" },
+  question: { fontFamily: font.extrabold, fontSize: 23, lineHeight: 30, color: colors.petrol950, marginTop: 14 },
+  halves: { flex: 1, flexDirection: "row", alignItems: "stretch", gap: 10, marginVertical: 14 },
+  half: { flex: 1, minWidth: 0, borderRadius: 18, borderWidth: 1.5, borderColor: colors.line, padding: 12, gap: 8, justifyContent: "center", overflow: "hidden" },
   halfGlow: { backgroundColor: colors.petrol100 },
   halfTag: { fontFamily: font.extrabold, fontSize: 12, letterSpacing: 1, color: colors.petrol700 },
   halfTitle: { fontFamily: font.extrabold, fontSize: 18, lineHeight: 23, color: colors.petrol950 },

@@ -268,11 +268,13 @@
         {
           "kind": "info",
           "title": "Doing nothing costs money",
-          "text": "Prices rise about 5% a year, so money that sits still buys less every year. The account or a deposit is fine for a short time, but over the long run inflation wins.",
+          "text": "Prices rise about 5% a year. Money that just sits on your account melts: every year it buys less. Not investing is a choice too, and it costs you.",
           "visual": {
-            "type": "number",
-            "value": "{cashReal10y}",
-            "label": "what {start} on the account can buy after 10 years"
+            "type": "melt",
+            "from": "{start}",
+            "to": "{cashReal10y}",
+            "years": 10,
+            "label": "What your money can buy"
           }
         },
         {
