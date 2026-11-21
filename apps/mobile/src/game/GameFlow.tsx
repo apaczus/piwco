@@ -105,6 +105,12 @@ function startSession(industryId: string | null): Session | null {
 // Building cards on the chapter's "Your city grew" (the Future tower first).
 const CHAPTER_CARDS: BuildingId[] = ["future", "home", "firm", "vault"];
 
+// A month that is only a swipe lesson (e.g. September / October: credit).
+const isLessonMonth = (m: number) => {
+  const l = levels.find((x) => x.month === m);
+  return !!l?.lessonOnly && !!l.lesson;
+};
+
 // The investing chapter's month (it isn't a simulated month: its own screens, then ✓ on the year map).
 const INVEST_MONTH = 8;
 
@@ -248,8 +254,14 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
             startMonth={start.month}
             skipped={skipped}
             // Startable now: January (the basics, nothing played yet) and the investing chapter.
-            canStart={(m) => (m === 1 && session.completedMonth === 0) || m === INVEST_MONTH}
+            done={session.chaptersDone}
+            // Startable now: January (the basics, nothing played yet), the investing chapter and lesson-only months.
+            canStart={(m) => (m === 1 && session.completedMonth === 0) || m === INVEST_MONTH || isLessonMonth(m)}
             onStart={(m) => {
+              if (isLessonMonth(m)) {
+                go((s) => openLesson(s, m, "howItWorks"));
+                return;
+              }
               setPickedMonth(m);
               toPhase("welcome");
             }}
@@ -396,7 +408,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
             monthName={lm.monthName}
             cards={fillCards(lm.lesson.cards, {})}
             doneSub={`${lm.monthName}'s lesson is yours. It's ✓ on your year.`}
-            doneLabel="Back to your year"
+            doneLabel={session.lessonFrom === "howItWorks" ? "Continue" : "Back to your year"}
             onDone={() => go(finishLesson)}
           />
         ) : null;

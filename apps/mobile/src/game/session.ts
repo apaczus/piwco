@@ -75,6 +75,8 @@ export type Session = {
   chaptersDone: number[];
   // Lesson-only month being studied (phase "studyLesson"), null otherwise.
   lessonMonth: number | null;
+  // Where that lesson was opened from (the lesson ends / ‹ goes back there).
+  lessonFrom: "roadmap" | "howItWorks";
 };
 
 export type MonthRecord = {
@@ -114,6 +116,7 @@ export function newSession(industryId: string, seed: number, answers?: Household
     invest: null,
     chaptersDone: [],
     lessonMonth: null,
+    lessonFrom: "roadmap",
   };
 }
 
@@ -236,19 +239,19 @@ export function finishChapter(s: Session, month: number): Session {
   return { ...s, phase: "hub", chaptersDone: s.chaptersDone.includes(month) ? s.chaptersDone : [...s.chaptersDone, month] };
 }
 
-// "LESSON ›" on the year map: open a lesson-only month.
-export function openLesson(s: Session, month: number): Session {
-  return { ...s, phase: "studyLesson", lessonMonth: month };
+// "LESSON ›" on the year map (or a month on "How Piwco works"): open a lesson-only month.
+export function openLesson(s: Session, month: number, from: Session["lessonFrom"] = "roadmap"): Session {
+  return { ...s, phase: "studyLesson", lessonMonth: month, lessonFrom: from };
 }
 
-// The lesson is done: ✓ on the year map (counts like a finished chapter), back to the year map.
+// The lesson is done: ✓ on the year map (counts like a finished chapter), back where it was opened from.
 export function finishLesson(s: Session): Session {
   const m = s.lessonMonth;
   const done = m === null || s.chaptersDone.includes(m) ? s.chaptersDone : [...s.chaptersDone, m];
-  return { ...s, phase: "roadmap", lessonMonth: null, chaptersDone: done };
+  return { ...s, phase: s.lessonFrom, lessonMonth: null, chaptersDone: done };
 }
 
-// ‹ back from a lesson-only month: the year map, nothing changes.
+// ‹ back from a lesson-only month: back where it was opened from, nothing changes.
 export function closeLesson(s: Session): Session {
-  return { ...s, phase: "roadmap", lessonMonth: null };
+  return { ...s, phase: s.lessonFrom, lessonMonth: null };
 }

@@ -139,3 +139,17 @@ describe("October lesson: the numbers on the cards add up", () => {
     expect(all).toContain("9 600");
   });
 });
+
+describe("lesson-only months: open, finish, back", () => {
+  it("from the year map back to it; from 'How Piwco works' back there; ✓ once", async () => {
+    const { newSession, openLesson, finishLesson, closeLesson } = await import("./session");
+    const s = newSession("gastronomy", 7)!;
+    const a = openLesson(s, 9);
+    expect(a.phase).toBe("studyLesson");
+    expect(finishLesson(a)).toMatchObject({ phase: "roadmap", chaptersDone: [9], lessonMonth: null });
+    const b = openLesson({ ...s, phase: "howItWorks" }, 10, "howItWorks");
+    expect(closeLesson(b)).toMatchObject({ phase: "howItWorks", chaptersDone: [] });
+    const done = finishLesson(openLesson(finishLesson(b), 10, "howItWorks"));
+    expect(done).toMatchObject({ phase: "howItWorks", chaptersDone: [10] });
+  });
+});

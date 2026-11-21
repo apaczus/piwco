@@ -14,11 +14,14 @@ export function HowItWorks({
   dir,
   startMonth,
   skipped,
+  done = [],
   canStart,
   onStart,
 }: {
   // Months the player can start from now (the others show a "still being built" notification).
   canStart: (month: number) => boolean;
+  // Lessons already finished here (✓ on the tile).
+  done?: number[];
   // A playable month was tapped, or the CTA (= the start month).
   onStart: (month: number) => void;
   dir: Dir;
@@ -71,7 +74,10 @@ export function HowItWorks({
           <View style={styles.grid}>
             {levels.map((l) => {
               const start = l.month === startMonth;
-              const known = !start && skipped(l.month);
+              const finished = !start && done.includes(l.month);
+              const known = !start && !finished && skipped(l.month);
+              // A lesson-only month that opens from here.
+              const lesson = !start && !finished && !!l.lessonOnly && !!l.lesson;
               return (
                 // Plain Pressable (PressScale would size the cell to its content): a third of the row.
                 <Pressable
@@ -81,13 +87,13 @@ export function HowItWorks({
                   accessibilityLabel={canStart(l.month) ? `Start ${l.monthName}` : `${l.monthName}: coming soon`}
                   style={({ pressed }) => [styles.monthCell, pressed ? { transform: [{ scale: 0.965 }] } : null]}
                 >
-                <View style={[styles.month, start ? styles.monthStart : known ? styles.monthKnown : null, !canStart(l.month) && !start && !known ? { opacity: 0.6 } : null]}>
+                <View style={[styles.month, start ? styles.monthStart : known || finished ? styles.monthKnown : lesson ? styles.monthLesson : null, !canStart(l.month) && !start && !known ? { opacity: 0.6 } : null]}>
                   <Text style={[styles.monthName, start ? { color: colors.petrol950 } : null]}>{l.monthName.slice(0, 3)}</Text>
                   <Text
-                    style={[styles.monthState, start ? { color: colors.petrol950 } : known ? { color: colors.success } : null]}
+                    style={[styles.monthState, start ? { color: colors.petrol950 } : known || finished ? { color: colors.success } : lesson ? { color: colors.yellow } : null]}
                     numberOfLines={1}
                   >
-                    {start ? t.start.toUpperCase() : known ? `✓ ${t.known}` : l.title}
+                    {start ? t.start.toUpperCase() : finished ? "✓ Lesson done" : known ? `✓ ${t.known}` : lesson ? "LESSON ›" : l.title}
                   </Text>
                 </View>
                 </Pressable>
@@ -132,6 +138,7 @@ const styles = StyleSheet.create({
   },
   monthKnown: { backgroundColor: mix(colors.success, colors.petrol900, 22) },
   monthStart: { backgroundColor: colors.yellow },
+  monthLesson: { borderWidth: 1.5, borderColor: colors.yellow },
   monthName: { fontFamily: font.extrabold, fontSize: 13, color: colors.onPetrol },
   monthState: { fontFamily: font.semibold, fontSize: 10.5, color: colors.onPetrolMuted },
   note: { fontFamily: font.regular, fontSize: 13, lineHeight: 19, color: colors.onPetrolSub },
