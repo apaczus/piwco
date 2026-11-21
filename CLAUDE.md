@@ -1,7 +1,7 @@
 # Piwco: project context
 
 > Claude reads this file at the start of every session. **Update it after every decision.**
-> Last updated: 2026-11-21 (session 3: step 32, events rework, Year page done)
+> Last updated: 2026-11-21 (session 3: step 32, events rework, Year page, tutorial done)
 
 ## Handoff: continuing the project (read first in a new session)
 
@@ -195,6 +195,10 @@ Three sheets:
   - ~~January input stays the big number + ±100/±500 buttons (no sliders)~~ **changed by the user (2026-11-21): the household budget uses sliders** (see "Household budget sliders" below); "Pay yourself" keeps the big number + buttons;
   - **March stays "learn from the mistake"** (the event can hit before the player is insured), not the spec's "choose policies before the event";
   - not taken from the spec (for now): the spec's name "Finance Quest" (brand is PIWCO), sliders, the Office building unlocking later (the company exists from January), analytics/pre-post questions (needs storage, later with the server).
+- **Tutorial after the survey** (user: "after the survey, a tutorial: how to play, what's ahead, what it gives"; answers 2026-11-21):
+  - **5 swipeable slides + 3 coach tips**: slides on the night sky with small animated illustrations: (1) one year of your money, 12 months = 12 lessons, (2) a month: mission → alarm → decide → End month / receipt, (3) your city (grows / cracks, Year · Learn · City), (4) myth/fact quiz + "Add to my plan", (5) what you get (budget, cushion, protection, a real plan). Then on the first game screen 3 tips with a dimmed screen and a highlighted element: mission, actions + HUD, the Year · Learn · City switch;
+  - shown **after every survey** ("Start game"), before "Welcome to the game"; **"Skip"** in the corner (slides and tips separately); "Skip to game" (dev) and "Start a new game" skip it; **"?" on the game screen** opens it again (ends with "Back to the game ›" and the tips again); ‹ on "Welcome to the game" goes back to the tutorial;
+  - texts in `packages/content/src/tutorial.json` (Claude's, for team review).
 - **Year page + back to the main page** (user: "swipe to the left side like City, it only shows the levels; at the right moments let me go back to the main page"; answers 2026-11-21):
   - the game pager has **three pages: YEAR (left) · LEARN (middle, the main page, shown first) · CITY (right)**; switch "Year · Learn · City";
   - YEAR = the year map, **read only**: "Level n of 12", year progress bar, 12 months (done ✓, current "YOU ARE HERE", playable ahead "SOON", rest locked);
@@ -450,6 +454,7 @@ Three sheets:
   - mobile: `session.ts` `eventShown`, `eventPending`, `afterDecision`, `visibleGame` (`monthStartPhase` now always `play`); `GameFlow` reveals the event after Pay yourself / budget / on End month and feeds `visibleGame` to the game screens; `EventScreen.tsx` stages alarm → details → decision (late payment: wait / bridge outcome); `assets/sounds/alarm.wav` + `alarm` in `sound.ts`; receipt line "Bridge loan (overdraft)"; event lesson lines "Bridged" / "You waited it out";
   - checked: typecheck, 113 tests, simulation for 3 industries × wait/bridge (event hidden until the first decision, receipt adds up, lesson filled, replay/rewind hide it again), the real phone bundles (manifest URL) contain the new code. **Not yet checked on phones.**
 - [x] Year page: `city/GamePager.tsx` (3 pages, starts on LEARN, `PagerContext` / `usePager`, `LEARN_PAGE`, `CITY_PAGE`), `city/BackToMonth.tsx`, `game/YearPage.tsx`, `game/MonthDonePage.tsx`, `CityPage` back pill (`backLabel`), phase `hub` in `session.ts` / `GameFlow`, `Roadmap` `onBackToGame`; `LockIcon` exported from `MonthResult`. Checked: typecheck, 113 tests, phone bundles contain the new code. **Not yet checked on phones** (start on the middle page on Android, swipe feel with 3 pages).
+- [x] Tutorial: `tutorial.json` + `Tutorial` type in `@piwco/content`; `game/Tutorial.tsx` (slides, illustrations: 12-month grid, mission/alarm/decide/receipt icons with a shaking alarm, demo night city with a cracked company, swiping myth/fact card, 4 growing account bars), `game/coach.tsx` (`CoachProvider`, `CoachTarget`, `CoachOverlay`: Modal, `measureInWindow`, 4 dim rects + yellow ring + card), `game/HelpButton.tsx`; targets in `GameScreen` (mission, actions) and `GamePager` (switch); phase `tutorial` (night); `GameFlow` starts in `tutorial` when a survey profile exists. Checked: typecheck, 113 tests, phone bundles contain the new code. **Not yet checked on phones** (highlight position, esp. Android status bar).
 - [ ] **MVP plan for the team spec (proposed 2026-11-21, each step approved separately):**
   - 28: onboarding profile → game: the profile (income D, flags like `car_oc_only`, `cushion`, `loans`) is passed to `/game`; the household side scales with D (decided earlier); the company stays the industry package;
   - 29: events as data + engine: `events.json` (8 MVP events, Claude's numbers for team review), drawn at the month start from the seed, filtered by month and profile (full / prepared / skipped), protection by policy / cushion; Vitest;

@@ -6,6 +6,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { Animated, Pressable, StyleSheet, Text, View, type LayoutChangeEvent, type ScrollViewInstance } from "react-native";
 import { buzz, useMountSpring } from "../onboarding/anim";
 import { colors, font, shadow1, springs } from "../theme";
+import { CoachTarget } from "../game/coach";
 
 const PAGES = ["Year", "Learn", "City"] as const;
 export type PagerPage = 0 | 1 | 2;
@@ -86,6 +87,7 @@ export function GamePager({
   return (
     <View style={styles.wrap} onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}>
       <View style={styles.switchRow}>
+        <CoachTarget id="pager">
         <View style={styles.switch} onLayout={(e) => setSwitchWidth(e.nativeEvent.layout.width)}>
           {segment > 0 ? (
             <Animated.View style={[styles.indicator, { width: segment, transform: [{ translateX: indicatorX }] }]} />
@@ -103,6 +105,7 @@ export function GamePager({
             </Pressable>
           ))}
         </View>
+        </CoachTarget>
       </View>
       {width > 0 ? (
         <Animated.ScrollView

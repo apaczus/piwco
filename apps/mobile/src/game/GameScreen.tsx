@@ -12,6 +12,8 @@ import { SoundToggle } from "./SoundToggle";
 import { SwipeHint } from "./SwipeHint";
 import { MissionCard } from "./MissionCard";
 import { missionStatus } from "./mission";
+import { CoachTarget } from "./coach";
+import { HelpButton } from "./HelpButton";
 
 function Pulse({ active, children }: { active: boolean; children: ReactNode }) {
   const v = useRef(new Animated.Value(0)).current;
@@ -44,7 +46,10 @@ export function GameScreen({
   showSwipeHint = false,
   onAction,
   onEndMonth,
+  onHelp,
 }: {
+  // "?" in the header: the tutorial again.
+  onHelp?: () => void;
   state: GameState;
   level: Level;
   dir: Dir;
@@ -76,9 +81,13 @@ export function GameScreen({
       >
         <View style={styles.headRow}>
           <Eyebrow>{`Month ${level.month} · ${level.monthName}`}</Eyebrow>
-          <SoundToggle />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            {onHelp ? <HelpButton onPress={onHelp} /> : null}
+            <SoundToggle />
+          </View>
         </View>
         {mission ? (
+          <CoachTarget id="mission">
           <MissionCard
             monthName={level.monthName}
             status={mission}
@@ -89,13 +98,16 @@ export function GameScreen({
               else if (id === "plan_budget") onAction("budget");
             }}
           />
+          </CoachTarget>
         ) : null}
-        <View style={styles.top}>
-          <ActionBar month={state.month} onAction={onAction} />
-          <View style={{ flex: 1 }}>
-            <GameHud state={state} memory={hudMemory} />
+        <CoachTarget id="actions">
+          <View style={styles.top}>
+            <ActionBar month={state.month} onAction={onAction} />
+            <View style={{ flex: 1 }}>
+              <GameHud state={state} memory={hudMemory} />
+            </View>
           </View>
-        </View>
+        </CoachTarget>
         {showSwipeHint ? <SwipeHint /> : null}
       </ScreenLayout>
     </View>

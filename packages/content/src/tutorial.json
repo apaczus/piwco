@@ -1,0 +1,56 @@
+{
+  "slides": [
+    {
+      "id": "year",
+      "eyebrow": "How PIWCO works",
+      "title": "One year of your money, in a game",
+      "text": "You run your business and your home for 12 months. Every month is one level and one money skill.",
+      "points": ["12 months = 12 lessons", "Your real numbers from the survey", "Mistakes cost nothing here"]
+    },
+    {
+      "id": "month",
+      "eyebrow": "Every month",
+      "title": "Plan, get surprised, decide",
+      "text": "Each month has a mission. Something will go wrong mid-month: you decide how to handle it.",
+      "points": ["Mission: pay yourself, plan your budget", "Alarm: a surprise you have to deal with", "End month: the receipt shows what really happened"]
+    },
+    {
+      "id": "city",
+      "eyebrow": "Your city",
+      "title": "Good decisions build your city",
+      "text": "Your home, company, cushion vault and protection grow as you play well. Debt cracks the walls.",
+      "points": ["Your year: one swipe to the left", "Your city: one swipe to the right", "Net worth: everything you own minus what you owe"]
+    },
+    {
+      "id": "lessons",
+      "eyebrow": "After each month",
+      "title": "Myth or fact? Then make it real",
+      "text": "A quick swipe quiz checks what you learned. Then you add one real step to your own plan.",
+      "points": ["Swipe left = myth, right = fact", "No points lost for wrong answers", "\"Add to my plan\" = a step for your real life"]
+    },
+    {
+      "id": "gain",
+      "eyebrow": "What you get",
+      "title": "Habits that keep you safe in real life",
+      "text": "After the year you'll know how to keep a budget, build a cushion, protect yourself and grow your money.",
+      "points": ["A budget that separates home and company", "A cushion for the surprises", "Insurance before you need it", "A plan you can start tomorrow"]
+    }
+  ],
+  "tips": [
+    {
+      "id": "mission",
+      "title": "Your mission",
+      "text": "Three steps for this month. Tap a step to do it. It ticks off by itself."
+    },
+    {
+      "id": "actions",
+      "title": "Actions and your numbers",
+      "text": "Actions on the left (more unlock every month). Your company and home money on the right, with where you'll end the month."
+    },
+    {
+      "id": "pager",
+      "title": "Year · Learn · City",
+      "text": "Swipe or tap: your year on the left, your city on the right. This page is home."
+    }
+  ]
+}

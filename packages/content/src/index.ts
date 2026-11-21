@@ -5,6 +5,7 @@ import eventsData from "./events.json";
 import financingData from "./financing.json";
 import levelsData from "./levels.json";
 import onboardingData from "./onboarding.json";
+import tutorialData from "./tutorial.json";
 
 // ---- Onboarding ("Finance Quest" analysis) ----
 
@@ -245,3 +246,11 @@ export type FinancingProduct = {
 };
 
 export const financing = financingData as FinancingProduct[];
+
+// Tutorial after the survey: slides (how to play, what's ahead, what you get) and tips on the game screen.
+// Tip ids are matched in code (apps/mobile/src/game/coach.tsx); texts are editable.
+export type TutorialSlide = { id: string; eyebrow: string; title: string; text: string; points: string[] };
+export type TutorialTip = { id: string; title: string; text: string };
+export type Tutorial = { slides: TutorialSlide[]; tips: TutorialTip[] };
+
+export const tutorial: Tutorial = tutorialData;
