@@ -1,5 +1,6 @@
 // Onboarding screens, ported from the artifact's welcome() / ageScreen() / typeScreen() / industry() /
 // explain() / firm() / question() / blockDone() / result().
+import { setPlayerProfile } from "../game/profile";
 import {
   onboarding,
   type AccountId,
@@ -601,6 +602,7 @@ export function ResultScreen({
                 return;
               }
               try {
+                setPlayerProfile(buildProfile(state));
                 router.push({ pathname: "/game", params: { industry: industry.id } });
               } catch (e) {
                 setCtaNote(`Could not start the game: ${e instanceof Error ? e.message : String(e)}`);

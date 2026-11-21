@@ -189,6 +189,7 @@ Three sheets:
   - **January input stays** the big number + ±100/±500 buttons (no sliders);
   - **March stays "learn from the mistake"** (the event can hit before the player is insured), not the spec's "choose policies before the event";
   - not taken from the spec (for now): the spec's name "Finance Quest" (brand is PIWCO), sliders, the Office building unlocking later (the company exists from January), analytics/pre-post questions (needs storage, later with the server).
+- **Onboarding answers → starting state** (user, 2026-11-21, step 28): household spending, minimums and starting cash = baseline × income D / 5 500 (test profile A), **multiplier clamped to 0.6–1.3** (so the owner draw can cover the household in January in every industry; event amounts will still scale with the full D); **cushion answer → emergency fund** = months × monthly household bills (0 / 0.5 / 2 / 4.5 / 7); **"I rent" → no own house** (rented flat in the city); **"no car" → no car**, car & transport = 250 PLN (public transport, scaled). Loans and end-of-month answers don't change the start (yet); all answers + flags go to the game for the events. The company stays the fixed industry package. "Skip to game" = no profile = baseline.
 - Playable industries: **Gastronomy, IT & Software Development, Manufacturing**.
 - PLN amounts for industries: **Claude proposes them** from the market-analysis descriptions, the team reviews.
 - Startup survival data: used as a **hook on the start screen** ("1 in 5 businesses closes in its first year") **and in the summary**, NOT as a bankruptcy probability in the engine.
@@ -385,6 +386,11 @@ Three sheets:
   - `app/index.tsx`: intro on top, onboarding mounted underneath when the intro starts fading (its entrance plays during the fade);
   - checked: typecheck, bundles built. **Confirmed on a phone by the user: looks good.**
 - [x] Commit (user request, 2026-11-21): steps 15–27 committed on `master` (not pushed).
+- [x] Step 28: onboarding profile → game:
+  - `household.json`: `referenceIncome` 5 500, `incomeScaleMin` 0.6, `incomeScaleMax` 1.3, `noCarTransportSpending` 250 (+ types);
+  - engine `setupFromContent.ts`: `buildInitialSetup(industry, household, seed, answers?)` with `HouseholdAnswers` (income, cushionMonths, ownsHouse, ownsCar) and `incomeScale()`; amounts rounded to 50 PLN; 6 new tests incl. "January can be passed in every industry at every income, with and without a car" (83 tests);
+  - mobile `game/profile.ts` (in-memory profile store + `householdAnswers(profile)`), onboarding "Start game" stores `buildProfile(state)`, "Skip to game" clears it; `newSession(industry, seed, answers?, flags)`; session keeps `flags` for the events; "Start a new game" reuses the profile;
+  - checked: tests, typecheck, profile simulation (3 000 / rent / no car → cash 900, housing 1 500, transport 150; 5 500 / cushion 0.5 → fund 2 600; 14 000 / cushion 2 → housing 3 250, fund 13 500), bundles built. **Not yet checked on phones.**
 - [ ] **MVP plan for the team spec (proposed 2026-11-21, each step approved separately):**
   - 28: onboarding profile → game: the profile (income D, flags like `car_oc_only`, `cushion`, `loans`) is passed to `/game`; the household side scales with D (decided earlier); the company stays the industry package;
   - 29: events as data + engine: `events.json` (8 MVP events, Claude's numbers for team review), drawn at the month start from the seed, filtered by month and profile (full / prepared / skipped), protection by policy / cushion; Vitest;

@@ -1,4 +1,5 @@
 // The whole onboarding: state, navigation, screen transitions (artifact: render() / next() / back()).
+import { setPlayerProfile } from "../game/profile";
 import { onboarding, type AgeBandId } from "@piwco/content";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -238,6 +239,8 @@ export function OnboardingFlow() {
             DEV_SKIP_TO_GAME
               ? () => {
                   buzz("light");
+                  // Skipping = no profile: the game uses the baseline (test profile A).
+                  setPlayerProfile(null);
                   router.push({ pathname: "/game", params: { industry: DEV_SKIP_INDUSTRY } });
                 }
               : undefined

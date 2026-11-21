@@ -1,4 +1,8 @@
 {
+  "referenceIncome": 5500,
+  "incomeScaleMin": 0.6,
+  "incomeScaleMax": 1.3,
+  "noCarTransportSpending": 250,
   "startingCash": 1500,
   "emergencyFund": 0,
   "ownsHouse": true,

@@ -146,6 +146,14 @@ export type HouseholdCategoryProfile = {
 
 // Personal finances at the start, the same for everyone before onboarding answers apply.
 export type HouseholdProfile = {
+  // The numbers below are for this monthly net income (test profile A). The player's income from the onboarding
+  // scales them (spending, minimums, starting cash), but only between incomeScaleMin and incomeScaleMax, so the
+  // company's owner draw can still cover the household in month 1 in every industry.
+  referenceIncome: number;
+  incomeScaleMin: number;
+  incomeScaleMax: number;
+  // "Car & transport" for a player without a car (public transport), before scaling.
+  noCarTransportSpending: number;
   startingCash: number;
   emergencyFund: number;
   ownsHouse: boolean;

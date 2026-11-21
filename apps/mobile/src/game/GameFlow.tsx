@@ -44,6 +44,7 @@ import {
   type Session,
 } from "./session";
 import { BackButton } from "./BackButton";
+import { getPlayerProfile, householdAnswers } from "./profile";
 import { WelcomeToGame } from "./WelcomeToGame";
 
 function timeOfDay(phase: Phase): TimeOfDay {
@@ -64,11 +65,16 @@ function timeOfDay(phase: Phase): TimeOfDay {
   }
 }
 
+// A new game for the industry, with the onboarding profile (if the player came through the onboarding).
+function startSession(industryId: string | null): Session | null {
+  if (!industryId) return null;
+  const profile = getPlayerProfile();
+  return newSession(industryId, randomSeed(), householdAnswers(profile), profile?.flags ?? []);
+}
+
 export function GameFlow({ industryId }: { industryId: string | null }) {
   const insets = useSafeAreaInsets();
-  const [session, setSession] = useState<Session | null>(() =>
-    industryId ? newSession(industryId, randomSeed()) : null,
-  );
+  const [session, setSession] = useState<Session | null>(() => startSession(industryId));
   const [dir, setDir] = useState<Dir>(1);
   const [navId, setNavId] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -332,7 +338,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
                 monthStartShown.current = {};
                 shownBeforeEnd.current = {};
                 lastBadge.current = 0;
-                go(() => newSession(industryId ?? "", randomSeed())!, -1);
+                go((s) => startSession(industryId) ?? s, -1);
               }}
             />
             {sheetMonth !== null ? (

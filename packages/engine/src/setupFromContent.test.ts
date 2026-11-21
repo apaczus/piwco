@@ -1,7 +1,10 @@
 import { household, industries, type IndustryProfile } from "@piwco/content";
 import { describe, expect, it } from "vitest";
 import { createInitialState } from "./initialState";
-import { buildInitialSetup } from "./setupFromContent";
+import { applyAction } from "./actions";
+import { checkMonthGoal } from "./levels";
+import { settleMonth } from "./settle";
+import { buildInitialSetup, incomeScale, type HouseholdAnswers } from "./setupFromContent";
 
 const isWholePln = (n: number) => Number.isInteger(n) && n >= 0;
 
@@ -59,5 +62,69 @@ describe("buildInitialSetup", () => {
     expect(() => buildInitialSetup(industries[0]!, broken, 1)).toThrow(
       'Household category missing in content: "food"',
     );
+  });
+});
+
+describe("onboarding answers (household scaled by income)", () => {
+  const gastronomy = industries.find((i) => i.id === "gastronomy")!;
+  const base: HouseholdAnswers = { income: 5500, cushionMonths: 0, ownsHouse: true, ownsCar: true };
+  const setup = (a: Partial<HouseholdAnswers>) => buildInitialSetup(gastronomy, household, 1, { ...base, ...a });
+
+  it("keeps the baseline at the reference income (test profile A)", () => {
+    const s = setup({});
+    expect(s.personal.cash).toBe(household.startingCash);
+    expect(s.personal.monthlySpending.housing).toBe(2_500);
+    expect(s.personal.minimumSpending.food).toBe(1_000);
+  });
+
+  it("scales spending, minimums and cash with income, within the bounds", () => {
+    expect(incomeScale(household, 3_000)).toBe(0.6); // 0.545 → clamped to the minimum
+    expect(incomeScale(household, 14_000)).toBe(1.3); // 2.5 → clamped to the maximum
+    const low = setup({ income: 3_000 });
+    const high = setup({ income: 14_000 });
+    expect(low.personal.monthlySpending.housing).toBe(1_500);
+    expect(high.personal.monthlySpending.housing).toBe(3_250);
+    expect(high.personal.minimumSpending.housing).toBe(3_250);
+    expect(high.personal.cash).toBe(1_950);
+    for (const s of [low, high]) {
+      for (const v of [...Object.values(s.personal.monthlySpending), ...Object.values(s.personal.minimumSpending), s.personal.cash]) {
+        expect(v % 50).toBe(0);
+      }
+    }
+  });
+
+  it("turns the cushion answer into months of household bills", () => {
+    // Bills at the reference income: 2 500 + 1 500 + 700 + 500 = 5 200.
+    expect(setup({ cushionMonths: 0 }).personal.emergencyFund).toBe(0);
+    expect(setup({ cushionMonths: 0.5 }).personal.emergencyFund).toBe(2_600);
+    expect(setup({ cushionMonths: 2 }).personal.emergencyFund).toBe(10_400);
+  });
+
+  it("applies renting and having no car", () => {
+    const s = setup({ ownsHouse: false, ownsCar: false });
+    expect(s.personal.ownsHouse).toBe(false);
+    expect(s.personal.ownsCar).toBe(false);
+    expect(s.personal.monthlySpending.car_transport).toBe(household.noCarTransportSpending);
+  });
+
+  it("keeps the company package fixed", () => {
+    expect(setup({ income: 14_000 }).business).toEqual(setup({ income: 3_000 }).business);
+  });
+
+  it("January can be passed in every industry at every income", () => {
+    for (const industry of industries) {
+      for (const income of [3_000, 5_500, 9_500, 14_000]) {
+        for (const ownsCar of [true, false]) {
+          const state = createInitialState(buildInitialSetup(industry, household, 1, { ...base, income, ownsCar }));
+          const bills = Object.entries(state.personal.monthlySpending).reduce((s, [k, v]) => (k === "savings" ? s : s + v), 0);
+          const draw = Math.min(state.business.cash, Math.max(1, bills - state.personal.cash));
+          const r = applyAction(state, { type: "owner_draw", amount: draw });
+          expect(r.ok).toBe(true);
+          if (!r.ok) continue;
+          const goal = checkMonthGoal(1, settleMonth(r.state).report);
+          expect({ industry: industry.id, income, ownsCar, passed: goal.passed }).toEqual({ industry: industry.id, income, ownsCar, passed: true });
+        }
+      }
+    }
   });
 });

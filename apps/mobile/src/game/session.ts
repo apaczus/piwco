@@ -8,6 +8,7 @@ import {
   settleMonth,
   type Action,
   type GameState,
+  type HouseholdAnswers,
   type GoalResult,
   type MonthReport,
 } from "@piwco/engine";
@@ -29,6 +30,8 @@ export type Session = {
   history: MonthRecord[];
   // Month being reviewed (receipt → result → lesson → city of that pass, nothing changes); null = playing.
   reviewing: number | null;
+  // Onboarding profile flags (car_oc_only, home_uninsured, payday_loan, ...): which events hit and how.
+  flags: string[];
 };
 
 export type MonthRecord = {
@@ -46,11 +49,23 @@ export function randomSeed(): number {
 }
 
 // null when the industry is unknown or not playable.
-export function newSession(industryId: string, seed: number): Session | null {
+// `answers` = the onboarding's household answers (income, cushion, home, car); without them the baseline is used.
+// `flags` = profile flags (e.g. car_oc_only), kept for the random events.
+export function newSession(industryId: string, seed: number, answers?: HouseholdAnswers, flags: string[] = []): Session | null {
   const industry = industries.find((i) => i.id === industryId);
   if (!industry) return null;
-  const game = createInitialState(buildInitialSetup(industry, household, seed));
-  return { game, snapshot: game, phase: "welcome", result: null, completedMonth: 0, beforeEnd: null, history: [], reviewing: null };
+  const game = createInitialState(buildInitialSetup(industry, household, seed, answers));
+  return {
+    game,
+    snapshot: game,
+    phase: "welcome",
+    result: null,
+    completedMonth: 0,
+    beforeEnd: null,
+    history: [],
+    reviewing: null,
+    flags,
+  };
 }
 
 export function act(s: Session, action: Action): { session: Session; error: string | null } {
