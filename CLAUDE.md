@@ -1,18 +1,24 @@
 # Piwco: project context
 
 > Claude reads this file at the start of every session. **Update it after every decision.**
-> Last updated: 2026-11-21
+> Last updated: 2026-11-21 (end of session 2, handoff to another Claude account)
 
 ## Handoff: continuing the project (read first in a new session)
 
-- This file is the full memory of the first working session: every decision, the reasons, what is built, what is open. Setup and run commands for humans are in `README.md`.
-- **Where we stopped (2026-11-21):** onboarding (Finance Quest design) + playable January with the "dopamine" start (welcome screen, mission, HUD, budget), the interactive swipe lesson, rolling numbers, the settlement receipt and sounds are built (steps 11–18 below). The city + day/night plan (steps 19–24) is built and **confirmed on a phone by the user (2026-11-21): looks good**. Next: MVP of the team spec (events in months 1–3), see the plan in Progress; team review of the numbers (`industries.json`, `household.json`) and lesson cards; decisions listed under UNDECIDED.
-- **Open design problem:** in month 1 the company can't fail with the current numbers (see step 13 "Finding"). Proposed fix: random events at the start of the month (planned anyway), before February.
-- **In progress on the team side (2026-11-21):** the team is writing the **random events** and the **challenges** right now and will send them as prompts. Don't invent events or challenges; wait for their content, then propose how to implement it.
-- **Suggested next steps:** user feedback on the game start → random events → map onboarding answers to the starting state (personal side scales with income) → February (emergency fund) and March (insurance) → city → server recomputation + leaderboard.
-- **On the developer laptop:** Metro runs in a terminal tab (`npm run start:tailscale -w @piwco/mobile -- --clear`), the phones reach it over Tailscale (`100.100.123.81`). Postgres container `hackaton-postgres-1` exists but isn't used yet.
-- **On another computer:** `git clone https://github.com/apaczus/piwco.git && npm install`. The Tailscale address will be different: the phones need access to that computer (its own Tailscale share, or the same Wi-Fi with `npm run start -w @piwco/mobile`).
-- The original conversation was exported locally to `~/Downloads/session-export-*.zip` on the developer laptop (not in the repo: it contains personal data).
+- This file is the full memory of the working sessions so far (2026-11-21): every decision, the reasons, what is built, what is open. Setup and run commands for humans are in `README.md`. **A new Claude (other account / other computer) should read this whole file before doing anything**, then follow the collaboration rules below.
+- **Second session (2026-11-21) moved to another Claude account at the user's request.** Everything decided in it is written into DECIDED and Progress below (steps 15–31 + fixes); the chat itself was exported locally on the developer laptop (see the last bullet), not into the repo.
+- **What exists now (all on `master`, pushed to https://github.com/apaczus/piwco):**
+  - app opens on the animated **PIWCO intro** (Please Invest With Confidence) → onboarding (Finance Quest artifact design, brand PIWCO) → game;
+  - **January is playable end to end**: welcome + mission → **random event** (push notification, decision cards with cost previews, plot twist, loans with interest) → game screen with **Learn · City tabs** (mission, HUD with rolling numbers, action bar, city backdrop; CITY page with level-up reward) → Pay yourself / **household budget with sliders** → End month → **settlement receipt** (sunset) → result → **swipe myth/fact lesson** → **"Your city grew"** → year map (review / replay a completed month, start a new game); **‹ back** after the month (undo End month); **day/night sky** (sun, moon, stars); **sounds** + haptics; onboarding answers set the household start (income scale, cushion, renting, no car).
+  - engine (`packages/engine`, 110 Vitest tests): state, actions (owner draw, transfer to cushion, budget, cover event, borrow for event), settlement (late payments, company + personal loans, event leftovers → arrears), month 1 goal, city levels, events draw.
+- **Where we stopped:** the MVP plan for the team spec, steps **28–31 done**; **next: step 32** (event lesson: 3 info cards "What happened / What is X / The math" + 2–3 myth/fact quiz cards, and "Add to my plan": repairs/builds the city building + a real-world checklist item, in memory; "Prepared" shortcut), then **33** (month advance + February playable: first cushion tranche + bills + event; February content), **34** (March: insurance action with a recurring premium, big event, "learn from the mistake"). See the plan under Progress.
+- **Not yet checked on phones** (the user tested up to the city + day/night, the intro and the sounds): step 25–26 (back / review / replay), 28 (profile → start), 31 (event screen), the budget sliders after the smoothness pass, the slide 2 / stairs label fix. Ask the user how they look before building on them.
+- **Waiting for the team:** Health Score formula; the "economy model" Excel with numbers and `PROMPT_Finance_Quest_game.md` (not in the repo); review of Claude's numbers (`industries.json`, `household.json`, `events.json`, `financing.json`, `city.json`) and of the lesson cards in `levels.json`.
+- **Rules that changed in session 2:** local git commit after every finished step (push only on request); no react-native-svg `Text` (overlay RN `Text`); the household budget uses sliders (user change); the city/sky/back/intro decisions are in DECIDED.
+- **Temporary things to turn off before the final demo:** the "Skip to game ›" dev button (`apps/mobile/src/devFlags.ts`); use Metro production mode only after the last code change (see "Metro mode").
+- **On the developer laptop:** Metro runs in a terminal tab (`npm run start:tailscale -w @piwco/mobile -- --clear`), the phones reach it over Tailscale (`100.100.123.81`). Postgres container `hackaton-postgres-1` exists but isn't used yet. Server is still only `GET /health`.
+- **On another computer:** `git clone https://github.com/apaczus/piwco.git && npm install`, then `npm test -w @piwco/engine` and `cd apps/mobile && npx tsc --noEmit`. The Tailscale address will be different: the phones need access to that computer (its own Tailscale share, or the same Wi-Fi with `npm run start -w @piwco/mobile`).
+- The conversations were exported locally on the developer laptop (`~/Downloads/session-export-*.zip`: session 1, and `~/Downloads/session-export-1795274093593.zip`: session 2), **not in the repo: they contain personal data**.
 
 ## Collaboration rules (most important, always follow)
 
