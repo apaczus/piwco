@@ -4,7 +4,7 @@ import type { Level } from "@piwco/content";
 import type { ReactNode } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Enter } from "../onboarding/anim";
-import { Cta, Eyebrow, Sub, Title } from "../onboarding/ui";
+import { Cta, Eyebrow, LinkButton, Sub, Title } from "../onboarding/ui";
 import { colors, font, shadow2 } from "../theme";
 import { SwipeHint } from "./SwipeHint";
 
@@ -13,7 +13,10 @@ export function MonthDonePage({
   next,
   backdrop,
   onYear,
+  onPlayBasics,
 }: {
+  // After the investing chapter, a player who skipped the basics can still play January.
+  onPlayBasics?: () => void;
   level: Level;
   next: Level | undefined;
   backdrop: ReactNode;
@@ -36,7 +39,14 @@ export function MonthDonePage({
         </Enter>
         <SwipeHint />
       </ScrollView>
-      <Cta label="See your year ›" onPress={onYear} />
+      {onPlayBasics ? (
+        <View style={{ gap: 4 }}>
+          <Cta label="Play the basics anyway ›" onPress={onPlayBasics} />
+          <LinkButton label="See your year" onPress={onYear} />
+        </View>
+      ) : (
+        <Cta label="See your year ›" onPress={onYear} />
+      )}
     </View>
   );
 }

@@ -60,5 +60,29 @@
       "title": "What you get",
       "text": "After the year you'll know how to keep a budget, build a cushion, protect yourself and grow your money. Each month ends with one step for your real life."
     }
-  ]
+  ],
+  "howItWorks": {
+    "eyebrow": "How Piwco works",
+    "title": "You learn by solving problems",
+    "sub": "Every level follows the same 3 steps.",
+    "steps": [
+      {
+        "title": "Problem",
+        "text": "Something happens: a client pays late, a machine breaks, the market drops."
+      },
+      {
+        "title": "Decide",
+        "text": "You choose what to do with real numbers. Every choice has a price, and you see it right away."
+      },
+      {
+        "title": "Learn",
+        "text": "A short swipe lesson explains why it worked or not. Your city grows with every good decision."
+      }
+    ],
+    "yearTitle": "Your year: 12 levels, one money skill each",
+    "known": "You know this",
+    "start": "Start here",
+    "knownNote": "You already know the basics (budget, cushion, insurance), so we skip them. You can still play them later.",
+    "cta": "Start investing ›"
+  }
 }

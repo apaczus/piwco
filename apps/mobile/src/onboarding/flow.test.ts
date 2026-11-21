@@ -16,6 +16,12 @@ describe("buildProfile: knowledge", () => {
     });
   }
 
+  for (const [answer, k] of [["1", "beginner"], ["2", "beginner"], ["3", "intermediate"], ["4", "intermediate"], ["5", "intermediate"]] as const) {
+    it(`scale answer ${answer} -> ${k}`, () => {
+      expect(buildProfile(state("business", "26", { knowledge: answer })).knowledge).toBe(k);
+    });
+  }
+
   it("no answer -> intermediate", () => {
     const p = buildProfile(state("private", "36"));
     expect(p.knowledge).toBe("intermediate");
@@ -51,7 +57,7 @@ describe("knowledge question in the flow", () => {
       const nextQ = flow.findIndex((x, j) => j > i && x.kind === "question");
       expect(progressOf({ ...s, step: nextQ }).counter).toBe(`2 / ${total}`);
       // Pre-selected default.
-      expect(questionsFor(s).find((q) => q.id === "knowledge")?.default).toBe("intermediate");
+      expect(questionsFor(s).find((q) => q.id === "knowledge")?.default).toBe("3");
     });
   }
 });

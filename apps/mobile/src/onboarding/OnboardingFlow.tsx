@@ -17,6 +17,7 @@ import {
   questionsFor,
   type OnboardingState,
   type PlayerType,
+  knowledgeOf,
 } from "./flow";
 import { Hud, WelcomeBackground } from "./Hud";
 import {
@@ -163,7 +164,7 @@ export function OnboardingFlow() {
       );
       break;
     case "explain":
-      screen = <ExplainScreen dir={dir} type={s.type} onNext={next} />;
+      screen = <ExplainScreen dir={dir} type={s.type} knowsBasics={knowledgeOf(s.answers.knowledge) !== "beginner"} onNext={next} />;
       break;
     case "firm":
       screen = <FirmScreen dir={dir} onNext={next} />;

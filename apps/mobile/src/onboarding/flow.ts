@@ -136,13 +136,17 @@ export function buildProfile(s: OnboardingState): OnboardingProfile {
 export const DEFAULT_KNOWLEDGE: KnowledgeLevel = "intermediate";
 const KNOWLEDGE_LEVELS: readonly string[] = ["beginner", "intermediate", "advanced"];
 
-// Answer -> knowledge level; missing or unknown -> the default ("intermediate").
+// Self-rating 1–5 (decided 2026-11-21): 1–2 = beginner (starts in January), 3–5 = intermediate (skips the basics,
+// starts with investing). Level names are still accepted; missing or unknown -> the default ("intermediate").
 export function knowledgeOf(answer: string | string[] | undefined): KnowledgeLevel {
+  if (answer === "1" || answer === "2") return "beginner";
+  if (answer === "3" || answer === "4" || answer === "5") return "intermediate";
   return typeof answer === "string" && KNOWLEDGE_LEVELS.includes(answer) ? (answer as KnowledgeLevel) : DEFAULT_KNOWLEDGE;
 }
 
-// Result-screen line for the knowledge level.
-export function knowledgeLine(k: KnowledgeLevel): string {
-  const name = k.charAt(0).toUpperCase() + k.slice(1);
-  return `Level: ${name}: ${k === "beginner" ? "we'll start from the basics" : "we'll skip the basics"}`;
+// Result-screen line for the knowledge answer, e.g. "You rated yourself 3 of 5: we'll skip the basics".
+export function knowledgeLine(answer: string | string[] | undefined): string {
+  const k = knowledgeOf(answer);
+  const head = typeof answer === "string" && /^[1-5]$/.test(answer) ? `You rated yourself ${answer} of 5` : `Level: ${k.charAt(0).toUpperCase() + k.slice(1)}`;
+  return `${head}: ${k === "beginner" ? "we'll start from the basics" : "we'll skip the basics and start with investing"}`;
 }

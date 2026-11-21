@@ -298,7 +298,19 @@ export const financing = financingData as FinancingProduct[];
 // `id` = the highlighted element (matched in apps/mobile/src/game/coach.tsx; "alarm" and "gain" have no element,
 // they are plain cards). `page` = the pager page that is scrolled to first. Texts are editable.
 export type TutorialTip = { id: string; page: "year" | "learn" | "city"; title: string; text: string };
-export type Tutorial = { tips: TutorialTip[] };
+// "How Piwco works": shown before the first mission to players who skip the basics (problem-based learning).
+export type HowItWorks = {
+  eyebrow: string;
+  title: string;
+  sub: string;
+  steps: { title: string; text: string }[];
+  yearTitle: string;
+  known: string;
+  start: string;
+  knownNote: string;
+  cta: string;
+};
+export type Tutorial = { tips: TutorialTip[]; howItWorks: HowItWorks };
 
 export const tutorial = tutorialData as Tutorial;
 

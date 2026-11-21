@@ -19,6 +19,8 @@ import { newInvest, type InvestState } from "../invest/investSession";
 // "welcome" = the celebratory "Welcome to the game" screen with the first mission (start of a new game).
 // "eventLesson" = the month's event lesson (info cards, quiz, "Add to my plan"), after the result, before "lesson".
 export type Phase =
+  // "How Piwco works" (Problem → Decide → Learn + the year), before "welcome" for players who skip the basics.
+  | "howItWorks"
   | "welcome"
   | "intro"
   | "event"
@@ -224,7 +226,7 @@ export function openInvest(s: Session): Session {
   return { ...s, phase: "invest", invest: s.invest ?? newInvest() };
 }
 
-// The chapter's "Your city grew" is done: the month counts as done on the year map, then the year map.
+// The chapter's "Your city grew" is done: the month counts as done on the year map, back to the dashboard (hub).
 export function finishChapter(s: Session, month: number): Session {
-  return { ...s, phase: "roadmap", chaptersDone: s.chaptersDone.includes(month) ? s.chaptersDone : [...s.chaptersDone, month] };
+  return { ...s, phase: "hub", chaptersDone: s.chaptersDone.includes(month) ? s.chaptersDone : [...s.chaptersDone, month] };
 }

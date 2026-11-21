@@ -1,0 +1,93 @@
+// "How Piwco works" (decided 2026-11-21): before the first mission of a player who rated themselves 3–5.
+// Problem → Decide → Learn (problem-based learning), then the 12 months: the basics they skip ("You know this"),
+// August ("Start here"), the rest later. Night screen, like "Welcome to the game". Texts in tutorial.json.
+import { levels, tutorial } from "@piwco/content";
+import { StyleSheet, Text, View } from "react-native";
+import { Enter } from "../onboarding/anim";
+import { ScreenLayout, type Dir } from "../onboarding/screens";
+import { Cta, Eyebrow, Sub, Title } from "../onboarding/ui";
+import { colors, font, mix } from "../theme";
+
+export function HowItWorks({
+  dir,
+  startMonth,
+  skipped,
+  onNext,
+}: {
+  dir: Dir;
+  // The month the player starts with (8 = investing).
+  startMonth: number;
+  skipped: (month: number) => boolean;
+  onNext: () => void;
+}) {
+  const t = tutorial.howItWorks;
+  return (
+    <ScreenLayout dir={dir} footer={<Cta label={t.cta} onPress={onNext} onPetrol appear />}>
+      <Eyebrow>{t.eyebrow}</Eyebrow>
+      <Title>{t.title}</Title>
+      <Sub>{t.sub}</Sub>
+      <View style={styles.steps}>
+        {t.steps.map((s, i) => (
+          <Enter key={s.title} from="below" delay={150 + i * 160}>
+            <View style={styles.step}>
+              <View style={styles.no}>
+                <Text style={styles.noText}>{i + 1}</Text>
+              </View>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={styles.stepTitle}>{s.title}</Text>
+                <Text style={styles.stepText}>{s.text}</Text>
+              </View>
+            </View>
+          </Enter>
+        ))}
+      </View>
+      <Enter from="below" delay={700}>
+        <View style={{ gap: 10 }}>
+          <Text style={styles.yearTitle}>{t.yearTitle}</Text>
+          <View style={styles.grid}>
+            {levels.map((l) => {
+              const start = l.month === startMonth;
+              const known = !start && skipped(l.month);
+              return (
+                <View key={l.id} style={[styles.month, start ? styles.monthStart : known ? styles.monthKnown : null]}>
+                  <Text style={[styles.monthName, start ? { color: colors.petrol950 } : null]}>{l.monthName.slice(0, 3)}</Text>
+                  <Text
+                    style={[styles.monthState, start ? { color: colors.petrol950 } : known ? { color: colors.success } : null]}
+                    numberOfLines={1}
+                  >
+                    {start ? t.start.toUpperCase() : known ? `✓ ${t.known}` : l.title}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+          <Text style={styles.note}>{t.knownNote}</Text>
+        </View>
+      </Enter>
+    </ScreenLayout>
+  );
+}
+
+const styles = StyleSheet.create({
+  steps: { gap: 8 },
+  step: { flexDirection: "row", gap: 12, alignItems: "flex-start", backgroundColor: colors.surface, borderRadius: 16, padding: 14 },
+  no: { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.yellow, alignItems: "center", justifyContent: "center" },
+  noText: { fontFamily: font.extrabold, fontSize: 15, color: colors.petrol950 },
+  stepTitle: { fontFamily: font.extrabold, fontSize: 16, color: colors.petrol950 },
+  stepText: { fontFamily: font.regular, fontSize: 13.5, lineHeight: 19, color: colors.ink },
+  yearTitle: { fontFamily: font.extrabold, fontSize: 14, color: colors.onPetrol },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  month: {
+    width: "31.6%",
+    borderRadius: 10,
+    paddingVertical: 7,
+    paddingHorizontal: 8,
+    backgroundColor: mix(colors.onPetrol, colors.petrol900, 8),
+    gap: 1,
+  },
+  monthKnown: { backgroundColor: mix(colors.success, colors.petrol900, 22) },
+  monthStart: { backgroundColor: colors.yellow },
+  monthName: { fontFamily: font.extrabold, fontSize: 13, color: colors.onPetrol },
+  monthState: { fontFamily: font.semibold, fontSize: 10.5, color: colors.onPetrolMuted },
+  note: { fontFamily: font.regular, fontSize: 13, lineHeight: 19, color: colors.onPetrolSub },
+});

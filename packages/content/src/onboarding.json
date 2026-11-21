@@ -92,14 +92,16 @@
     {
       "id": "knowledge",
       "atStart": true,
-      "default": "intermediate",
-      "question": "How well do you know finance?",
-      "why": "We'll skip what you already know.",
+      "default": "3",
+      "question": "How well do you find your way in finance?",
+      "why": "From 1 (just starting) to 5 (I know loans and investing). We'll skip what you already know.",
       "shortLabel": "Knowledge",
       "options": [
-        { "label": "Beginner: I'm just starting", "value": "beginner" },
-        { "label": "Intermediate: I budget and save", "value": "intermediate" },
-        { "label": "Advanced: I know loans and investing", "value": "advanced" }
+        { "label": "1 · I'm just starting", "value": "1" },
+        { "label": "2 · I know the very basics", "value": "2" },
+        { "label": "3 · I budget and save", "value": "3" },
+        { "label": "4 · I know loans and saving products", "value": "4" },
+        { "label": "5 · I know loans and investing", "value": "5" }
       ]
     },
     {

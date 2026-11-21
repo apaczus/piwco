@@ -322,7 +322,18 @@ export function IndustryScreen({
 
 // ---------- The 4-account rule ----------
 
-export function ExplainScreen({ dir, type, onNext }: { dir: Dir; type: PlayerType | null; onNext: () => void }) {
+export function ExplainScreen({
+  dir,
+  type,
+  knowsBasics = false,
+  onNext,
+}: {
+  dir: Dir;
+  type: PlayerType | null;
+  // Self-rating 3–5: the rule is a check ("do you use it?"), not "the basic rule" (decided 2026-11-21).
+  knowsBasics?: boolean;
+  onNext: () => void;
+}) {
   const [seen, setSeen] = useState<AccountId[]>([]);
   const [finished, setFinished] = useState(false);
   const [ctaShown, setCtaShown] = useState(false);
@@ -366,8 +377,17 @@ export function ExplainScreen({ dir, type, onNext }: { dir: Dir; type: PlayerTyp
       }
     >
       <Eyebrow>The 4-account rule</Eyebrow>
-      <Title>The basic rule of managing money</Title>
-      <Sub>Every złoty has its place. Meet the 4 accounts, from the top down to the foundation.</Sub>
+      {knowsBasics ? (
+        <>
+          <Title>Let's check if you use the 4-account rule</Title>
+          <Sub>It matters in personal finance. A quick look at the 4 accounts, then your answers show where you stand.</Sub>
+        </>
+      ) : (
+        <>
+          <Title>The basic rule of managing money</Title>
+          <Sub>Every złoty has its place. Meet the 4 accounts, from the top down to the foundation.</Sub>
+        </>
+      )}
       <Stairs
         compact
         built={seen}
@@ -629,7 +649,7 @@ export function ResultScreen({
           ? `A ${industry?.label ?? ""} company and your personal finances, moved into the simulation.`
           : "Your personal finances, moved into the simulation."}
       </Sub>
-      <Panel title="About you" text={knowledgeLine(knowledgeOf(state.answers.knowledge))} />
+      <Panel title="About you" text={knowledgeLine(state.answers.knowledge)} />
       <Stairs
         built={ACCOUNT_ORDER}
         landDelays={landDelays}
