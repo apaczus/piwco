@@ -303,6 +303,31 @@ export function drawing(id: BuildingId, level: number, rented: boolean, look: Lo
   }
 }
 
+// Cracks over a building whose side is paying off a loan (the debt is visible in the city).
+function Cracks({ w, h }: { w: number; h: number }) {
+  const x = w * 0.3;
+  const y = h * 0.35;
+  return (
+    <G opacity={0.85}>
+      <Path
+        d={`M${x} ${y} l4 6 l-3 5 l5 7 l-2 6 M${x + 4} ${y + 6} l6 2 M${x + 2} ${y + 11} l-5 3`}
+        stroke={colors.petrol950}
+        strokeWidth={1.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      <Path
+        d={`M${w * 0.68} ${h * 0.6} l-3 5 l4 4 l-2 5`}
+        stroke={colors.petrol950}
+        strokeWidth={1.4}
+        strokeLinecap="round"
+        fill="none"
+      />
+    </G>
+  );
+}
+
 function Cloud({ u }: { u: number }) {
   return (
     <Svg width={44 * u} height={30 * u} viewBox="0 0 44 30">
@@ -378,6 +403,7 @@ export function CityScene({
                 >
                   <Svg width={d.w * u} height={d.h * u} viewBox={`0 0 ${d.w} ${d.h}`}>
                     {d.body}
+                    {(id === "home" && city.damaged.home) || (id === "firm" && city.damaged.firm) ? <Cracks w={d.w} h={d.h} /> : null}
                   </Svg>
                 </Pressable>
               );

@@ -19,6 +19,8 @@ export type CityView = {
   levels: Record<BuildingId, CityLevel>;
   // Rain cloud over the building (arrears).
   clouds: { home: boolean; firm: boolean };
+  // Cracks on the building: that side is paying off a loan (e.g. one taken to cover an event).
+  damaged: { home: boolean; firm: boolean };
   // The player doesn't own a house: Home is drawn as a rented flat (same level).
   rentedHome: boolean;
 };
@@ -52,6 +54,7 @@ export function cityLevels(state: GameState, monthsPassed: number, config: CityC
       future: 0,
     },
     clouds: { home: state.personal.arrears > 0, firm: state.business.arrears > 0 },
+    damaged: { home: state.personal.debt.balance > 0, firm: state.business.debt.balance > 0 },
     rentedHome: !state.personal.ownsHouse,
   };
 }

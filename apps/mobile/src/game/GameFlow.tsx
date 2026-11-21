@@ -1,5 +1,5 @@
 // The game: welcome (first mission) -> play (mission, HUD, actions) -> draw / budget -> receipt -> result -> lesson -> city -> roadmap.
-import { levels } from "@piwco/content";
+import { gameEvents, levels } from "@piwco/content";
 import { cityLevels, forecastCity, netWorth, type HouseholdCategory } from "@piwco/engine";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -34,6 +34,7 @@ import {
   act,
   endMonth,
   endReview,
+  monthStartPhase,
   newSession,
   randomSeed,
   replay,
@@ -44,12 +45,14 @@ import {
   type Session,
 } from "./session";
 import { BackButton } from "./BackButton";
+import { EventScreen } from "./EventScreen";
 import { getPlayerProfile, householdAnswers } from "./profile";
 import { WelcomeToGame } from "./WelcomeToGame";
 
 function timeOfDay(phase: Phase): TimeOfDay {
   switch (phase) {
     case "intro":
+    case "event":
     case "play":
     case "draw":
     case "budget":
@@ -174,11 +177,32 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
             dir={dir}
             onAccept={() => {
               buzz("light");
-              toPhase("play");
+              toPhase(monthStartPhase(session.game));
             }}
           />
         );
         break;
+      case "event": {
+        const def = session.game.event ? gameEvents.find((e) => e.id === session.game.event!.id) : undefined;
+        screen = def ? (
+          <EventScreen
+            state={session.game}
+            def={def}
+            dir={dir}
+            onAction={(a) => {
+              // Stays on the event screen (plot twist / outcome) without a screen transition.
+              const r = act(session, a, "event");
+              if (r.error) setError(r.error);
+              else setSession(r.session);
+            }}
+            onDone={() => {
+              buzz("light");
+              toPhase("play");
+            }}
+          />
+        ) : null;
+        break;
+      }
       case "intro":
         screen = <MonthIntro level={level} dir={dir} onStart={() => toPhase("play")} />;
         break;

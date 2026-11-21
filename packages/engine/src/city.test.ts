@@ -41,6 +41,7 @@ describe("cityLevels", () => {
     const view = cityLevels(start(), 0, CONFIG);
     expect(view.levels).toEqual({ home: 1, firm: 2, vault: 0, shield: 0, future: 0 });
     expect(view.clouds).toEqual({ home: false, firm: false });
+    expect(view.damaged).toEqual({ home: false, firm: false });
     expect(view.rentedHome).toBe(false);
   });
 
@@ -95,6 +96,14 @@ describe("cityLevels", () => {
     const view = cityLevels(s, 0, CONFIG);
     expect(view.clouds).toEqual({ home: true, firm: true });
     expect(view.rentedHome).toBe(true);
+  });
+
+  it("shows cracks on a building whose side is paying off a loan", () => {
+    const s = withState(start(), (x) => {
+      x.personal.debt = { balance: 1_240, monthlyInstallment: 414 };
+      x.business.debt = { balance: 4_240, monthlyInstallment: 707 };
+    });
+    expect(cityLevels(s, 0, CONFIG).damaged).toEqual({ home: true, firm: true });
   });
 
   it("uses the thresholds passed in (city.json can be edited)", () => {

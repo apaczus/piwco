@@ -1,9 +1,10 @@
 // Pure game-session logic (no UI): start a game, apply actions, end the month, replay from the snapshot.
-import { financing, household, industries } from "@piwco/content";
+import { financing, gameEvents, household, industries } from "@piwco/content";
 import {
   applyAction,
   buildInitialSetup,
   checkMonthGoal,
+  drawEvent,
   financingTerms,
   createInitialState,
   settleMonth,
@@ -15,7 +16,7 @@ import {
 } from "@piwco/engine";
 
 // "welcome" = the celebratory "Welcome to the game" screen with the first mission (start of a new game).
-export type Phase = "welcome" | "intro" | "play" | "draw" | "budget" | "receipt" | "result" | "lesson" | "city" | "roadmap";
+export type Phase = "welcome" | "intro" | "event" | "play" | "draw" | "budget" | "receipt" | "result" | "lesson" | "city" | "roadmap";
 
 export type Session = {
   game: GameState;
@@ -53,7 +54,9 @@ export function randomSeed(): number {
 export function newSession(industryId: string, seed: number, answers?: HouseholdAnswers, flags: string[] = []): Session | null {
   const industry = industries.find((i) => i.id === industryId);
   if (!industry) return null;
-  const game = createInitialState({ ...buildInitialSetup(industry, household, seed, answers), flags, financing: financingTerms(financing) });
+  const fresh = createInitialState({ ...buildInitialSetup(industry, household, seed, answers), flags, financing: financingTerms(financing) });
+  // The month's random event is drawn at its start (decided); the snapshot includes it, so a replay meets it again.
+  const game = drawEvent(fresh, gameEvents).state;
   return {
     game,
     snapshot: game,
@@ -66,10 +69,15 @@ export function newSession(industryId: string, seed: number, answers?: Household
   };
 }
 
-export function act(s: Session, action: Action): { session: Session; error: string | null } {
+export function act(s: Session, action: Action, phase: Phase = "play"): { session: Session; error: string | null } {
   const r = applyAction(s.game, action);
   if (!r.ok) return { session: s, error: r.error };
-  return { session: { ...s, game: r.state, phase: "play" }, error: null };
+  return { session: { ...s, game: r.state, phase }, error: null };
+}
+
+// The month starts with its event screen when there is one to see or decide (otherwise straight to the game).
+export function monthStartPhase(game: GameState): Phase {
+  return game.event && game.event.month === game.month ? "event" : "play";
 }
 
 export function endMonth(s: Session): Session {
@@ -123,7 +131,7 @@ export function rewindTo(s: Session, month: number): Session {
     ...s,
     game: rec.start,
     snapshot: rec.start,
-    phase: "play",
+    phase: monthStartPhase(rec.start),
     result: null,
     completedMonth: month - 1,
     beforeEnd: null,
@@ -133,5 +141,5 @@ export function rewindTo(s: Session, month: number): Session {
 }
 
 export function replay(s: Session): Session {
-  return { ...s, game: s.snapshot, phase: "play", result: null, beforeEnd: null };
+  return { ...s, game: s.snapshot, phase: monthStartPhase(s.snapshot), result: null, beforeEnd: null };
 }

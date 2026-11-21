@@ -1,5 +1,6 @@
 // Pure receipt logic (no UI): the month-end settlement as lines, from the month report + this month's log.
 import type { LogEntry, MonthReport } from "@piwco/engine";
+import { gameEvents } from "@piwco/content";
 import { categoryLabel, formatPln } from "./format";
 
 export type ReceiptLine = {
@@ -38,12 +39,52 @@ export function buildReceipt(report: MonthReport, log: readonly LogEntry[]): Rec
   const billsPaid = p.bills.reduce((s, x) => s + x.paid, 0);
   const homeStart = p.oldArrearsPaid + p.installmentPaid + billsPaid + persEventAtEnd + p.savedToFund + p.endCash + eventFrom("personal");
 
+  const eventTitle = ev ? (gameEvents.find((e) => e.id === ev.id)?.title ?? "Surprise cost") : "";
+  // The event's own line: what left the accounts for it (during the month + at the settlement), how it was covered.
+  const eventLine = (prefix: string): ReceiptLine | null => {
+    if (!ev || ev.effect !== "cost") return null;
+    if (ev.variant === "prepared") return { id: `${prefix}_event`, sign: "−", label: eventTitle, amount: 0, status: "ok", note: "covered by your protection" };
+    const fromAccounts = ev.paidBefore.reduce((s, x) => s + x.amount, 0) + ev.leftoverPaid;
+    const borrowed = ev.loans.reduce((s, l) => s + l.principal, 0);
+    const notes = [
+      ...ev.paidBefore.filter((x) => x.source === "cushion").map((x) => `${formatPln(x.amount)} from the cushion`),
+      borrowed > 0 ? `${formatPln(borrowed)} borrowed` : "",
+      ev.unpaid > 0 ? `${formatPln(ev.unpaid)} unpaid` : "",
+    ].filter(Boolean);
+    return {
+      id: `${prefix}_event`,
+      sign: "−",
+      label: eventTitle,
+      amount: fromAccounts - ev.paidBefore.filter((x) => x.source === "cushion").reduce((s, x) => s + x.amount, 0),
+      status: ev.unpaid > 0 ? "bad" : "ok",
+      note: notes.join(" · ") || undefined,
+    };
+  };
+
   const company: ReceiptLine[] = [
     { id: "c_start", sign: "+", label: "On the account", amount: companyStart },
-    { id: "c_revenue", sign: "+", label: "Revenue", amount: b.revenue },
+    {
+      id: "c_revenue",
+      sign: "+",
+      label: "Revenue",
+      amount: b.revenue - b.receivablesCollected,
+      note: b.lateRevenue > 0 ? `${formatPln(b.lateRevenue)} arrives next month` : undefined,
+    },
   ];
+  if (b.receivablesCollected > 0) company.push({ id: "c_late_in", sign: "+", label: "Late payment from last month", amount: b.receivablesCollected });
   if (draw > 0) company.push({ id: "c_draw", sign: "−", label: "Paid to you", amount: draw });
   if (b.oldArrearsPaid > 0) company.push({ id: "c_arrears", sign: "−", label: "Old arrears", amount: b.oldArrearsPaid });
+  if (b.installmentDue > 0) {
+    const unpaid = b.installmentDue - b.installmentPaid;
+    company.push({
+      id: "c_loan",
+      sign: "−",
+      label: "Company loan installment",
+      amount: b.installmentDue,
+      status: unpaid > 0 ? "bad" : "ok",
+      note: unpaid > 0 ? `${formatPln(unpaid)} unpaid` : undefined,
+    });
+  }
   const costsUnpaid = b.costs - b.costsPaid;
   company.push({
     id: "c_costs",
@@ -53,6 +94,10 @@ export function buildReceipt(report: MonthReport, log: readonly LogEntry[]): Rec
     status: costsUnpaid > 0 ? "bad" : "ok",
     note: costsUnpaid > 0 ? `${formatPln(costsUnpaid)} unpaid` : undefined,
   });
+  if (ev?.side === "business") {
+    const line = eventLine("c");
+    if (line) company.push(line);
+  }
   company.push({ id: "c_left", sign: "=", label: "Left in the company", amount: b.endCash });
 
   const home: ReceiptLine[] = [{ id: "h_start", sign: "+", label: "On your account", amount: homeStart }];
@@ -84,6 +129,10 @@ export function buildReceipt(report: MonthReport, log: readonly LogEntry[]): Rec
             ? `${formatPln(bill.belowMinimum)} below minimum`
             : undefined,
     });
+  }
+  if (ev?.side === "personal") {
+    const line = eventLine("h");
+    if (line) home.push(line);
   }
   if (p.savingsBudgeted > 0) home.push({ id: "h_savings", sign: "→", label: "Saved to your cushion", amount: p.savedToFund });
   home.push({ id: "h_left", sign: "=", label: "Left at home", amount: p.endCash });
