@@ -688,11 +688,13 @@ const welcome = StyleSheet.create({
   },
   dots: { flexDirection: "row", gap: 6, justifyContent: "center" },
   dot: { width: 8, height: 8, borderRadius: 99, backgroundColor: "rgba(255,255,255,0.28)" },
+  // Bold (700) instead of ExtraBold and no negative tracking: at this size ExtraBold's small counters
+  // (b, d, e) closed up and looked filled on phones (user report).
   title: {
-    fontFamily: font.extrabold,
+    fontFamily: font.bold,
     fontSize: 29,
-    lineHeight: 34,
-    letterSpacing: -0.58,
+    lineHeight: 35,
+    letterSpacing: 0,
     color: colors.onPetrol,
     textAlign: "center",
   },
