@@ -1,8 +1,8 @@
 // Investing chapter screens (month 8 "Stocks and bonds"). Rendered by GameFlow in phase "invest" (it keeps the sky,
 // ‹ back, transitions and sounds). Built only from the existing components; the line chart is the one new element.
 // Step 2 = Try 1: intro → split → one year fast → result. The lesson (step 3) is a placeholder for now.
-import { invest } from "@piwco/content";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { invest, type InvestInstrument } from "@piwco/content";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { buzz, useReducedMotion } from "../onboarding/anim";
 import { ScreenLayout, type Dir } from "../onboarding/screens";
@@ -73,6 +73,60 @@ function IntroScreen({ state, dir, onNext }: { state: InvestState; dir: Dir; onN
 
 // ---------- Screen 2: split ----------
 
+// One instrument card. Memoized with stable callbacks, so dragging one slider doesn't rebuild the others' content.
+const InstrumentSlider = memo(function InstrumentSlider({
+  inst,
+  value,
+  limit,
+  open,
+  onToggleInfo,
+  onChange,
+}: {
+  inst: InvestInstrument;
+  value: number;
+  limit: number;
+  open: boolean;
+  onToggleInfo: (id: string) => void;
+  onChange: (id: string, v: number) => void;
+}) {
+  const color = instrumentColor(inst.color);
+  const cash = inst.id === "cash";
+  const onInfo = useCallback(() => onToggleInfo(inst.id), [onToggleInfo, inst.id]);
+  const extra = useMemo(
+    () => (
+      <View style={{ gap: 6 }}>
+        <Text style={styles.oneLiner}>{inst.oneLiner}</Text>
+        <View style={styles.levels}>
+          <LevelBars label="Return" value={inst.returnLevel} color={colors.success} />
+          <LevelBars label="Risk" value={inst.riskLevel} color={colors.danger} />
+        </View>
+        {open ? <Panel tint={color} title="What can go wrong" text={inst.whatCanGoWrong} /> : null}
+      </View>
+    ),
+    [inst, open, color],
+  );
+  return (
+    <BudgetSlider
+      id={inst.id}
+      label={inst.name}
+      hint={cash ? "whatever you don't place" : `${Math.round((value / START) * 100)}% of your money`}
+      value={value}
+      max={START}
+      limit={limit}
+      minimum={0}
+      color={color}
+      shortfall={false}
+      onChange={onChange}
+      step={500}
+      tickEvery={1000}
+      plusMinus={500}
+      readOnly={cash}
+      onInfo={onInfo}
+      extra={extra}
+    />
+  );
+});
+
 function SplitScreen({ state, dir, onInvest }: { state: InvestState; dir: Dir; onInvest: (draft: Record<string, number>) => void }) {
   const [draft, setDraft] = useState<Record<string, number>>(state.draft);
   const [info, setInfo] = useState<string | null>(null);
@@ -85,6 +139,10 @@ function SplitScreen({ state, dir, onInvest }: { state: InvestState; dir: Dir; o
       }),
     [],
   );
+  const onToggleInfo = useCallback((id: string) => {
+    buzz("tick");
+    setInfo((cur) => (cur === id ? null : id));
+  }, []);
   const alloc = allocationOf(draft);
   const left = alloc.cash;
 
@@ -103,45 +161,17 @@ function SplitScreen({ state, dir, onInvest }: { state: InvestState; dir: Dir; o
       </View>
 
       <View style={styles.list}>
-        {invest.instruments.map((inst) => {
-          const color = instrumentColor(inst.color);
-          const open = info === inst.id;
-          const cash = inst.id === "cash";
-          return (
-            <BudgetSlider
-              key={inst.id}
-              id={inst.id}
-              label={inst.name}
-              hint={cash ? "whatever you don't place" : `${Math.round(((alloc[inst.id] ?? 0) / START) * 100)}% of your money`}
-              value={alloc[inst.id] ?? 0}
-              max={START}
-              minimum={0}
-              color={color}
-              shortfall={false}
-              onChange={onSlide}
-              step={500}
-              tickEvery={1000}
-              plusMinus={500}
-              readOnly={cash}
-              onInfo={() => {
-                buzz("tick");
-                setInfo(open ? null : inst.id);
-              }}
-              extra={
-                <View style={{ gap: 6 }}>
-                  <Text style={styles.oneLiner}>{inst.oneLiner}</Text>
-                  <View style={styles.levels}>
-                    <LevelBars label="Return" value={inst.returnLevel} color={colors.success} />
-                    <LevelBars label="Risk" value={inst.riskLevel} color={colors.danger} />
-                  </View>
-                  {open ? (
-                    <Panel tint={color} title="What can go wrong" text={inst.whatCanGoWrong} />
-                  ) : null}
-                </View>
-              }
-            />
-          );
-        })}
+        {invest.instruments.map((inst) => (
+          <InstrumentSlider
+            key={inst.id}
+            inst={inst}
+            value={alloc[inst.id] ?? 0}
+            limit={(draft[inst.id] ?? 0) + left}
+            open={info === inst.id}
+            onToggleInfo={onToggleInfo}
+            onChange={onSlide}
+          />
+        ))}
       </View>
     </ScreenLayout>
   );

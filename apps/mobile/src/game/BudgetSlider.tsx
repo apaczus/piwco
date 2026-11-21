@@ -32,6 +32,8 @@ type Props = {
   onInfo?: () => void;
   // No track and no − / + (e.g. "Keep it on your account" = whatever is left).
   readOnly?: boolean;
+  // Highest value the thumb can reach right now (e.g. the money still free); the track still shows 0–max.
+  limit?: number;
 };
 
 function BudgetSliderImpl({
@@ -50,6 +52,7 @@ function BudgetSliderImpl({
   extra,
   onInfo,
   readOnly,
+  limit,
 }: Props) {
   const reduced = useReducedMotion();
   const [width, setWidth] = useState(0);
@@ -59,8 +62,9 @@ function BudgetSliderImpl({
   // Thumb position in px (left edge of the thumb). Driven directly while dragging, sprung otherwise.
   const pos = useRef(new Animated.Value(0)).current;
   const dragging = useRef(false);
-  const live = useRef({ track, max, value, onChange, id, STEP, tickEvery });
-  live.current = { track, max, value, onChange, id, STEP, tickEvery };
+  const cap = Math.min(max, limit ?? max);
+  const live = useRef({ track, max, value, onChange, id, STEP, tickEvery, cap });
+  live.current = { track, max, value, onChange, id, STEP, tickEvery, cap };
   const lastTick = useRef(value);
   const origin = useRef(0);
   const grab = useRef(new Animated.Value(0)).current;
@@ -101,9 +105,11 @@ function BudgetSliderImpl({
 
   const follow = (fingerX: number) => {
     const l = live.current;
-    const px = Math.min(l.track, Math.max(0, fingerX - THUMB / 2));
+    // The thumb stops at the limit (no running past it and springing back).
+    const capPx = l.max > 0 ? (l.cap / l.max) * l.track : 0;
+    const px = Math.min(capPx, Math.max(0, fingerX - THUMB / 2));
     pos.setValue(px);
-    const next = Math.round(((px / l.track) * l.max) / l.STEP) * l.STEP;
+    const next = Math.min(l.cap, Math.round(((px / l.track) * l.max) / l.STEP) * l.STEP);
     if (next === l.value) return;
     if (Math.abs(next - lastTick.current) >= l.tickEvery) {
       lastTick.current = next;
@@ -139,7 +145,7 @@ function BudgetSliderImpl({
   ).current;
 
   const nudge = (d: number) => {
-    const next = Math.max(0, Math.min(max, value + d));
+    const next = Math.max(0, Math.min(cap, value + d));
     if (next !== value) {
       buzz("tick");
       onChange(id, next);
