@@ -19,7 +19,10 @@ import { newInvest, type InvestState } from "../invest/investSession";
 // "welcome" = the celebratory "Welcome to the game" screen with the first mission (start of a new game).
 // "eventLesson" = the month's event lesson (info cards, quiz, "Add to my plan"), after the result, before "lesson".
 export type Phase =
-  // "How Piwco works" (Problem → Decide → Learn + the year), before "welcome" for players who skip the basics.
+  // Players who skip the basics: "You skip the first 3 months" → "The goal + your city" → "How Piwco works"
+  // (Problem → Decide → Learn + the year) → "welcome".
+  | "skipBasics"
+  | "yourCity"
   | "howItWorks"
   | "welcome"
   | "intro"

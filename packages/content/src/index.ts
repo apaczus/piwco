@@ -331,7 +331,20 @@ export type HowItWorks = {
   lessonCta: string;
   lockedCta: string;
 };
-export type Tutorial = { tips: TutorialTip[]; howItWorks: HowItWorks };
+// "You skip the first 3 months" (animated) and "The goal + your city", before "How Piwco works" (players 3–5).
+export type SkipBasicsTexts = { eyebrow: string; title: string; sub: string; stamp: string; goOn: string; note: string; cta: string };
+export type YourCityTexts = {
+  eyebrow: string;
+  title: string;
+  sub: string;
+  // "{built}" / "{total}": buildings standing / all buildings.
+  stage: string;
+  // One row per building (id = the engine's BuildingId).
+  buildings: { id: string; what: string; grows: string }[];
+  rule: string;
+  cta: string;
+};
+export type Tutorial = { tips: TutorialTip[]; howItWorks: HowItWorks; skipBasics: SkipBasicsTexts; yourCity: YourCityTexts };
 
 export const tutorial = tutorialData as Tutorial;
 

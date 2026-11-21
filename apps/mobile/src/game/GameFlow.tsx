@@ -64,6 +64,8 @@ import { getPlayerProfile, householdAnswers, playerKnowledge } from "./profile";
 import { skipsMonth, startMonthFor } from "./startMonth";
 import { WelcomeToGame } from "./WelcomeToGame";
 import { HowItWorks } from "./HowItWorks";
+import { SkipBasics } from "./SkipBasics";
+import { YourCity } from "./YourCity";
 import { CoachOverlay, CoachProvider, type CoachRegistry } from "./coach";
 import { InvestScreen } from "../invest/InvestFlow";
 import { backStage, investNight, investProgress } from "../invest/investSession";
@@ -76,6 +78,7 @@ function timeOfDay(phase: Phase): TimeOfDay {
     case "draw":
     case "budget":
     case "hub":
+    case "yourCity":
       return "day";
     case "receipt":
       return "sunset";
@@ -87,6 +90,7 @@ function timeOfDay(phase: Phase): TimeOfDay {
     case "roadmap":
     case "howItWorks":
     case "studyLesson":
+    case "skipBasics":
       return "night";
     case "invest":
       return "day";
@@ -99,7 +103,7 @@ function startSession(industryId: string | null): Session | null {
   const profile = getPlayerProfile();
   const s = newSession(industryId, randomSeed(), householdAnswers(profile), profile?.flags ?? []);
   // Players who skip the basics first see how the game works (decided 2026-11-21).
-  return s && startMonthFor(playerKnowledge(), levels).month === INVEST_MONTH ? { ...s, phase: "howItWorks" } : s;
+  return s && startMonthFor(playerKnowledge(), levels).month === INVEST_MONTH ? { ...s, phase: "skipBasics" } : s;
 }
 
 // Building cards on the chapter's "Your city grew" (the Future tower first).
@@ -247,6 +251,18 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
     const eventLessonNext = !rec && !!viewResult && hasEventLesson(viewResult.report);
     const afterEventLesson: Phase = level.lesson ? "lesson" : "city";
     switch (session.phase) {
+      case "skipBasics":
+        screen = <SkipBasics dir={dir} skipped={skipped} onNext={() => toPhase("yourCity")} />;
+        break;
+      case "yourCity":
+        screen = (
+          <YourCity
+            dir={dir}
+            city={cityLevels(session.game, session.completedMonth, cityConfigFor(session.game), investProgress(session.invest))}
+            onNext={() => toPhase("howItWorks")}
+          />
+        );
+        break;
       case "howItWorks":
         screen = (
           <HowItWorks
@@ -643,8 +659,14 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
     const lvl = levels.find((l) => l.month === (session.reviewing ?? session.game.month)) ?? levels[0]!;
     const hadEventLesson = session.reviewing === null && !!session.result && hasEventLesson(session.result.report);
     switch (session.phase) {
-      case "howItWorks":
+      case "skipBasics":
         back = router.canGoBack() ? () => router.back() : null;
+        break;
+      case "yourCity":
+        back = () => toPhase("skipBasics", -1);
+        break;
+      case "howItWorks":
+        back = () => toPhase("yourCity", -1);
         break;
       case "welcome":
         // Players who skip the basics came from "How Piwco works".

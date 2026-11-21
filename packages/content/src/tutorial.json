@@ -88,5 +88,49 @@
     "startCta": "Start with {month} ›",
     "lessonCta": "Open the {month} lesson ›",
     "lockedCta": "🔒 {month}: still being built"
+  },
+  "skipBasics": {
+    "eyebrow": "You know the basics",
+    "title": "So you skip the first 3 months",
+    "sub": "These are the basic stages. You said you know them, so they're ticked off for you.",
+    "stamp": "Skipped",
+    "goOn": "You can go further: straight to investing and credit.",
+    "note": "You can still play them later from your year map.",
+    "cta": "Next ›"
+  },
+  "yourCity": {
+    "eyebrow": "The goal of the game",
+    "title": "Finish the year with a strong city",
+    "sub": "A cushion for bad days, protection, debt under control and money that works for you. Every building is one of them.",
+    "stage": "Your city now: {built} of {total} buildings",
+    "buildings": [
+      {
+        "id": "home",
+        "what": "Your household",
+        "grows": "Grows with every month you finish. A rain cloud = unpaid bills."
+      },
+      {
+        "id": "firm",
+        "what": "Your company",
+        "grows": "Grows with your revenue. Cracks = company debt."
+      },
+      {
+        "id": "vault",
+        "what": "Your emergency fund",
+        "grows": "Save to your cushion to build it."
+      },
+      {
+        "id": "shield",
+        "what": "Your insurance",
+        "grows": "Every policy adds a level."
+      },
+      {
+        "id": "future",
+        "what": "Your investments",
+        "grows": "The investing chapter builds it."
+      }
+    ],
+    "rule": "Good decisions build your city. Bad debt cracks it.",
+    "cta": "How it works ›"
   }
 }
