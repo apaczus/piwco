@@ -1,0 +1,64 @@
+{
+  "startAmount": 10000,
+  "inflation": 0.05,
+  "instruments": [
+    {
+      "id": "cash",
+      "name": "Keep it on your account",
+      "oneLiner": "Money stays on your bank account: always there, never grows.",
+      "returnLevel": 0,
+      "riskLevel": 0,
+      "color": "muted",
+      "whatCanGoWrong": "Nothing drops, but prices rise every year, so the same money buys less.",
+      "market": { "yearly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "volatility": 0 }
+    },
+    {
+      "id": "deposit",
+      "name": "Savings deposit",
+      "oneLiner": "The bank pays you a fixed rate for keeping your money for an agreed time.",
+      "returnLevel": 1,
+      "riskLevel": 1,
+      "color": "cushion",
+      "whatCanGoWrong": "The money is frozen for the term: break it early and you lose the interest.",
+      "market": { "yearly": [0.055, 0.055, 0.055, 0.055, 0.055, 0.055, 0.055, 0.055, 0.055, 0.055], "volatility": 0 }
+    },
+    {
+      "id": "bonds",
+      "name": "Treasury bonds",
+      "oneLiner": "You lend money to the state and get interest, a bit above inflation.",
+      "returnLevel": 2,
+      "riskLevel": 1,
+      "color": "protection",
+      "whatCanGoWrong": "Prices move a little month to month, and selling before maturity can cost a fee.",
+      "market": { "yearly": [0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065, 0.065], "volatility": 0.004 }
+    },
+    {
+      "id": "etf",
+      "name": "S&P 500 ETF",
+      "oneLiner": "One fund that holds the 500 biggest US companies at once.",
+      "returnLevel": 4,
+      "riskLevel": 3,
+      "color": "future",
+      "whatCanGoWrong": "The whole market can fall 10–20% in a bad year; it has always recovered, but not always fast.",
+      "market": { "yearly": [-0.05, 0.18, 0.11, 0.09, 0.14, -0.14, 0.16, 0.1, 0.08, 0.15], "volatility": 0.035 }
+    },
+    {
+      "id": "stock",
+      "name": "NovaTech shares (one company)",
+      "oneLiner": "A young company with one product, 3 years on the stock exchange.",
+      "returnLevel": 5,
+      "riskLevel": 5,
+      "color": "main",
+      "whatCanGoWrong": "One bad piece of news can cut the price in half overnight.",
+      "market": { "yearly": [-0.4, 0.35, -0.2, 0.45, 0.1, -0.3, 0.25, -0.1, 0.3, 0.05], "volatility": 0.09 }
+    }
+  ],
+  "marketSeed": 808,
+  "marketEvents": [
+    { "instrument": "stock", "month": 4, "change": -0.45, "title": "NovaTech: product recall" },
+    { "instrument": "etf", "month": 7, "change": -0.12, "title": "Markets dip on recession fears" }
+  ],
+  "balancedMix": { "etf": 0.6, "bonds": 0.3, "deposit": 0.1 },
+  "horizons": [1, 5, 10],
+  "monthlyTopUps": [0, 100, 300, 500]
+}

@@ -6,6 +6,7 @@ import financingData from "./financing.json";
 import levelsData from "./levels.json";
 import onboardingData from "./onboarding.json";
 import tutorialData from "./tutorial.json";
+import investData from "./invest.json";
 
 // ---- Onboarding ("Finance Quest" analysis) ----
 
@@ -265,3 +266,36 @@ export type TutorialTip = { id: string; page: "year" | "learn" | "city"; title: 
 export type Tutorial = { tips: TutorialTip[] };
 
 export const tutorial = tutorialData as Tutorial;
+
+// Investing chapter (month 8 "Stocks and bonds"). Claude's numbers, for team review. The engine turns the yearly
+// returns into a deterministic 120-month history (packages/engine/src/invest.ts): each year ends exactly at its
+// yearly return; marketEvents pin one month's move (month 1–120).
+export type InvestInstrument = {
+  id: string;
+  name: string;
+  oneLiner: string;
+  // 0–5, shown as dots on the screen.
+  returnLevel: number;
+  riskLevel: number;
+  // Colour key, mapped to theme.ts in the app ("muted" = colors.muted, otherwise an accountColors id).
+  color: string;
+  whatCanGoWrong: string;
+  // Yearly return per year (10 years, e.g. -0.05 = -5%) and how much single months wiggle around it.
+  market: { yearly: number[]; volatility: number };
+};
+
+export type InvestMarketEvent = { instrument: string; month: number; change: number; title: string };
+
+export type InvestContent = {
+  startAmount: number;
+  inflation: number;
+  instruments: InvestInstrument[];
+  marketSeed: number;
+  marketEvents: InvestMarketEvent[];
+  // Share of each instrument in "a balanced mix" (sums to 1).
+  balancedMix: Record<string, number>;
+  horizons: number[];
+  monthlyTopUps: number[];
+};
+
+export const invest: InvestContent = investData;
