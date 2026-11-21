@@ -84,8 +84,9 @@
     "start": "Start here",
     "knownNote": "You already know the basics (budget, cushion, insurance), so we skip them. You can still play them later.",
     "cta": "Start investing ›",
-    "tapHint": "Tap a month to start there.",
-    "notReadyTitle": "{month} is still being built",
-    "notReadyText": "This level is coming soon. You can start with January, August or a lesson month now."
+    "tapHint": "Tap a month to pick where you start.",
+    "startCta": "Start with {month} ›",
+    "lessonCta": "Open the {month} lesson ›",
+    "lockedCta": "🔒 {month}: still being built"
   }
 }

@@ -174,16 +174,23 @@ export function Cta({
   onPress,
   onPetrol,
   appear,
+  locked,
 }: {
   label: string;
   onPress: () => void;
   onPetrol?: boolean;
   // Springy appearance (used when the button shows up after an animation).
   appear?: boolean;
+  // Greyed out (e.g. a level still being built); still pressable so it can answer with a haptic.
+  locked?: boolean;
 }) {
   const button = (
-    <PressScale onPress={onPress} accessibilityLabel={label} style={[styles.cta, onPetrol ? styles.ctaOnPetrol : null]}>
-      <Text style={styles.ctaText}>{label}</Text>
+    <PressScale
+      onPress={onPress}
+      accessibilityLabel={label}
+      style={[styles.cta, onPetrol ? styles.ctaOnPetrol : null, locked ? (onPetrol ? styles.ctaLockedPetrol : styles.ctaLocked) : null]}
+    >
+      <Text style={[styles.ctaText, locked ? { color: onPetrol ? colors.onPetrolSub : colors.muted } : null]}>{label}</Text>
     </PressScale>
   );
   if (!appear) return button;
@@ -319,6 +326,8 @@ export const styles = StyleSheet.create({
     elevation: 4,
   },
   ctaOnPetrol: { shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: 24, shadowOffset: { width: 0, height: 8 } },
+  ctaLocked: { backgroundColor: colors.line, shadowOpacity: 0, elevation: 0 },
+  ctaLockedPetrol: { backgroundColor: "rgba(255,255,255,0.14)", shadowOpacity: 0, elevation: 0 },
   ctaText: { fontFamily: font.extrabold, fontSize: 17, color: colors.petrol950 },
   link: {
     fontFamily: font.semibold,

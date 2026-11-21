@@ -326,9 +326,10 @@ export type HowItWorks = {
   knownNote: string;
   cta: string;
   tapHint: string;
-  // Tapping a month that can't be played yet ("{month}" = its name).
-  notReadyTitle: string;
-  notReadyText: string;
+  // Button for the picked month ("{month}" = its name): a playable month, a lesson, or one still being built.
+  startCta: string;
+  lessonCta: string;
+  lockedCta: string;
 };
 export type Tutorial = { tips: TutorialTip[]; howItWorks: HowItWorks };
 

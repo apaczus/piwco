@@ -2,10 +2,9 @@
 // Problem → Decide → Learn (problem-based learning), then the 12 months: the basics they skip ("You know this"),
 // August ("Start here"), the rest later. Night screen, like "Welcome to the game". Texts in tutorial.json.
 import { levels, tutorial } from "@piwco/content";
-import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { buzz, Enter } from "../onboarding/anim";
-import { Notification } from "./notify";
+import { useRef, useState } from "react";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { buzz, Enter, useReducedMotion } from "../onboarding/anim";
 import { ScreenLayout, type Dir } from "../onboarding/screens";
 import { Cta, Eyebrow, Sub, Title } from "../onboarding/ui";
 import { colors, font, mix } from "../theme";
@@ -18,11 +17,11 @@ export function HowItWorks({
   canStart,
   onStart,
 }: {
-  // Months the player can start from now (the others show a "still being built" notification).
+  // Months the player can start from now (for the others the button shows "still being built").
   canStart: (month: number) => boolean;
   // Lessons already finished here (✓ on the tile).
   done?: number[];
-  // A playable month was tapped, or the CTA (= the start month).
+  // The button was pressed with a month that can be started.
   onStart: (month: number) => void;
   dir: Dir;
   // The month the player starts with (8 = investing).
@@ -30,25 +29,48 @@ export function HowItWorks({
   skipped: (month: number) => boolean;
 }) {
   const t = tutorial.howItWorks;
-  // The last month tapped that can't be played yet (a new tap re-shows the notification).
-  const [notReady, setNotReady] = useState<{ month: number; n: number } | null>(null);
+  const reduced = useReducedMotion();
+  // The picked month (starts on the start month); the button below says what happens, or that it's locked.
+  const [picked, setPicked] = useState(startMonth);
+  const shake = useRef(new Animated.Value(0)).current;
+  const pickedLevel = levels.find((l) => l.month === picked);
+  const pickedName = pickedLevel?.monthName ?? "";
+  const open = canStart(picked);
+  const ctaLabel = !open
+    ? t.lockedCta
+    : picked === startMonth
+      ? t.cta
+      : pickedLevel?.lessonOnly
+        ? t.lessonCta
+        : t.startCta;
   const tap = (month: number) => {
-    if (canStart(month)) {
+    if (month === picked) return;
+    // Tick for a month that opens, a short "no" for one still being built.
+    if (canStart(month)) buzz("tick");
+    else buzz("medium", "error");
+    setPicked(month);
+  };
+  const go = () => {
+    if (open) {
       buzz("light");
-      onStart(month);
-    } else {
-      setNotReady((p) => ({ month, n: (p?.n ?? 0) + 1 }));
+      onStart(picked);
+      return;
+    }
+    buzz("medium", "error");
+    if (!reduced) {
+      shake.setValue(0);
+      Animated.sequence([8, -7, 5, -3, 0].map((x) => Animated.timing(shake, { toValue: x, duration: 55, useNativeDriver: true }))).start();
     }
   };
-  // The notification hides by itself after a moment (it floats over the months).
-  useEffect(() => {
-    if (!notReady) return;
-    const id = setTimeout(() => setNotReady(null), 2600);
-    return () => clearTimeout(id);
-  }, [notReady]);
-  const notReadyName = notReady ? (levels.find((l) => l.month === notReady.month)?.monthName ?? "") : "";
   return (
-    <ScreenLayout dir={dir} footer={<Cta label={t.cta} onPress={() => onStart(startMonth)} onPetrol appear />}>
+    <ScreenLayout
+      dir={dir}
+      footer={
+        <Animated.View style={{ transform: [{ translateX: shake }] }}>
+          <Cta label={ctaLabel.replace("{month}", pickedName)} onPress={go} onPetrol appear locked={!open} />
+        </Animated.View>
+      }
+    >
       <Eyebrow>{t.eyebrow}</Eyebrow>
       <Title>{t.title}</Title>
       <Sub>{t.sub}</Sub>
@@ -87,7 +109,15 @@ export function HowItWorks({
                   accessibilityLabel={canStart(l.month) ? `Start ${l.monthName}` : `${l.monthName}: coming soon`}
                   style={({ pressed }) => [styles.monthCell, pressed ? { transform: [{ scale: 0.965 }] } : null]}
                 >
-                <View style={[styles.month, start ? styles.monthStart : known || finished ? styles.monthKnown : lesson ? styles.monthLesson : null, !canStart(l.month) && !start && !known ? { opacity: 0.6 } : null]}>
+                <View
+                  style={[
+                    styles.month,
+                    start ? styles.monthStart : known || finished ? styles.monthKnown : lesson ? styles.monthLesson : null,
+                    !canStart(l.month) && !start && !known && l.month !== picked ? { opacity: 0.6 } : null,
+                    // The picked month: a white frame on top of its own look.
+                    l.month === picked ? styles.monthPicked : null,
+                  ]}
+                >
                   <Text style={[styles.monthName, start ? { color: colors.petrol950 } : null]}>{l.monthName.slice(0, 3)}</Text>
                   <Text
                     style={[styles.monthState, start ? { color: colors.petrol950 } : known || finished ? { color: colors.success } : lesson ? { color: colors.yellow } : null]}
@@ -101,17 +131,6 @@ export function HowItWorks({
             })}
           </View>
           <Text style={styles.note}>{t.knownNote}</Text>
-          {notReady ? (
-            // Floats over the months (no layout jump); slides in again on every tap.
-            <View pointerEvents="none" style={styles.notice}>
-              <Notification
-                key={notReady.n}
-                title={t.notReadyTitle.replace("{month}", notReadyName)}
-                text={t.notReadyText}
-                sound="error"
-              />
-            </View>
-          ) : null}
         </View>
       </Enter>
     </ScreenLayout>
@@ -128,7 +147,7 @@ const styles = StyleSheet.create({
   yearTitle: { fontFamily: font.extrabold, fontSize: 14, color: colors.onPetrol },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   monthCell: { width: "31.6%" },
-  notice: { position: "absolute", left: 0, right: 0, top: 26 },
+  monthPicked: { borderWidth: 2, borderColor: colors.onPetrol },
   month: {
     borderRadius: 10,
     paddingVertical: 7,
