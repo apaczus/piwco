@@ -2,8 +2,10 @@
 // Problem → Decide → Learn (problem-based learning), then the 12 months: the basics they skip ("You know this"),
 // August ("Start here"), the rest later. Night screen, like "Welcome to the game". Texts in tutorial.json.
 import { levels, tutorial } from "@piwco/content";
-import { StyleSheet, Text, View } from "react-native";
-import { Enter } from "../onboarding/anim";
+import { useEffect, useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { buzz, Enter } from "../onboarding/anim";
+import { Notification } from "./notify";
 import { ScreenLayout, type Dir } from "../onboarding/screens";
 import { Cta, Eyebrow, Sub, Title } from "../onboarding/ui";
 import { colors, font, mix } from "../theme";
@@ -12,17 +14,38 @@ export function HowItWorks({
   dir,
   startMonth,
   skipped,
-  onNext,
+  canStart,
+  onStart,
 }: {
+  // Months the player can start from now (the others show a "still being built" notification).
+  canStart: (month: number) => boolean;
+  // A playable month was tapped, or the CTA (= the start month).
+  onStart: (month: number) => void;
   dir: Dir;
   // The month the player starts with (8 = investing).
   startMonth: number;
   skipped: (month: number) => boolean;
-  onNext: () => void;
 }) {
   const t = tutorial.howItWorks;
+  // The last month tapped that can't be played yet (a new tap re-shows the notification).
+  const [notReady, setNotReady] = useState<{ month: number; n: number } | null>(null);
+  const tap = (month: number) => {
+    if (canStart(month)) {
+      buzz("light");
+      onStart(month);
+    } else {
+      setNotReady((p) => ({ month, n: (p?.n ?? 0) + 1 }));
+    }
+  };
+  // The notification hides by itself after a moment (it floats over the months).
+  useEffect(() => {
+    if (!notReady) return;
+    const id = setTimeout(() => setNotReady(null), 2600);
+    return () => clearTimeout(id);
+  }, [notReady]);
+  const notReadyName = notReady ? (levels.find((l) => l.month === notReady.month)?.monthName ?? "") : "";
   return (
-    <ScreenLayout dir={dir} footer={<Cta label={t.cta} onPress={onNext} onPetrol appear />}>
+    <ScreenLayout dir={dir} footer={<Cta label={t.cta} onPress={() => onStart(startMonth)} onPetrol appear />}>
       <Eyebrow>{t.eyebrow}</Eyebrow>
       <Title>{t.title}</Title>
       <Sub>{t.sub}</Sub>
@@ -44,12 +67,21 @@ export function HowItWorks({
       <Enter from="below" delay={700}>
         <View style={{ gap: 10 }}>
           <Text style={styles.yearTitle}>{t.yearTitle}</Text>
+          <Text style={styles.note}>{t.tapHint}</Text>
           <View style={styles.grid}>
             {levels.map((l) => {
               const start = l.month === startMonth;
               const known = !start && skipped(l.month);
               return (
-                <View key={l.id} style={[styles.month, start ? styles.monthStart : known ? styles.monthKnown : null]}>
+                // Plain Pressable (PressScale would size the cell to its content): a third of the row.
+                <Pressable
+                  key={l.id}
+                  onPress={() => tap(l.month)}
+                  accessibilityRole="button"
+                  accessibilityLabel={canStart(l.month) ? `Start ${l.monthName}` : `${l.monthName}: coming soon`}
+                  style={({ pressed }) => [styles.monthCell, pressed ? { transform: [{ scale: 0.965 }] } : null]}
+                >
+                <View style={[styles.month, start ? styles.monthStart : known ? styles.monthKnown : null, !canStart(l.month) && !start && !known ? { opacity: 0.6 } : null]}>
                   <Text style={[styles.monthName, start ? { color: colors.petrol950 } : null]}>{l.monthName.slice(0, 3)}</Text>
                   <Text
                     style={[styles.monthState, start ? { color: colors.petrol950 } : known ? { color: colors.success } : null]}
@@ -58,10 +90,22 @@ export function HowItWorks({
                     {start ? t.start.toUpperCase() : known ? `✓ ${t.known}` : l.title}
                   </Text>
                 </View>
+                </Pressable>
               );
             })}
           </View>
           <Text style={styles.note}>{t.knownNote}</Text>
+          {notReady ? (
+            // Floats over the months (no layout jump); slides in again on every tap.
+            <View pointerEvents="none" style={styles.notice}>
+              <Notification
+                key={notReady.n}
+                title={t.notReadyTitle.replace("{month}", notReadyName)}
+                text={t.notReadyText}
+                sound="error"
+              />
+            </View>
+          ) : null}
         </View>
       </Enter>
     </ScreenLayout>
@@ -77,8 +121,9 @@ const styles = StyleSheet.create({
   stepText: { fontFamily: font.regular, fontSize: 13.5, lineHeight: 19, color: colors.ink },
   yearTitle: { fontFamily: font.extrabold, fontSize: 14, color: colors.onPetrol },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  monthCell: { width: "31.6%" },
+  notice: { position: "absolute", left: 0, right: 0, top: 26 },
   month: {
-    width: "31.6%",
     borderRadius: 10,
     paddingVertical: 7,
     paddingHorizontal: 8,

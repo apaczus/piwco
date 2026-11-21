@@ -116,6 +116,8 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
   // Intermediate / advanced start with the investing chapter (decided); beginners with January.
   const start = startMonthFor(knowledge, levels);
   const chapterStart = start.month === INVEST_MONTH;
+  // Month picked on "How Piwco works" (null = the start month).
+  const [pickedMonth, setPickedMonth] = useState<number | null>(null);
   // Guided tour of the game screen: every time the game is entered (survey or "Skip to game"), before the first
   // move; "?" plays it again. "Start a new game" in the same visit doesn't repeat it.
   const [coachPending, setCoachPending] = useState(true);
@@ -236,23 +238,38 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
     const afterEventLesson: Phase = level.lesson ? "lesson" : "city";
     switch (session.phase) {
       case "howItWorks":
-        screen = <HowItWorks dir={dir} startMonth={start.month} skipped={skipped} onNext={() => toPhase("welcome")} />;
+        screen = (
+          <HowItWorks
+            dir={dir}
+            startMonth={start.month}
+            skipped={skipped}
+            // Startable now: January (the basics, nothing played yet) and the investing chapter.
+            canStart={(m) => (m === 1 && session.completedMonth === 0) || m === INVEST_MONTH}
+            onStart={(m) => {
+              setPickedMonth(m);
+              toPhase("welcome");
+            }}
+          />
+        );
         break;
-      case "welcome":
+      case "welcome": {
+        // From "How Piwco works" the player may pick January instead of the chapter.
+        const welcomeInvest = chapterStart && pickedMonth !== 1;
         screen = (
           <WelcomeToGame
             warmUp={start.fallback}
             state={session.game}
-            level={chapterStart ? investLevel : level}
+            level={welcomeInvest ? investLevel : level}
             dir={dir}
             onAccept={() => {
               buzz("light");
-              if (chapterStart) go(openInvest);
+              if (welcomeInvest) go(openInvest);
               else toPhase(monthStartPhase(session.game));
             }}
           />
         );
         break;
+      }
       case "event": {
         const def = session.game.event ? gameEvents.find((e) => e.id === session.game.event!.id) : undefined;
         screen = def ? (

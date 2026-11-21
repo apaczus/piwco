@@ -83,6 +83,9 @@
     "known": "You know this",
     "start": "Start here",
     "knownNote": "You already know the basics (budget, cushion, insurance), so we skip them. You can still play them later.",
-    "cta": "Start investing ›"
+    "cta": "Start investing ›",
+    "tapHint": "Tap a month to start there.",
+    "notReadyTitle": "{month} is still being built",
+    "notReadyText": "This level is coming soon. You can start with January or August now."
   }
 }

@@ -309,6 +309,10 @@ export type HowItWorks = {
   start: string;
   knownNote: string;
   cta: string;
+  tapHint: string;
+  // Tapping a month that can't be played yet ("{month}" = its name).
+  notReadyTitle: string;
+  notReadyText: string;
 };
 export type Tutorial = { tips: TutorialTip[]; howItWorks: HowItWorks };
 
