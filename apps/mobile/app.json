@@ -25,7 +25,12 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "output": "single",
+      "name": "PIWCO",
+      "shortName": "PIWCO",
+      "themeColor": "#00262D",
+      "backgroundColor": "#00262D"
     }
   }
 }

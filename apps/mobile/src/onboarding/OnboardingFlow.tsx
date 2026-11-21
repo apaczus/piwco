@@ -20,6 +20,7 @@ import {
   knowledgeOf,
 } from "./flow";
 import { Hud, WelcomeBackground } from "./Hud";
+import { SkipConfirm } from "./SkipConfirm";
 import {
   AgeScreen,
   BlockDoneScreen,
@@ -43,6 +44,8 @@ export function OnboardingFlow() {
   const [chosen, setChosen] = useState<string | null>(null);
   // Increments on every navigation; the new screen becomes visible only after it has rendered.
   const [navId, setNavId] = useState(0);
+  // "Skip to game ›" asks first (demo data).
+  const [skipAsk, setSkipAsk] = useState(false);
   const out = useRef(new Animated.Value(1)).current;
   // Exit slide distance (+28 going back, -28 going forward). An Animated.Value, so changing it doesn't re-render.
   const exitX = useRef(new Animated.Value(-28)).current;
@@ -244,10 +247,8 @@ export function OnboardingFlow() {
           onSkipToGame={
             DEV_SKIP_TO_GAME
               ? () => {
-                  buzz("light");
-                  // Skipping = no profile: the game uses the baseline (test profile A).
-                  setPlayerProfile(null);
-                  router.push({ pathname: "/game", params: { industry: DEV_SKIP_INDUSTRY } });
+                  buzz("tick");
+                  setSkipAsk(true);
                 }
               : undefined
           }
@@ -267,6 +268,17 @@ export function OnboardingFlow() {
           </View>
         </Animated.View>
       </View>
+      {skipAsk ? (
+        <SkipConfirm
+          onCancel={() => setSkipAsk(false)}
+          onConfirm={() => {
+            setSkipAsk(false);
+            // Skipping = no profile: the game uses the baseline (test profile A).
+            setPlayerProfile(null);
+            router.push({ pathname: "/game", params: { industry: DEV_SKIP_INDUSTRY } });
+          }}
+        />
+      ) : null}
     </View>
   );
 }

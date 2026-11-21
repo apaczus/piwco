@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PIWCO</title>
+  <meta name="description" content="PIWCO (Please Invest With Confidence): a mobile game that teaches entrepreneurs and private persons finance, one month at a time." />
+  <meta name="theme-color" content="#00262D" />
+  <link rel="icon" href="app/favicon.ico" />
+  <script>
+    // Phones (narrow screens) get the app full screen; computers get it inside a phone frame.
+    if (window.matchMedia("(max-width: 760px)").matches) location.replace("app/");
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --petrol950: #00262D;
+      --petrol900: #003A44;
+      --petrol800: #004B57;
+      --petrol700: #0B5E6B;
+      --petrol100: #E2EEEF;
+      --yellow: #FFD400;
+      --onPetrolSub: rgba(255, 255, 255, 0.72);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      font-family: Manrope, system-ui, sans-serif;
+      background: radial-gradient(circle at 15% 20%, #0B5E6B 0, transparent 45%),
+        radial-gradient(circle at 85% 85%, #004B57 0, transparent 40%), var(--petrol950);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 64px;
+      padding: 24px 32px;
+      overflow: hidden;
+    }
+    .info { max-width: 420px; display: flex; flex-direction: column; gap: 18px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: 3px; font-size: 15px; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--yellow); }
+    h1 { margin: 0; font-size: 40px; line-height: 1.1; font-weight: 800; }
+    h1 b { color: var(--yellow); }
+    p { margin: 0; font-size: 16px; line-height: 1.55; color: var(--onPetrolSub); }
+    .tips { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .tips li { font-size: 14.5px; line-height: 1.45; color: var(--onPetrolSub); padding-left: 22px; position: relative; }
+    .tips li::before { content: "›"; position: absolute; left: 4px; color: var(--yellow); font-weight: 800; }
+    .qr { display: flex; gap: 16px; align-items: center; background: rgba(255, 255, 255, 0.07); border-radius: 16px; padding: 14px; }
+    .qr img { width: 112px; height: 112px; background: #fff; border-radius: 10px; padding: 4px; }
+    .qr strong { display: block; font-size: 15px; margin-bottom: 4px; }
+    .qr span { font-size: 13.5px; line-height: 1.45; color: var(--onPetrolSub); }
+    a { color: var(--yellow); }
+    .phone-wrap { flex: none; width: 414px; height: 868px; transform-origin: center; }
+    .phone {
+      width: 414px;
+      height: 868px;
+      border-radius: 56px;
+      padding: 12px;
+      background: #0a0f10;
+      box-shadow: 0 0 0 2px #2a3436, 0 30px 80px rgba(0, 0, 0, 0.55);
+      position: relative;
+    }
+    .phone iframe { width: 390px; height: 844px; border: 0; border-radius: 44px; display: block; background: var(--petrol900); }
+    .notch {
+      position: absolute; top: 22px; left: 50%; transform: translateX(-50%);
+      width: 110px; height: 30px; border-radius: 16px; background: #0a0f10; pointer-events: none;
+    }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn {
+      display: inline-block; text-decoration: none; font-weight: 800; font-size: 14px;
+      padding: 10px 16px; border-radius: 12px; background: var(--yellow); color: var(--petrol950);
+    }
+    .btn.ghost { background: transparent; color: #fff; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.35); }
+    @media (max-width: 1100px) { .info { display: none; } }
+  </style>
+</head>
+<body>
+  <section class="info">
+    <div class="brand"><span class="dot"></span>PIWCO</div>
+    <h1><b>P</b>lease <b>I</b>nvest <b>W</b>ith <b>C</b>onfidence</h1>
+    <p>A mobile game that teaches finance by solving problems: every month a real money problem hits, you decide with real numbers, then a short swipe lesson explains why it worked. Good decisions build your city.</p>
+    <ul class="tips">
+      <li>The phone on the right is the full app. Click and drag like on a phone (swipe the lesson cards, drag the sliders).</li>
+      <li>The short survey sets your starting point. Rate yourself 1–2 to start with January (budget), 3–5 to go straight to investing and credit.</li>
+      <li>In a hurry? "Skip to game ›" (top right) starts with demo data.</li>
+      <li>Sound is on: turn it off with the speaker icon in the game.</li>
+    </ul>
+    <div class="qr">
+      <img src="qr.svg" alt="QR code to open PIWCO on a phone" />
+      <div>
+        <strong>Play it on your phone</strong>
+        <span>Scan the code with the camera. It opens full screen in the phone's browser, nothing to install.</span>
+      </div>
+    </div>
+    <div class="actions">
+      <a class="btn" href="app/" target="_blank" rel="noopener">Open full screen</a>
+      <a class="btn ghost" href="https://github.com/apaczus/piwco" target="_blank" rel="noopener">Source code</a>
+    </div>
+  </section>
+  <div class="phone-wrap" id="wrap">
+    <div class="phone">
+      <iframe src="app/" title="PIWCO app" allow="autoplay"></iframe>
+      <div class="notch"></div>
+    </div>
+  </div>
+  <script>
+    // Scale the phone down on short screens so it always fits.
+    function fit() {
+      var s = Math.min(1, (window.innerHeight - 32) / 868);
+      document.getElementById("wrap").style.transform = "scale(" + s + ")";
+      document.getElementById("wrap").style.margin = (-(1 - s) * 868) / 2 + "px " + (-(1 - s) * 414) / 2 + "px";
+    }
+    window.addEventListener("resize", fit);
+    fit();
+  </script>
+</body>
+</html>

@@ -5,6 +5,7 @@ import {
   AccessibilityInfo,
   Animated,
   Easing,
+  Platform,
   Pressable,
   type StyleProp,
   type ViewStyle,
@@ -34,6 +35,8 @@ export const drawEasing = Easing.bezier(0.6, 0, 0.2, 1);
 export function buzz(strength: "tick" | "light" | "medium" | "success" = "tick", sound?: SoundName | null) {
   const s = sound === undefined ? (strength === "success" ? "success" : strength === "light" ? "pop" : null) : sound;
   if (s) playSound(s);
+  // The web version (GitHub Pages) has no haptics: browsers block or ignore vibration.
+  if (Platform.OS === "web") return;
   const p =
     strength === "tick"
       ? Haptics.selectionAsync()
