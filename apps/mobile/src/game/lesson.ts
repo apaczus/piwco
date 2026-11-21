@@ -1,5 +1,5 @@
 // Pure lesson helpers (no UI): fill the player's numbers into the "myth or fact?" cards.
-import type { SwipeCard, SwipeLesson } from "@piwco/content";
+import type { MythFactCard, SwipeCard, SwipeLesson } from "@piwco/content";
 import type { MonthReport } from "@piwco/engine";
 import { formatPln } from "./format";
 
@@ -52,9 +52,37 @@ export function fillCards(cards: SwipeCard[], values: Record<string, string>): S
         explain: f(c.explain),
       };
     }
+    if (c.kind === "quiz") {
+      return { ...c, question: f(c.question), options: c.options.map(f), explain: f(c.explain) };
+    }
     return { ...c, statement: f(c.statement), explain: f(c.explain) };
   });
 }
+
+// A myth / fact card (also "sort" cards with their own labels).
+export function isMythFact(c: SwipeCard | undefined): c is MythFactCard {
+  return !!c && (c.kind === undefined || c.kind === "mythfact");
+}
+
+// The two answers of a myth / fact card: MYTH / FACT, or the card's own labels ("sort").
+export function swipeLabels(c: MythFactCard): { left: string; right: string } {
+  return c.leftLabel && c.rightLabel ? { left: c.leftLabel, right: c.rightLabel } : { left: "MYTH", right: "FACT" };
+}
+
+// A new myth / fact part starts at this card (first one, after other kinds, or the labels change): the
+// "QUIZ TIME" alert shows here.
+export function swipePartStarts(cards: SwipeCard[], i: number): boolean {
+  const c = cards[i];
+  if (!isMythFact(c)) return false;
+  const prev = cards[i - 1];
+  if (!isMythFact(prev)) return true;
+  const a = swipeLabels(c);
+  const b = swipeLabels(prev);
+  return a.left !== b.left || a.right !== b.right;
+}
+
+// Quiz answers are lettered A–D.
+export const QUIZ_LETTERS = ["A", "B", "C", "D"];
 
 export function fillLesson(lesson: SwipeLesson, report: MonthReport): SwipeCard[] {
   return fillCards(lesson.cards, lessonValues(report));

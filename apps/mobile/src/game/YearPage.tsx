@@ -56,7 +56,7 @@ export function YearPage({
                 styles.month,
                 done ? styles.monthDone : null,
                 current ? styles.monthCurrent : null,
-                !done && !current && !l.playable ? { opacity: 0.55 } : null,
+                !done && !current && !l.playable && !(l.lessonOnly && l.lesson) ? { opacity: 0.55 } : null,
               ]}
             >
               <Text style={[styles.no, current ? { color: colors.petrol950 } : null]}>{String(l.month).padStart(2, "0")}</Text>
@@ -72,6 +72,8 @@ export function YearPage({
                 </View>
               ) : skipped(l.month) ? (
                 <SkippedBadge />
+              ) : l.lessonOnly && l.lesson ? (
+                <Text style={styles.soon}>LESSON</Text>
               ) : l.playable ? (
                 <Text style={styles.soon}>SOON</Text>
               ) : (

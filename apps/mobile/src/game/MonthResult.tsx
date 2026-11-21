@@ -162,7 +162,10 @@ export function Roadmap({
   skipped = () => false,
   chaptersDone = [],
   onPlayBasics,
+  onOpenLesson,
 }: {
+  // A lesson-only month ("LESSON ›", or a finished one again) was tapped.
+  onOpenLesson?: (month: number) => void;
   // Chapters finished outside the month simulation (8 = investing): ✓, not tappable.
   chaptersDone?: number[];
   // "Play the basics anyway": a player who skipped January (and finished a chapter) can still play it.
@@ -208,17 +211,21 @@ export function Roadmap({
           const chapter = chaptersDone.includes(l.month);
           const done = l.month <= completedMonth || chapter;
           const basics = !done && !!onPlayBasics && l.month === completedMonth + 1;
+          // Lesson-only months open any time (again after ✓).
+          const lesson = !!onOpenLesson && !!l.lessonOnly && !!l.lesson;
           const row = (
-            <View style={[styles.month, done ? styles.monthDone : null, !done && !l.playable ? { opacity: 0.55 } : null]}>
+            <View style={[styles.month, done ? styles.monthDone : null, !done && !l.playable && !lesson ? { opacity: 0.55 } : null]}>
               <Text style={styles.monthNo}>{String(l.month).padStart(2, "0")}</Text>
               <View style={{ flex: 1 }}>
                 <Text style={styles.monthName}>{l.monthName}</Text>
                 <Text style={styles.monthTitle}>{l.title}</Text>
               </View>
               {done ? (
-                <Text style={styles.doneMark}>{chapter && l.month > completedMonth ? "✓" : "✓ ›"}</Text>
+                <Text style={styles.doneMark}>{chapter && l.month > completedMonth && !lesson ? "✓" : "✓ ›"}</Text>
               ) : basics ? (
                 <Text style={styles.play}>PLAY ›</Text>
+              ) : lesson ? (
+                <Text style={styles.play}>LESSON ›</Text>
               ) : skipped(l.month) ? (
                 <SkippedBadge />
               ) : l.playable ? (
@@ -228,7 +235,11 @@ export function Roadmap({
               )}
             </View>
           );
-          return basics ? (
+          return lesson && (!done || l.month > completedMonth) ? (
+            <PressScale key={l.id} onPress={() => onOpenLesson?.(l.month)} accessibilityLabel={`${l.monthName}: lesson`}>
+              {row}
+            </PressScale>
+          ) : basics ? (
             <PressScale key={l.id} onPress={onPlayBasics} accessibilityLabel={`Play ${l.monthName} anyway`}>
               {row}
             </PressScale>

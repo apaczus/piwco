@@ -3,7 +3,7 @@
 // - info: an explanation (+ optional visual and "Read more ▾"); swipe either way or "Got it" = next, no score;
 // - choice: two options on the card's left / right half; swipe towards one or tap it.
 // Every answer gets an explanation; no penalty. Ends with a "Lesson complete" screen.
-import type { ChoiceLessonCard, InfoLessonCard, SwipeCard } from "@piwco/content";
+import type { ChoiceLessonCard, InfoLessonCard, QuizLessonCard, SwipeCard } from "@piwco/content";
 import { Pressable, ScrollView } from "react-native";
 import { LevelBars } from "../invest/LevelBars";
 import { MeltVisual } from "../invest/MeltVisual";
@@ -19,7 +19,8 @@ import {
   View,
 } from "react-native";
 import { buzz, Enter, PressScale, useMountSpring, useReducedMotion } from "../onboarding/anim";
-import { Cta, SkyToneContext } from "../onboarding/ui";
+import { Cta, SkyToneContext, Tile } from "../onboarding/ui";
+import { isMythFact, QUIZ_LETTERS, swipeLabels, swipePartStarts } from "./lesson";
 import { colors, font, mix, springs } from "../theme";
 import { Confetti } from "./Confetti";
 import { SoundToggle } from "./SoundToggle";
@@ -29,11 +30,11 @@ type Stage = "card" | "feedback" | "done";
 type Res = boolean | "seen" | null;
 
 const graded = (c: SwipeCard) => c.kind !== "info";
-const isMythFact = (c: SwipeCard | undefined) => !!c && c.kind !== "info" && c.kind !== "choice";
 
 // Short alert when the myth / fact part starts (user, 2026-11-21: "make it clear you now choose FACT or MYTH").
 // Pops in over the lesson with a haptic; tap or ~3.5 s closes it. Reduced motion: appears without the pop.
-function QuizAlert({ reduced, onClose }: { reduced: boolean; onClose: () => void }) {
+function QuizAlert({ reduced, labels, onClose }: { reduced: boolean; labels: { left: string; right: string }; onClose: () => void }) {
+  const mythFact = labels.left === "MYTH" && labels.right === "FACT";
   const v = useRef(new Animated.Value(reduced ? 1 : 0)).current;
   const shake = useRef(new Animated.Value(0)).current;
   const closed = useRef(false);
@@ -55,7 +56,7 @@ function QuizAlert({ reduced, onClose }: { reduced: boolean; onClose: () => void
     return () => clearTimeout(t);
   }, [v, shake, reduced, close]);
   return (
-    <Pressable onPress={close} style={styles.quizBackdrop} accessibilityRole="button" accessibilityLabel="Myth or fact: start">
+    <Pressable onPress={close} style={styles.quizBackdrop} accessibilityRole="button" accessibilityLabel={`${labels.left} or ${labels.right}: start`}>
       <Animated.View
         style={[
           styles.quizCard,
@@ -74,14 +75,18 @@ function QuizAlert({ reduced, onClose }: { reduced: boolean; onClose: () => void
         <Text style={styles.quizTitle}>Now you choose:</Text>
         <View style={styles.quizPills}>
           <View style={[styles.quizPill, { backgroundColor: colors.danger }]}>
-            <Text style={styles.quizPillText}>← MYTH</Text>
+            <Text style={styles.quizPillText} numberOfLines={1} adjustsFontSizeToFit>{`← ${labels.left}`}</Text>
           </View>
           <Text style={styles.quizOr}>or</Text>
           <View style={[styles.quizPill, { backgroundColor: colors.success }]}>
-            <Text style={styles.quizPillText}>FACT →</Text>
+            <Text style={styles.quizPillText} numberOfLines={1} adjustsFontSizeToFit>{`${labels.right} →`}</Text>
           </View>
         </View>
-        <Text style={styles.quizText}>Is the sentence true? Swipe right or tap FACT. False? Swipe left or tap MYTH.</Text>
+        <Text style={styles.quizText}>
+          {mythFact
+            ? "Is the sentence true? Swipe right or tap FACT. False? Swipe left or tap MYTH."
+            : `Swipe right or tap ${labels.right}. Swipe left or tap ${labels.left}.`}
+        </Text>
         <Text style={styles.quizTap}>Tap to start</Text>
       </Animated.View>
     </Pressable>
@@ -91,6 +96,7 @@ function QuizAlert({ reduced, onClose }: { reduced: boolean; onClose: () => void
 function isCorrect(c: SwipeCard, right: boolean): boolean {
   if (c.kind === "choice") return (c.correct === "right") === right;
   if (c.kind === "info") return true;
+  if (c.kind === "quiz") return false; // answered by tapping a tile (answerQuiz)
   return c.isFact === right;
 }
 
@@ -135,6 +141,7 @@ function CardFace({
   reduced,
   panHandlers,
   onPick,
+  onQuiz,
 }: {
   card: SwipeCard;
   number: number;
@@ -145,6 +152,8 @@ function CardFace({
   panHandlers: object;
   // Choice card: a half was tapped (true = right).
   onPick: (right: boolean) => void;
+  // Quiz card: an answer tile was tapped.
+  onQuiz: (index: number) => void;
 }) {
   const enter = useMountSpring(springs.lively);
   const rotate = pan.interpolate({
@@ -174,13 +183,15 @@ function CardFace({
         <InfoFace card={card} number={number} />
       ) : card.kind === "choice" ? (
         <ChoiceFace card={card} number={number} right={fact} left={myth} onPick={onPick} />
+      ) : card.kind === "quiz" ? (
+        <QuizFace card={card} number={number} onPick={onQuiz} />
       ) : (
         <>
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.tint, { backgroundColor: colors.success, opacity: Animated.multiply(fact, 0.14) }]} />
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.tint, { backgroundColor: colors.danger, opacity: Animated.multiply(myth, 0.14) }]} />
       <View style={styles.cardTop}>
         <View style={styles.chip}>
-          <Text style={styles.chipText}>MYTH OR FACT?</Text>
+          <Text style={styles.chipText}>{`${swipeLabels(card).left} OR ${swipeLabels(card).right}?`}</Text>
         </View>
         <Text style={styles.cardNo}>{`#${number}`}</Text>
       </View>
@@ -189,10 +200,10 @@ function CardFace({
       </View>
       <Text style={styles.swipeHint}>← swipe or tap →</Text>
       <Animated.View pointerEvents="none" style={[styles.stamp, styles.stampFact, { opacity: fact, transform: [{ rotate: "-12deg" }, { scale: fact.interpolate({ inputRange: [0, 1], outputRange: [1.4, 1] }) }] }]}>
-        <Text style={[styles.stampText, { color: colors.success }]}>FACT</Text>
+        <Text style={[styles.stampText, swipeLabels(card).right.length > 5 ? styles.stampTextSmall : null, { color: colors.success }]}>{swipeLabels(card).right}</Text>
       </Animated.View>
       <Animated.View pointerEvents="none" style={[styles.stamp, styles.stampMyth, { opacity: myth, transform: [{ rotate: "12deg" }, { scale: myth.interpolate({ inputRange: [0, 1], outputRange: [1.4, 1] }) }] }]}>
-        <Text style={[styles.stampText, { color: colors.danger }]}>MYTH</Text>
+        <Text style={[styles.stampText, swipeLabels(card).left.length > 5 ? styles.stampTextSmall : null, { color: colors.danger }]}>{swipeLabels(card).left}</Text>
       </Animated.View>
         </>
       )}
@@ -325,6 +336,24 @@ function ChoiceFace({
   );
 }
 
+// Quiz card: the question, then 3–4 answers as survey tiles (A–D). Tap only, no swipe.
+function QuizFace({ card, number, onPick }: { card: QuizLessonCard; number: number; onPick: (index: number) => void }) {
+  return (
+    <>
+      <CardTop chip="PICK ONE" number={number} />
+      <Text style={styles.question}>{card.question}</Text>
+      <SkyToneContext.Provider value="day">
+        <View style={styles.quizOptions}>
+          {card.options.map((o, i) => (
+            <Tile key={i} label={`${QUIZ_LETTERS[i] ?? ""}  ${o}`} mark="single" onPress={() => onPick(i)} />
+          ))}
+        </View>
+      </SkyToneContext.Provider>
+      <Text style={styles.swipeHint}>tap an answer</Text>
+    </>
+  );
+}
+
 // Cards waiting behind the current one; the first rises as the top card is dragged away.
 function Ghosts({ count, pan, width }: { count: number; pan: Animated.Value; width: number }) {
   const lift = pan.interpolate({ inputRange: [-width, 0, width], outputRange: [1, 0, 1], extrapolate: "clamp" });
@@ -388,12 +417,21 @@ function AnswerButton({
 }
 
 // Shown in place of the card after an answer: right or wrong, the real answer and why.
-function Feedback({ card, correct, reduced }: { card: SwipeCard; correct: boolean; reduced: boolean }) {
+function Feedback({ card, correct, reduced, picked }: { card: SwipeCard; correct: boolean; reduced: boolean; picked?: number }) {
   const choice = card.kind === "choice" ? card : null;
-  const fact = card.kind !== "info" && card.kind !== "choice" && card.isFact;
-  const chipTint = choice || fact ? colors.success : colors.danger;
-  const chipText = choice ? `ANSWER: ${choice[choice.correct].title.toUpperCase()}` : fact ? "IT'S A FACT" : "IT'S A MYTH";
-  const quoted = card.kind === "choice" ? card.question : card.kind === "info" ? card.title : card.statement;
+  const quiz = card.kind === "quiz" ? card : null;
+  const mf = isMythFact(card) ? card : null;
+  const labels = mf ? swipeLabels(mf) : { left: "MYTH", right: "FACT" };
+  // Default MYTH / FACT: "IT'S A FACT"; own labels ("sort"): "IT'S GOOD DEBT".
+  const article = mf && !mf.leftLabel ? "IT'S A" : "IT'S";
+  const fact = !!mf && mf.isFact;
+  const chipTint = choice || quiz || fact ? colors.success : colors.danger;
+  const chipText = choice
+    ? `ANSWER: ${choice[choice.correct].title.toUpperCase()}`
+    : quiz
+      ? `ANSWER: ${QUIZ_LETTERS[quiz.correct] ?? ""} · ${quiz.options[quiz.correct] ?? ""}`
+      : `${article} ${fact ? labels.right : labels.left}`;
+  const quoted = card.kind === "choice" || card.kind === "quiz" ? card.question : card.kind === "info" ? card.title : card.statement;
   const tint = correct ? colors.success : colors.danger;
   const shake = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -408,14 +446,16 @@ function Feedback({ card, correct, reduced }: { card: SwipeCard; correct: boolea
   return (
     <Enter from="below" spring={springs.lively} style={StyleSheet.absoluteFill}>
       <View style={[styles.card, styles.feedback]}>
-        {choice || card.kind === "info" ? (
+        {choice || quiz || card.kind === "info" ? (
           <View style={[styles.feedbackBand, { backgroundColor: tint }]} />
         ) : (
           // Myth or fact, impossible to miss: a full-width banner in the answer's colour (the same as its button).
           <View style={[styles.truthBanner, { backgroundColor: fact ? colors.success : colors.danger }]}>
-            <Text style={styles.truthSmall}>{"IT'S A"}</Text>
+            <Text style={styles.truthSmall}>{article}</Text>
             <Pop delay={60}>
-              <Text style={styles.truthBig}>{fact ? "FACT" : "MYTH"}</Text>
+              <Text style={[styles.truthBig, (fact ? labels.right : labels.left).length > 5 ? styles.truthBigSmall : null]} numberOfLines={1} adjustsFontSizeToFit>
+                {fact ? labels.right : labels.left}
+              </Text>
             </Pop>
           </View>
         )}
@@ -428,13 +468,16 @@ function Feedback({ card, correct, reduced }: { card: SwipeCard; correct: boolea
           </Animated.View>
           <View style={{ flex: 1, gap: 4 }}>
             <Text style={[styles.verdict, { color: tint }]}>{correct ? "Correct!" : "Not quite"}</Text>
-            {choice ? (
+            {choice || quiz ? (
               <View style={[styles.answerChip, { backgroundColor: mix(chipTint, colors.surface, 14) }]}>
                 <Text style={[styles.answerChipText, { color: chipTint }]}>{chipText}</Text>
               </View>
             ) : (
-              <Text style={styles.youSaid}>{`You said ${(correct ? fact : !fact) ? "FACT" : "MYTH"}`}</Text>
+              <Text style={styles.youSaid}>{`You said ${(correct ? fact : !fact) ? labels.right : labels.left}`}</Text>
             )}
+            {quiz && !correct && picked !== undefined ? (
+              <Text style={styles.youSaid}>{`You said ${QUIZ_LETTERS[picked] ?? ""} · ${quiz.options[picked] ?? ""}`}</Text>
+            ) : null}
           </View>
         </View>
         <Text style={styles.quoted}>{`“${quoted}”`}</Text>
@@ -502,6 +545,8 @@ export function SwipeLesson({
   const pan = useRef(new Animated.Value(0)).current;
   // Card indexes where the myth / fact part starts and the alert was already shown.
   const [quizAlert, setQuizAlert] = useState(false);
+  // Quiz card: the answer tapped (for the feedback).
+  const [quizPick, setQuizPick] = useState<number | undefined>(undefined);
   const alerted = useRef(new Set<number>());
 
   // Refs so the (created once) pan responder always sees the current card.
@@ -540,10 +585,30 @@ export function SwipeLesson({
     });
   }).current;
 
+  // Quiz card: an answer tile was tapped (no fly-out; straight to the feedback).
+  const answerQuiz = (i: number) => {
+    const l = live.current;
+    const c = l.cards[l.index];
+    if (busy.current || l.stage !== "card" || c?.kind !== "quiz") return;
+    busy.current = true;
+    nudge.current?.stop();
+    const correct = i === c.correct;
+    buzz(correct ? "success" : "medium", correct ? "success" : "error");
+    setQuizPick(i);
+    setResults((rs) => rs.map((r, k) => (k === l.index ? correct : r)));
+    setStage("feedback");
+    pan.setValue(0);
+  };
+
   const responder = useRef(
     PanResponder.create({
+      // Quiz cards are tap only.
       onMoveShouldSetPanResponder: (_, g) =>
-        !busy.current && live.current.stage === "card" && Math.abs(g.dx) > 6 && Math.abs(g.dx) > Math.abs(g.dy),
+        !busy.current &&
+        live.current.stage === "card" &&
+        live.current.cards[live.current.index]?.kind !== "quiz" &&
+        Math.abs(g.dx) > 6 &&
+        Math.abs(g.dx) > Math.abs(g.dy),
       onPanResponderGrant: () => {
         nudge.current?.stop();
         pan.stopAnimation();
@@ -587,7 +652,7 @@ export function SwipeLesson({
   // The myth / fact part starts (first card, or after info / choice cards): show the alert, answers wait for it.
   useEffect(() => {
     if (stage !== "card" || alerted.current.has(index)) return;
-    if (!isMythFact(cards[index]) || (index > 0 && isMythFact(cards[index - 1]))) return;
+    if (!swipePartStarts(cards, index)) return;
     alerted.current.add(index);
     busy.current = true;
     nudge.current?.stop();
@@ -609,6 +674,7 @@ export function SwipeLesson({
     }
     buzz("tick");
     busy.current = false;
+    setQuizPick(undefined);
     setIndex((i) => i + 1);
     setStage("card");
   }
@@ -632,7 +698,7 @@ export function SwipeLesson({
   return (
     <View style={{ flex: 1 }}>
       {/* Edge glows (myth / fact only): the side the card is dragged towards lights up. */}
-      {card.kind !== "info" && card.kind !== "choice" ? (
+      {isMythFact(card) ? (
         <>
           <Animated.View pointerEvents="none" style={[styles.glow, { left: -18, opacity: glowMyth }]}>
             <LinearGradient colors={[mix(colors.danger, colors.petrol900, 75), "transparent"]} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
@@ -667,10 +733,11 @@ export function SwipeLesson({
               reduced={reduced}
               panHandlers={responder.panHandlers}
               onPick={answer}
+              onQuiz={answerQuiz}
             />
           </>
         ) : (
-          <Feedback key={`f${index}`} card={card} correct={results[index] === true} reduced={reduced} />
+          <Feedback key={`f${index}`} card={card} correct={results[index] === true} reduced={reduced} picked={card.kind === "quiz" ? quizPick : undefined} />
         )}
       </View>
 
@@ -682,10 +749,13 @@ export function SwipeLesson({
             <AnswerButton side="myth" pan={pan} threshold={threshold} onPress={() => answer(false)} label={card.left.title} color={colors.petrol700} />
             <AnswerButton side="fact" pan={pan} threshold={threshold} onPress={() => answer(true)} label={card.right.title} color={colors.petrol700} />
           </View>
-        ) : stage === "card" ? (
+        ) : stage === "card" && card.kind === "quiz" ? (
+          // Answers are on the card; keeps the footer height.
+          <View style={{ height: 58 }} />
+        ) : stage === "card" && isMythFact(card) ? (
           <View style={styles.answers}>
-            <AnswerButton side="myth" pan={pan} threshold={threshold} onPress={() => answer(false)} />
-            <AnswerButton side="fact" pan={pan} threshold={threshold} onPress={() => answer(true)} />
+            <AnswerButton side="myth" pan={pan} threshold={threshold} onPress={() => answer(false)} label={card.leftLabel && card.rightLabel ? card.leftLabel : undefined} />
+            <AnswerButton side="fact" pan={pan} threshold={threshold} onPress={() => answer(true)} label={card.leftLabel && card.rightLabel ? card.rightLabel : undefined} />
           </View>
         ) : (
           <Cta appear label={last ? "Finish lesson" : "Next card"} onPress={next} />
@@ -694,6 +764,7 @@ export function SwipeLesson({
       {quizAlert ? (
         <QuizAlert
           reduced={reduced}
+          labels={isMythFact(card) ? swipeLabels(card) : { left: "MYTH", right: "FACT" }}
           onClose={() => {
             busy.current = false;
             setQuizAlert(false);
@@ -777,6 +848,8 @@ const styles = StyleSheet.create({
   stampFact: { left: 22, borderColor: colors.success },
   stampMyth: { right: 22, borderColor: colors.danger },
   stampText: { fontFamily: font.extrabold, fontSize: 34, letterSpacing: 2 },
+  stampTextSmall: { fontSize: 22, letterSpacing: 1 },
+  quizOptions: { gap: 8, marginTop: 14, flex: 1 },
   glow: { position: "absolute", top: 0, bottom: 0, width: 140 },
   footer: { minHeight: 68, justifyContent: "flex-end" },
   answers: { flexDirection: "row", gap: 14 },
@@ -814,6 +887,7 @@ const styles = StyleSheet.create({
   truthBanner: { marginHorizontal: -24, marginTop: -30, paddingVertical: 14, alignItems: "center", borderTopLeftRadius: 28, borderTopRightRadius: 28 },
   truthSmall: { fontFamily: font.extrabold, fontSize: 13, letterSpacing: 2, color: colors.surface, opacity: 0.85 },
   truthBig: { fontFamily: font.extrabold, fontSize: 54, lineHeight: 62, letterSpacing: 6, color: colors.surface },
+  truthBigSmall: { fontSize: 38, lineHeight: 46, letterSpacing: 3 },
   youSaid: { fontFamily: font.bold, fontSize: 14, color: colors.muted },
   feedbackBand: { position: "absolute", left: 0, right: 0, top: 0, height: 8 },
   verdictRow: { flexDirection: "row", alignItems: "center", gap: 16 },

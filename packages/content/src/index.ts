@@ -90,7 +90,11 @@ export type LessonCard = {
 export type MythFactCard = {
   kind?: "mythfact";
   statement: string;
+  // true = the right side (FACT, or `rightLabel`).
   isFact: boolean;
+  // "Sort" cards: own words instead of MYTH / FACT (e.g. "BAD DEBT" / "GOOD DEBT"). Both or neither.
+  leftLabel?: string;
+  rightLabel?: string;
   // Shown after the answer (right or wrong).
   explain: string;
 };
@@ -123,7 +127,17 @@ export type ChoiceLessonCard = {
   explain: string;
 };
 
-export type SwipeCard = MythFactCard | InfoLessonCard | ChoiceLessonCard;
+// One question, 3–4 answers to tap (A–D, survey tiles), then the same feedback as myth / fact.
+export type QuizLessonCard = {
+  kind: "quiz";
+  question: string;
+  options: string[];
+  // Index of the right answer in `options`.
+  correct: number;
+  explain: string;
+};
+
+export type SwipeCard = MythFactCard | InfoLessonCard | ChoiceLessonCard | QuizLessonCard;
 
 export type SwipeLesson = {
   title: string;
@@ -158,6 +172,8 @@ export type Level = {
   lesson?: SwipeLesson;
   // Knowledge levels that skip this month (they already know it).
   skipFor?: KnowledgeLevel[];
+  // A month that is only a swipe lesson (no simulation): "LESSON ›" on the year map opens `lesson`.
+  lessonOnly?: boolean;
 };
 
 // Cast: JSON strings ("intermediate") don't type-check as the KnowledgeLevel union.

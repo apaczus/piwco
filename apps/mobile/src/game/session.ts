@@ -36,7 +36,9 @@ export type Phase =
   // Between months: the pager (Year · Learn · City) for a completed month, nothing to play until the next one.
   | "hub"
   // The investing chapter (month 8): its own screens (apps/mobile/src/invest), not a simulated month.
-  | "invest";
+  | "invest"
+  // A lesson-only month (e.g. September / October: credit), opened from the year map.
+  | "studyLesson";
 
 // A real-world step the player added with "Add to my plan" (kept in memory; storage comes with the server).
 export type PlanItem = {
@@ -71,6 +73,8 @@ export type Session = {
   invest: InvestState | null;
   // Chapters finished outside the month simulation (8 = investing): ✓ on the year map.
   chaptersDone: number[];
+  // Lesson-only month being studied (phase "studyLesson"), null otherwise.
+  lessonMonth: number | null;
 };
 
 export type MonthRecord = {
@@ -109,6 +113,7 @@ export function newSession(industryId: string, seed: number, answers?: Household
     eventShown: false,
     invest: null,
     chaptersDone: [],
+    lessonMonth: null,
   };
 }
 
@@ -229,4 +234,21 @@ export function openInvest(s: Session): Session {
 // The chapter's "Your city grew" is done: the month counts as done on the year map, back to the dashboard (hub).
 export function finishChapter(s: Session, month: number): Session {
   return { ...s, phase: "hub", chaptersDone: s.chaptersDone.includes(month) ? s.chaptersDone : [...s.chaptersDone, month] };
+}
+
+// "LESSON ›" on the year map: open a lesson-only month.
+export function openLesson(s: Session, month: number): Session {
+  return { ...s, phase: "studyLesson", lessonMonth: month };
+}
+
+// The lesson is done: ✓ on the year map (counts like a finished chapter), back to the year map.
+export function finishLesson(s: Session): Session {
+  const m = s.lessonMonth;
+  const done = m === null || s.chaptersDone.includes(m) ? s.chaptersDone : [...s.chaptersDone, m];
+  return { ...s, phase: "roadmap", lessonMonth: null, chaptersDone: done };
+}
+
+// ‹ back from a lesson-only month: the year map, nothing changes.
+export function closeLesson(s: Session): Session {
+  return { ...s, phase: "roadmap", lessonMonth: null };
 }

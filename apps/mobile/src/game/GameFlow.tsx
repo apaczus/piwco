@@ -27,7 +27,7 @@ import type { HudMemory } from "./GameHud";
 import { GameScreen } from "./GameScreen";
 import { MonthIntro } from "./MonthIntro";
 import { MonthResult, Roadmap } from "./MonthResult";
-import { fillLesson } from "./lesson";
+import { fillCards, fillLesson } from "./lesson";
 import { buildReceipt } from "./receipt";
 import { SettlementReceipt } from "./SettlementReceipt";
 import { SwipeLesson } from "./SwipeLesson";
@@ -40,6 +40,9 @@ import {
   eventPending,
   endReview,
   finishChapter,
+  finishLesson,
+  closeLesson,
+  openLesson,
   monthStartPhase,
   newSession,
   openInvest,
@@ -83,6 +86,7 @@ function timeOfDay(phase: Phase): TimeOfDay {
     case "city":
     case "roadmap":
     case "howItWorks":
+    case "studyLesson":
       return "night";
     case "invest":
       return "day";
@@ -383,6 +387,21 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
         }
         break;
       }
+      case "studyLesson": {
+        // A lesson-only month (credit): the swipe lesson, then back to the year map with ✓.
+        const lm = levels.find((l) => l.month === session.lessonMonth);
+        screen = lm?.lesson ? (
+          <SwipeLesson
+            title={lm.lesson.title}
+            monthName={lm.monthName}
+            cards={fillCards(lm.lesson.cards, {})}
+            doneSub={`${lm.monthName}'s lesson is yours. It's ✓ on your year.`}
+            doneLabel="Back to your year"
+            onDone={() => go(finishLesson)}
+          />
+        ) : null;
+        break;
+      }
       case "hub": {
         // Between months: the completed month's real city (no forecast, nothing left to level up).
         const config = cityConfigFor(session.game);
@@ -548,6 +567,10 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
               skipped={skipped}
               chaptersDone={session.chaptersDone}
               completedMonth={session.completedMonth}
+              onOpenLesson={(m) => {
+                buzz("light");
+                go((s) => openLesson(s, m));
+              }}
               onPlayBasics={
                 // After the chapter, a player who skipped the basics can still play January.
                 session.completedMonth === 0 && session.chaptersDone.length > 0
@@ -639,6 +662,9 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
       case "roadmap":
         // After the investing chapter (no month played yet): back to its dashboard.
         back = session.completedMonth === 0 && session.invest ? () => toPhase("hub", -1) : () => toPhase("city", -1);
+        break;
+      case "studyLesson":
+        back = () => go(closeLesson, -1);
         break;
       case "hub":
         // After the investing chapter: back to its "Your city grew".
