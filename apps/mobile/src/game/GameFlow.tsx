@@ -32,11 +32,13 @@ import { SwipeLesson } from "./SwipeLesson";
 import { MonthSheet } from "./MonthSheet";
 import {
   act,
+  addToPlan,
   endMonth,
   endReview,
   monthStartPhase,
   newSession,
   randomSeed,
+  repairing,
   replay,
   rewindTo,
   startReview,
@@ -46,6 +48,8 @@ import {
 } from "./session";
 import { BackButton } from "./BackButton";
 import { EventScreen } from "./EventScreen";
+import { EventLesson } from "./EventLesson";
+import { buildEventLesson, hasEventLesson } from "./eventLesson";
 import { getPlayerProfile, householdAnswers } from "./profile";
 import { WelcomeToGame } from "./WelcomeToGame";
 
@@ -61,6 +65,7 @@ function timeOfDay(phase: Phase): TimeOfDay {
       return "sunset";
     case "welcome":
     case "result":
+    case "eventLesson":
     case "lesson":
     case "city":
     case "roadmap":
@@ -168,6 +173,9 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
     const viewGame = rec ? rec.settled : session.game;
     const viewCompleted = rec ? rec.month : session.completedMonth;
     const level = levels.find((l) => l.month === (rec ? rec.month : session.game.month)) ?? levels[0]!;
+    // The event lesson is part of the month's first pass only ("Review" skips it).
+    const eventLessonNext = !rec && !!viewResult && hasEventLesson(viewResult.report);
+    const afterEventLesson: Phase = level.lesson ? "lesson" : "city";
     switch (session.phase) {
       case "welcome":
         screen = (
@@ -218,7 +226,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
             celebrated={celebrated.current}
             onCelebrated={(ids) => ids.forEach((id) => celebrated.current.add(id))}
             hudMemory={hudMemory}
-            backdrop={<CityScene city={forecast.city} />}
+            backdrop={<CityScene city={forecast.city} repairing={repairing(session.plan, forecast.city.damaged)} />}
             showSwipeHint={!cityOpened}
             onAction={(id: ActionId) => {
               if (id === "draw") toPhase("draw");
@@ -241,6 +249,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
                 config={config}
                 shown={seen.levels}
                 shownWorth={seen.worth}
+                plan={session.plan}
                 active={onCity}
                 onSeen={() => setShown({ levels: forecast.city.levels, worth: forecast.netWorth })}
               />
@@ -310,10 +319,31 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
               lastBadge.current = 0;
               go(replay, -1);
             }}
-            onContinue={() => toPhase(level.lesson ? "lesson" : "city")}
+            onContinue={() => toPhase(eventLessonNext ? "eventLesson" : afterEventLesson)}
           />
         ) : null;
         break;
+      case "eventLesson": {
+        const built = viewResult ? buildEventLesson(viewResult.report, viewGame.financing) : null;
+        const damaged = built ? cityLevels(viewGame, viewCompleted, cityConfigFor(viewGame)).damaged[built.building] : false;
+        screen = built ? (
+          <EventLesson
+            lesson={built}
+            monthName={level.monthName}
+            damaged={damaged}
+            onDone={(added) => {
+              const plan = built.plan;
+              go((s) => {
+                const next = { ...s, phase: afterEventLesson };
+                return added && plan
+                  ? addToPlan(next, { month: s.game.month, eventId: built.eventId, ...plan, building: built.building })
+                  : next;
+              });
+            }}
+          />
+        ) : null;
+        break;
+      }
       case "lesson":
         screen =
           level.lesson && viewResult ? (
@@ -337,6 +367,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
             netWorth={worth}
             shown={seen?.levels ?? real.levels}
             shownWorth={seen?.worth ?? worth}
+            repairing={repairing(rec ? session.plan.filter((p) => p.month <= rec.month) : session.plan, real.damaged)}
             onSeen={() => (rec ? setReviewShown : setShown)({ levels: real.levels, worth })}
             monthName={level.monthName}
             dir={dir}
@@ -351,6 +382,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
             <Roadmap
               completedMonth={session.completedMonth}
               dir={dir}
+              plan={session.plan}
               onPickMonth={(m) => {
                 buzz("tick");
                 setSheetMonth(m);
@@ -397,6 +429,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
   let back: (() => void) | null = null;
   if (session) {
     const lvl = levels.find((l) => l.month === (session.reviewing ?? session.game.month)) ?? levels[0]!;
+    const hadEventLesson = session.reviewing === null && !!session.result && hasEventLesson(session.result.report);
     switch (session.phase) {
       case "welcome":
         back = router.canGoBack() ? () => router.back() : null;
@@ -413,11 +446,14 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
       case "result":
         back = () => toPhase("receipt", -1);
         break;
-      case "lesson":
+      case "eventLesson":
         back = () => toPhase("result", -1);
         break;
+      case "lesson":
+        back = () => toPhase(hadEventLesson ? "eventLesson" : "result", -1);
+        break;
       case "city":
-        back = () => toPhase(lvl.lesson ? "lesson" : "result", -1);
+        back = () => toPhase(lvl.lesson ? "lesson" : hadEventLesson ? "eventLesson" : "result", -1);
         break;
       case "roadmap":
         back = () => toPhase("city", -1);

@@ -12,6 +12,8 @@ import { BuildingCards } from "./BuildingCards";
 import { BUILDING_INFO, buildingHint } from "./buildings";
 import { CityScene } from "./CityScene";
 import type { CityConfig } from "@piwco/engine";
+import { repairing, type PlanItem } from "../game/session";
+import { MyPlan } from "./MyPlan";
 
 export function CityPage({
   city,
@@ -19,9 +21,12 @@ export function CityPage({
   config,
   shown,
   shownWorth,
+  plan,
   active,
   onSeen,
 }: {
+  // "My plan" items (real-world steps from the event lessons); they also put scaffolding on damaged buildings.
+  plan: PlanItem[];
   city: CityView;
   netWorth: number;
   config: CityConfig;
@@ -46,6 +51,7 @@ export function CityPage({
       <CityScene
         city={shownCity}
         decorate={lu.decorate}
+        repairing={repairing(plan, city.damaged)}
         onPressBuilding={(id) => {
           buzz("tick");
           setPicked((p) => (p === id ? null : id));
@@ -59,6 +65,7 @@ export function CityPage({
         <Text style={styles.tapHint}>Tap a building to see how it grows.</Text>
       )}
       <BuildingCards city={shownCity} barFor={lu.barFor} />
+      <MyPlan plan={plan} />
     </ScrollView>
   );
 }

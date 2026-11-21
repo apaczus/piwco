@@ -1,4 +1,6 @@
 // After "End month": lesson card (success) or "what went wrong" + replay (failure). Plus the year roadmap.
+import { MyPlan } from "../city/MyPlan";
+import type { PlanItem } from "./session";
 import { levels, type Level } from "@piwco/content";
 import type { GoalReason, GoalResult, MonthReport } from "@piwco/engine";
 import { useEffect } from "react";
@@ -146,8 +148,11 @@ export function Roadmap({
   dir,
   onNewGame,
   onPickMonth,
+  plan = [],
 }: {
   completedMonth: number;
+  // "My plan" summary under the months (hidden while empty).
+  plan?: PlanItem[];
   dir: Dir;
   onNewGame: () => void;
   // A completed month was tapped (Review / Replay month).
@@ -190,6 +195,7 @@ export function Roadmap({
           );
         })}
       </View>
+      <MyPlan plan={plan} night hideEmpty />
     </ScreenLayout>
   );
 }

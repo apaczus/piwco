@@ -304,6 +304,31 @@ export function drawing(id: BuildingId, level: number, rented: boolean, look: Lo
 }
 
 // Cracks over a building whose side is paying off a loan (the debt is visible in the city).
+// "Add to my plan" on a damaged building: scaffolding while its loan is paid off (the cracks stay until then).
+function Scaffolding({ w, h }: { w: number; h: number }) {
+  const pole = "#C98A00";
+  const plank = colors.yellow700;
+  const top = h * 0.12;
+  const levels = [0.38, 0.66, 0.94].map((f) => top + (h - top) * f);
+  const xs = [2, w - 2];
+  return (
+    <G opacity={0.95}>
+      {xs.map((x) => (
+        <Path key={x} d={`M${x} ${top} V${h}`} stroke={pole} strokeWidth={2} strokeLinecap="round" />
+      ))}
+      {levels.map((y) => (
+        <Path key={y} d={`M0 ${y} H${w}`} stroke={plank} strokeWidth={2.6} strokeLinecap="round" />
+      ))}
+      <Path
+        d={`M${xs[0]} ${levels[0]} L${w * 0.32} ${top} M${xs[1]} ${levels[1]} L${w * 0.68} ${levels[0]}`}
+        stroke={pole}
+        strokeWidth={1.4}
+        strokeLinecap="round"
+      />
+    </G>
+  );
+}
+
 function Cracks({ w, h }: { w: number; h: number }) {
   const x = w * 0.3;
   const y = h * 0.35;
@@ -349,8 +374,11 @@ export function CityScene({
   showGround = true,
   onPressBuilding,
   decorate,
+  repairing,
 }: {
   city: CityView;
+  // Scaffolding on Home / Company (a plan item repairs them while their debt is paid off).
+  repairing?: { home: boolean; firm: boolean };
   night?: boolean;
   showGround?: boolean;
   onPressBuilding?: (id: BuildingId) => void;
@@ -404,6 +432,7 @@ export function CityScene({
                   <Svg width={d.w * u} height={d.h * u} viewBox={`0 0 ${d.w} ${d.h}`}>
                     {d.body}
                     {(id === "home" && city.damaged.home) || (id === "firm" && city.damaged.firm) ? <Cracks w={d.w} h={d.h} /> : null}
+                    {(id === "home" && repairing?.home) || (id === "firm" && repairing?.firm) ? <Scaffolding w={d.w} h={d.h} /> : null}
                   </Svg>
                 </Pressable>
               );

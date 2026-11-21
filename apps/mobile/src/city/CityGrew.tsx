@@ -19,7 +19,9 @@ export function CityGrew({
   monthName,
   dir,
   onContinue,
+  repairing,
 }: {
+  repairing?: { home: boolean; firm: boolean };
   city: CityView;
   netWorth: number;
   // What the player saw last (end of the month's play); the difference plays as the month's level up.
@@ -40,7 +42,7 @@ export function CityGrew({
         <Text style={styles.worthLabel}>Net worth</Text>
         <RollingNumber value={lu.waiting ? shownWorth : netWorth} from={shownWorth} duration={650} style={styles.worthValue} />
       </View>
-      <CityScene city={shownCity} night decorate={lu.decorate} />
+      <CityScene city={shownCity} night decorate={lu.decorate} repairing={repairing} />
       <BuildingCards city={shownCity} night barFor={lu.barFor} />
     </ScreenLayout>
   );

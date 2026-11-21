@@ -205,6 +205,30 @@ export type GameEventDef = {
   requires?: "car" | "own_house";
   // Already covered by a policy in the game state or by an onboarding flag ("Prepared" shortcut).
   protectedBy?: { policy?: string; flag?: string };
+  // Lesson shown at the end of the month (after the result, before the month's lesson). Claude's texts, for team
+  // review. Placeholders are filled in apps/mobile/src/game/eventLesson.ts: {amount}, {revenue}, {costs},
+  // {companyLeft}, {homeLeft}, {cushionLeft}, {borrowed}, {loanTotal}, {installment}, {months}, {interest}.
+  lesson?: EventLesson;
+};
+
+export type EventLesson = {
+  // City building that the plan item repairs (scaffolding while its debt is being paid off).
+  building: "home" | "firm";
+  // Short name of the idea, shown on the cards (e.g. "Business cushion").
+  concept: string;
+  // Card 1 "What happened".
+  happened: string;
+  // Card 2 "What is X".
+  whatIs: { title: string; text: string };
+  // Card 3 "The math": without debt / with a loan taken for the event / covered by a policy ("Prepared": only
+  // this card is shown, no quiz, no plan). Missing variants fall back to `math`.
+  math: string;
+  mathBorrowed?: string;
+  mathPrepared?: string;
+  // 2–3 "myth or fact?" cards.
+  quiz: MythFactCard[];
+  // "Add to my plan": one real-world step.
+  plan: { title: string; detail: string };
 };
 
 // The JSON is not validated at runtime; this cast gives the literal types (side, effect, base).

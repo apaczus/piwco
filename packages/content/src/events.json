@@ -7,7 +7,33 @@
     "months": [1],
     "weight": 1,
     "effect": "late_payment",
-    "amount": { "base": "revenue", "share": 0.06, "min": 2000, "max": 12000 }
+    "amount": { "base": "revenue", "share": 0.06, "min": 2000, "max": 12000 },
+    "lesson": {
+      "building": "firm",
+      "concept": "Payment terms",
+      "happened": "A key client moved their invoice to next month. {amount} of this month's revenue didn't arrive, but your costs still had to be paid on time.",
+      "whatIs": {
+        "title": "What are payment terms?",
+        "text": "Payment terms are the deadline on your invoice: 7, 14 or 30 days. Money a client owes you is a receivable. It's yours on paper, but you can't pay rent or salaries with it until it arrives."
+      },
+      "math": "This month {revenue} came in instead of the full amount. Your company ended the month with {companyLeft}. The missing {amount} arrives next month. A business cushion worth one month of costs ({costs}) would cover even a big late payment without stress.",
+      "quiz": [
+        {
+          "statement": "An issued invoice is as good as cash in your account.",
+          "isFact": false,
+          "explain": "An invoice is a promise. Cash is what you can spend. Plan your month with the cash, not with the invoices."
+        },
+        {
+          "statement": "A clear payment deadline and a reminder the day after it help you get paid faster.",
+          "isFact": true,
+          "explain": "Clients pay the invoices that ask clearly first. A 14-day term and a polite reminder beat a 60-day silence."
+        }
+      ],
+      "plan": {
+        "title": "Set clear payment terms",
+        "detail": "Put a 14-day payment deadline on every invoice and set a calendar reminder to follow up the day after it passes."
+      }
+    }
   },
   {
     "id": "equipment_failure",
@@ -18,7 +44,35 @@
     "weight": 1,
     "effect": "cost",
     "amount": { "base": "revenue", "share": 0.06, "min": 2000, "max": 12000 },
-    "protectedBy": { "policy": "equipment" }
+    "protectedBy": { "policy": "equipment" },
+    "lesson": {
+      "building": "firm",
+      "concept": "Business cushion",
+      "happened": "The machine your company runs on stopped mid-order. The repair bill: {amount}. It wasn't in the budget, and it couldn't wait.",
+      "whatIs": {
+        "title": "What is a business cushion?",
+        "text": "A business cushion is cash the company keeps aside only for surprises: a broken machine, a late client, a slow month. A common rule: one to three months of costs. It isn't profit, so you don't pay it out to yourself."
+      },
+      "math": "You paid the {amount} repair with money you already had. No loan, no interest: the repair cost exactly {amount}. Borrowed, the same repair would have cost more, because every loan adds interest.",
+      "mathBorrowed": "You borrowed {borrowed}. You'll pay back {loanTotal}: {installment} a month for {months} months. That's {interest} extra just in interest. With {amount} set aside in a business cushion, the same repair would have cost exactly {amount}.",
+      "mathPrepared": "Your equipment policy paid the {amount} repair. Without it, the company would have paid {amount} from its cash, or borrowed it and paid interest on top.",
+      "quiz": [
+        {
+          "statement": "A business cushion is money you don't have yet.",
+          "isFact": false,
+          "explain": "It's money you already earned and chose to keep aside. That's why it's there the day something breaks."
+        },
+        {
+          "statement": "Borrowing for a repair makes the repair cost more than its bill.",
+          "isFact": true,
+          "explain": "Interest is the price of not having the money ready. A cushion costs you nothing extra."
+        }
+      ],
+      "plan": {
+        "title": "Start a business cushion",
+        "detail": "Open a separate savings account for the company and set an automatic monthly transfer (for example 5% of revenue) until it holds one month of costs."
+      }
+    }
   },
   {
     "id": "washing_machine",

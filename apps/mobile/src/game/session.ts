@@ -16,7 +16,30 @@ import {
 } from "@piwco/engine";
 
 // "welcome" = the celebratory "Welcome to the game" screen with the first mission (start of a new game).
-export type Phase = "welcome" | "intro" | "event" | "play" | "draw" | "budget" | "receipt" | "result" | "lesson" | "city" | "roadmap";
+// "eventLesson" = the month's event lesson (info cards, quiz, "Add to my plan"), after the result, before "lesson".
+export type Phase =
+  | "welcome"
+  | "intro"
+  | "event"
+  | "play"
+  | "draw"
+  | "budget"
+  | "receipt"
+  | "result"
+  | "eventLesson"
+  | "lesson"
+  | "city"
+  | "roadmap";
+
+// A real-world step the player added with "Add to my plan" (kept in memory; storage comes with the server).
+export type PlanItem = {
+  month: number;
+  eventId: string;
+  title: string;
+  detail: string;
+  // City building it repairs (scaffolding while that side still has loan debt).
+  building: "home" | "firm";
+};
 
 export type Session = {
   game: GameState;
@@ -32,6 +55,8 @@ export type Session = {
   history: MonthRecord[];
   // Month being reviewed (receipt → result → lesson → city of that pass, nothing changes); null = playing.
   reviewing: number | null;
+  // "My plan", oldest first. Items belong to the month they were added in (a rewind drops later months' items).
+  plan: PlanItem[];
 };
 
 export type MonthRecord = {
@@ -66,6 +91,7 @@ export function newSession(industryId: string, seed: number, answers?: Household
     beforeEnd: null,
     history: [],
     reviewing: null,
+    plan: [],
   };
 }
 
@@ -110,6 +136,7 @@ export function undoEndMonth(s: Session): Session {
     result: null,
     beforeEnd: null,
     history: s.history.filter((h) => h.month !== month),
+    plan: s.plan.filter((p) => p.month !== month),
   };
 }
 
@@ -137,9 +164,24 @@ export function rewindTo(s: Session, month: number): Session {
     beforeEnd: null,
     history: s.history.filter((h) => h.month < month),
     reviewing: null,
+    plan: s.plan.filter((p) => p.month < month),
   };
 }
 
 export function replay(s: Session): Session {
   return { ...s, game: s.snapshot, phase: monthStartPhase(s.snapshot), result: null, beforeEnd: null };
+}
+
+// "Add to my plan": the same event's item is added once per month (going back and adding again changes nothing).
+export function addToPlan(s: Session, item: PlanItem): Session {
+  const plan = s.plan.filter((p) => !(p.month === item.month && p.eventId === item.eventId));
+  return { ...s, plan: [...plan, item] };
+}
+
+// Buildings with scaffolding: damaged (loan debt on that side) and a plan item that repairs them.
+export function repairing(plan: PlanItem[], damaged: { home: boolean; firm: boolean }): { home: boolean; firm: boolean } {
+  return {
+    home: damaged.home && plan.some((p) => p.building === "home"),
+    firm: damaged.firm && plan.some((p) => p.building === "firm"),
+  };
 }

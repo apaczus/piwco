@@ -212,7 +212,7 @@ function Feedback({ card, correct, reduced }: { card: MythFactCard; correct: boo
   );
 }
 
-function Done({ results, monthName, reduced }: { results: boolean[]; monthName: string; reduced: boolean }) {
+function Done({ results, sub, reduced }: { results: boolean[]; sub: string; reduced: boolean }) {
   useEffect(() => {
     const t = setTimeout(() => buzz("success"), 250);
     return () => clearTimeout(t);
@@ -229,7 +229,7 @@ function Done({ results, monthName, reduced }: { results: boolean[]; monthName: 
         <Text style={styles.doneTitle}>Lesson complete!</Text>
       </Enter>
       <Enter from="below" delay={340}>
-        <Text style={styles.doneSub}>{`${monthName}'s lesson is yours. You know where the cash goes.`}</Text>
+        <Text style={styles.doneSub}>{sub}</Text>
       </Enter>
       <View style={styles.doneDots}>
         {results.map((r, i) => (
@@ -247,11 +247,18 @@ export function SwipeLesson({
   monthName,
   cards,
   onDone,
+  eyebrow,
+  doneSub,
+  doneLabel = "See your year",
 }: {
   title: string;
   monthName: string;
   cards: MythFactCard[];
   onDone: () => void;
+  // Defaults: the month's lesson ("LESSON · JANUARY", "See your year").
+  eyebrow?: string;
+  doneSub?: string;
+  doneLabel?: string;
 }) {
   const { width } = useWindowDimensions();
   const reduced = useReducedMotion();
@@ -356,8 +363,12 @@ export function SwipeLesson({
   if (stage === "done") {
     return (
       <View style={{ flex: 1 }}>
-        <Done results={results.map((r) => r === true)} monthName={monthName} reduced={reduced} />
-        <Cta appear label="See your year" onPress={onDone} />
+        <Done
+          results={results.map((r) => r === true)}
+          sub={doneSub ?? `${monthName}'s lesson is yours. You know where the cash goes.`}
+          reduced={reduced}
+        />
+        <Cta appear label={doneLabel} onPress={onDone} />
       </View>
     );
   }
@@ -373,7 +384,7 @@ export function SwipeLesson({
       </Animated.View>
 
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>{`LESSON · ${monthName.toUpperCase()}`}</Text>
+        <Text style={styles.eyebrow}>{eyebrow ?? `LESSON · ${monthName.toUpperCase()}`}</Text>
         <View style={styles.headerRight}>
           <Text style={styles.counter}>{`${Math.min(index + 1, cards.length)} / ${cards.length}`}</Text>
           <SoundToggle onPetrol />
