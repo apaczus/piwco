@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // Bundler resolution: extensionless relative imports, as used by Metro (mobile) and Vitest.
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    // @piwco/content imports its data from .json files.
+    "resolveJsonModule": true,
+    "noEmit": true
+  },
+  "include": ["src"]
+}

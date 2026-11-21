@@ -1,0 +1,15 @@
+{
+  "startingCash": 1500,
+  "emergencyFund": 0,
+  "ownsHouse": true,
+  "ownsCar": true,
+  "debt": { "balance": 0, "monthlyInstallment": 0 },
+  "categories": [
+    { "id": "housing", "label": "Housing", "monthlySpending": 2500, "minimum": 2500 },
+    { "id": "food", "label": "Food", "monthlySpending": 1500, "minimum": 1000 },
+    { "id": "car_transport", "label": "Car & transport", "monthlySpending": 700, "minimum": 0 },
+    { "id": "insurance", "label": "Insurance", "monthlySpending": 0, "minimum": 0 },
+    { "id": "savings", "label": "Savings", "monthlySpending": 0, "minimum": 0 },
+    { "id": "other", "label": "Other", "monthlySpending": 500, "minimum": 0 }
+  ]
+}

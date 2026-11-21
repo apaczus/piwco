@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      # Dev-only credentials. The database is reachable only from this laptop (127.0.0.1).
+      POSTGRES_USER: piwco
+      POSTGRES_PASSWORD: piwco
+      POSTGRES_DB: piwco
+    ports:
+      # Host port 5433 (5432 is used by another project on this laptop).
+      - "127.0.0.1:5433:5432"
+    volumes:
+      # Postgres 18+ images store data under /var/lib/postgresql.
+      - piwco-pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U piwco -d piwco"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  piwco-pgdata:
+    name: piwco-pgdata

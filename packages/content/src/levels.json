@@ -1,0 +1,206 @@
+[
+  {
+    "id": "month_01",
+    "month": 1,
+    "monthName": "January",
+    "title": "Budget and cash flow",
+    "subtitle": "The foundation of a good start",
+    "playable": true,
+    "topics": [
+      "Tell apart revenue, fixed costs and variable costs, both in your household budget and in your business (linked to the costs of your industry).",
+      "Understand liquidity: cash flow vs. \"profit on paper\".",
+      "Separate private money from business money at the start of the year."
+    ],
+    "challenge": "Plan your monthly budget and get through the first month without a negative balance.",
+    "mission": {
+      "title": "Get through your first month with every bill paid",
+      "steps": [
+        { "id": "pay_yourself", "label": "Pay yourself from the company" },
+        { "id": "plan_budget", "label": "Plan your household budget" },
+        { "id": "all_paid", "label": "Make sure every bill gets paid" }
+      ],
+      "reward": "Unlocks February and your first lesson"
+    },
+    "lessonCard": {
+      "title": "Cash keeps you alive",
+      "points": [
+        "Revenue is not profit, and profit is not cash. A month can look profitable on paper and still leave you unable to pay rent if customers pay late.",
+        "Fixed costs (rent, salaries, loan installments) must be paid no matter what. Variable costs (ingredients, packaging) grow and shrink with sales.",
+        "Keep business and personal money in separate accounts. Pay yourself a planned amount from the business instead of dipping into the company account whenever you need cash.",
+        "A budget is a plan made before the month starts: money in, money out, and what is left."
+      ]
+    }
+  },
+  {
+    "id": "month_02",
+    "month": 2,
+    "monthName": "February",
+    "title": "Emergency fund",
+    "subtitle": "Your shield against the unexpected",
+    "playable": true,
+    "topics": [
+      "Build a safety buffer on top of good cash flow: how many months of costs are worth securing.",
+      "How the size of the fund differs for an employee, a freelancer and a business with unpredictable costs (e.g. food service or manufacturing).",
+      "Where to keep the fund so it is safe and quick to reach."
+    ],
+    "challenge": "Put aside the first part of your emergency fund while paying your current bills and a sudden small cost.",
+    "lessonCard": {
+      "title": "A cushion for bad days",
+      "points": [
+        "An emergency fund is cash set aside only for surprises: a broken fridge, a client who pays late, a sudden repair.",
+        "A common rule of thumb is 3–6 months of essential costs. A business with unpredictable costs or income, like a restaurant, needs a bigger cushion than someone with a steady salary.",
+        "Keep it safe and easy to reach, e.g. in a separate savings account, not in stocks or a long-term deposit.",
+        "Build it step by step: a small fixed amount every month adds up."
+      ]
+    }
+  },
+  {
+    "id": "month_03",
+    "month": 3,
+    "monthName": "March",
+    "title": "Insurance and risk",
+    "subtitle": "Protection against big losses",
+    "playable": true,
+    "topics": [
+      "Move from saving for small crises to protecting yourself against big losses that an emergency fund alone cannot cover.",
+      "Personal insurance (health, life, loss of income) and business insurance (liability, property, equipment and machinery).",
+      "How to read exclusions, deductibles and sums insured."
+    ],
+    "challenge": "Choose insurance that fits your life and your business. Disaster may strike before you are covered, so learn from it.",
+    "lessonCard": {
+      "title": "Insure what you can't afford to lose",
+      "points": [
+        "An emergency fund covers small shocks. Insurance is for big losses the fund cannot cover: a fire, a serious illness, a lawsuit.",
+        "Personal: health, life and loss-of-income insurance. Business: liability, property and equipment insurance.",
+        "Always check the exclusions (what is NOT covered), the deductible (the part you pay yourself) and the sum insured (the maximum payout).",
+        "Insurance only helps if you have it before something happens."
+      ]
+    }
+  },
+  {
+    "id": "month_04",
+    "month": 4,
+    "monthName": "April",
+    "title": "Taxes",
+    "subtitle": "Costs you don't see right away",
+    "playable": false,
+    "topics": [
+      "With cash flow, a buffer and risk under control, it is time for mandatory public charges.",
+      "Basics of income tax, VAT and social contributions, in personal life and in business.",
+      "How taxes affect real profit, product prices and cash planning for the coming months."
+    ],
+    "challenge": "Set aside cash for the tax deadline without touching your emergency fund."
+  },
+  {
+    "id": "month_05",
+    "month": 5,
+    "monthName": "May",
+    "title": "Personal and business debt",
+    "subtitle": "When a loan helps and when it hurts",
+    "playable": false,
+    "topics": [
+      "What to do when current funds are not enough.",
+      "\"Good\" debt (investing in growth or assets) vs. \"bad\" debt (paying for everyday spending or covering losses).",
+      "The cost of money over time: interest, APR, fees and the repayment schedule."
+    ],
+    "challenge": "Compare two loan offers and pay an installment on a tight budget."
+  },
+  {
+    "id": "month_06",
+    "month": 6,
+    "monthName": "June",
+    "title": "Debt financing",
+    "subtitle": "Loans, bonds and installments in business",
+    "playable": false,
+    "topics": [
+      "Using debt as part of a growth strategy in the middle of the year.",
+      "Bank loan, leasing, overdraft or a bond issue: matching the instrument to the goal and the industry.",
+      "How debt affects stability when sales drop or interest rates rise."
+    ],
+    "challenge": "Finance new equipment or an expansion with debt while keeping safe liquidity."
+  },
+  {
+    "id": "month_07",
+    "month": 7,
+    "monthName": "July",
+    "title": "Legal forms of business",
+    "subtitle": "Liability and taxes",
+    "playable": false,
+    "topics": [
+      "How the legal structure of a business protects your assets.",
+      "The main forms: sole proprietorship, civil partnership, limited liability company, joint-stock company, limited partnership.",
+      "Owners' liability, bringing in investors and the tax consequences of each form."
+    ],
+    "challenge": "Choose or change your company's legal form as risk and capital needs grow."
+  },
+  {
+    "id": "month_08",
+    "month": 8,
+    "monthName": "August",
+    "title": "Stocks and bonds",
+    "subtitle": "Putting surplus money to work",
+    "playable": false,
+    "topics": [
+      "Investing surplus capital once the budget, debt and legal form are in order.",
+      "Stocks (a share in a company's ownership and growth) and bonds (lending money to the issuer).",
+      "Risk, liquidity, time horizon and diversification in personal and business portfolios."
+    ],
+    "challenge": "Build a diversified portfolio with the capital you have and react to market swings."
+  },
+  {
+    "id": "month_09",
+    "month": 9,
+    "monthName": "September",
+    "title": "Financial leverage",
+    "subtitle": "Multiplying profit and risk",
+    "playable": false,
+    "topics": [
+      "Debt and financial assets combined in one mechanism.",
+      "Financial and operating leverage: how borrowed money or fixed costs boost returns in good times.",
+      "The dark side: the same mechanism speeds up losses in a downturn."
+    ],
+    "challenge": "Use leverage in an investment or a business project and survive a market correction."
+  },
+  {
+    "id": "month_10",
+    "month": 10,
+    "monthName": "October",
+    "title": "Dividends",
+    "subtitle": "Pay yourself or reinvest?",
+    "playable": false,
+    "topics": [
+      "Where dividends come from and when a company may pay them.",
+      "Why not every profitable company pays a dividend.",
+      "The dilemma: pay the profit to yourself or keep it in the company for growth (R&D, expansion)."
+    ],
+    "challenge": "Decide how to split your company's profit between your own needs and competing on the market."
+  },
+  {
+    "id": "month_11",
+    "month": 11,
+    "monthName": "November",
+    "title": "Pre-emptive rights",
+    "subtitle": "Defending your stake and raising capital",
+    "playable": false,
+    "topics": [
+      "Raising capital for the next cycle before the end of the year.",
+      "Pre-emptive rights and rights of first refusal: subscribing to new shares and contract clauses when shares are sold.",
+      "How a new share issue or a share sale dilutes your stake and your control."
+    ],
+    "challenge": "Decide whether to use your pre-emptive right, sell it, or let your stake be diluted."
+  },
+  {
+    "id": "month_12",
+    "month": 12,
+    "monthName": "December",
+    "title": "Annual review and strategy",
+    "subtitle": "Closing the year",
+    "playable": false,
+    "topics": [
+      "Summing up all 12 months and connecting personal and business finances.",
+      "Net worth (assets minus debts), emergency fund, insurance coverage and tax efficiency.",
+      "Learning from the year's mistakes and successes."
+    ],
+    "challenge": "Close your financial year."
+  }
+]

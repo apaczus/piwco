@@ -1,0 +1,332 @@
+{
+  "brand": "FINANCE QUEST",
+  "welcomeSlides": [
+    {
+      "title": "Finance is a series of decisions",
+      "text": "Finance Quest is a game where, month by month, you make decisions about money: yours and your company's. Every choice has consequences you see right away."
+    },
+    {
+      "title": "A simulation that puts problems in front of you",
+      "text": "Every month brings a problem to solve: a broken car, a client who doesn't pay, a stock market drop. You choose the solution, and the simulation shows its effects."
+    },
+    {
+      "title": "Learn to take risks",
+      "text": "Not every risk has to be eliminated. You'll learn to assess risks and decide which ones you take on and which ones you protect yourself against."
+    },
+    {
+      "title": "Awareness that stays with you",
+      "text": "After each month, a short lesson: why this way and not another. We start with a 2-minute analysis so the game mirrors your real finances."
+    }
+  ],
+  "welcomePills": ["about 2 minutes", "no amounts to type", "no judgement"],
+  "ageBands": [
+    { "id": "18", "label": "18–25 years", "hint": "starting out: first job, studies" },
+    { "id": "26", "label": "26–35 years", "hint": "building: home, family, career" },
+    { "id": "36", "label": "36–50 years", "hint": "stability: family, business, assets" },
+    { "id": "51", "label": "51–65 years", "hint": "before retirement" },
+    { "id": "65", "label": "Over 65", "hint": "retired" }
+  ],
+  "horizons": {
+    "18": "You have a long horizon. In the game you'll find out how much investment risk you can handle and how time smooths out drops.",
+    "26": "You're building the basics. In the game you'll learn to balance paying off debts with saving for the future.",
+    "36": "You're halfway there. The game will show you how to balance risk between everyday spending, your family's security and investments.",
+    "51": "Retirement is getting closer. In the game you'll learn to limit risk and protect what you've built.",
+    "65": "In retirement, protecting your capital is what matters. In the game you'll decide how to keep your savings' value without taking too much risk."
+  },
+  "industries": [
+    { "id": "gastronomy", "label": "Gastronomy", "hint": "restaurant, café", "playable": true },
+    { "id": "it_software", "label": "IT & Software", "hint": "software house, online", "playable": true },
+    { "id": "manufacturing", "label": "Manufacturing", "hint": "workshop, production", "playable": true },
+    { "id": "beauty", "label": "Beauty", "hint": "salon, barber", "playable": false },
+    { "id": "retail", "label": "Retail", "hint": "shop, e-commerce", "playable": false },
+    { "id": "services", "label": "Services", "hint": "office, consulting", "playable": false }
+  ],
+  "accounts": [
+    {
+      "id": "main",
+      "name": "Main Account",
+      "rule": "Income and expenses",
+      "explainTitle": "Main Account: where it all starts",
+      "explainText": "Your salary or your draw from the company lands here, and you pay your bills from here. Right after money comes in, you split part of it into the three other accounts.",
+      "focusStep": "1 of 4",
+      "focusBig": "Start",
+      "focusUnit": "money comes in here",
+      "inGame": "Every month starts with a decision: how much to transfer from the account, and where. You'll immediately see what's left."
+    },
+    {
+      "id": "cushion",
+      "name": "Safety Cushion",
+      "rule": "3–6 months of expenses",
+      "explainTitle": "Safety Cushion",
+      "explainText": "A reserve for 3–6 months of expenses. When the car breaks down or a worse month comes, you reach here, not for a loan.",
+      "focusStep": "2 of 4",
+      "focusBig": "3–6",
+      "focusUnit": "months of expenses",
+      "inGame": "Random events will test whether your cushion is enough. You decide how much risk you leave without a reserve."
+    },
+    {
+      "id": "future",
+      "name": "Future",
+      "rule": "10–20% of income · investments > inflation",
+      "explainTitle": "Future",
+      "explainText": "10–20% of your income every month. It goes into investments that grow faster than inflation, and towards retirement.",
+      "focusStep": "3 of 4",
+      "focusBig": "10–20%",
+      "focusUnit": "of income each month",
+      "inGame": "You'll choose between safer and riskier investing and see the effects months later, including during market drops."
+    },
+    {
+      "id": "protection",
+      "name": "Safety Package",
+      "rule": "Insurance · 3–7% of income",
+      "explainTitle": "Safety Package: the foundation",
+      "explainText": "Insurance for 3–7% of your income. It protects everything above it: one uninsured loss can wipe out both your cushion and your investments.",
+      "focusStep": "4 of 4 · foundation",
+      "focusBig": "3–7%",
+      "focusUnit": "of income on insurance",
+      "inGame": "You'll decide which risks to insure and which to take on yourself. A car breakdown or a flooded flat will show what that decision costs."
+    }
+  ],
+  "seniorFutureInGame": "You'll decide how to split your savings between safe and riskier options, and see what inflation does to them.",
+  "questions": [
+    {
+      "id": "income",
+      "account": "main",
+      "question": "How much comes into your account each month?",
+      "why": "Amounts in the game will match the scale of your real ones.",
+      "shortLabel": "Income",
+      "twoColumns": true,
+      "options": [
+        { "label": "Up to 4k PLN", "value": "3000" },
+        { "label": "4–7k PLN", "value": "5500" },
+        { "label": "7–12k PLN", "value": "9500" },
+        { "label": "Over 12k PLN", "value": "14000" }
+      ],
+      "optionsByAge": {
+        "18": [
+          { "label": "No steady income", "value": "1500" },
+          { "label": "Up to 4k PLN", "value": "3000" },
+          { "label": "4–7k PLN", "value": "5500" },
+          { "label": "Over 7k PLN", "value": "9000" }
+        ],
+        "65": [
+          { "label": "Up to 3k PLN", "value": "2500" },
+          { "label": "3–5k PLN", "value": "4000" },
+          { "label": "5–8k PLN", "value": "6500" },
+          { "label": "Over 8k PLN", "value": "10000" }
+        ]
+      }
+    },
+    {
+      "id": "endMonth",
+      "account": "main",
+      "question": "What's left in your account at the end of the month?",
+      "why": "This sets the balance you start the first month of the game with.",
+      "shortLabel": "End of month",
+      "twoColumns": true,
+      "options": [
+        { "label": "I run short", "value": "minus" },
+        { "label": "Nothing is left", "value": "zero" },
+        { "label": "A little is left", "value": "some" },
+        { "label": "Quite a lot is left", "value": "lot" }
+      ]
+    },
+    {
+      "id": "loans",
+      "account": "main",
+      "question": "What loans and debts do you have?",
+      "why": "Your debts will enter the game with installments typical for their type.",
+      "shortLabel": "Debts",
+      "multi": true,
+      "options": [
+        { "label": "Mortgage", "value": "mortgage" },
+        { "label": "Cash loan", "value": "cash_loan" },
+        { "label": "Credit card", "value": "credit_card" },
+        { "label": "Overdraft", "value": "overdraft" },
+        { "label": "Leasing", "value": "leasing" },
+        { "label": "Non-bank loan", "value": "payday_loan" }
+      ],
+      "optionsByAge": {
+        "18": [
+          { "label": "Student loan", "value": "student_loan" },
+          { "label": "Cash loan", "value": "cash_loan" },
+          { "label": "Credit card", "value": "credit_card" },
+          { "label": "Overdraft", "value": "overdraft" },
+          { "label": "Installment purchases", "value": "installments" },
+          { "label": "Non-bank loan", "value": "payday_loan" }
+        ]
+      }
+    },
+    {
+      "id": "separate",
+      "account": "main",
+      "businessOnly": true,
+      "question": "Does your company have a separate account that you don't pay private expenses from?",
+      "why": "The game will mirror how money flows between your company and your home today.",
+      "shortLabel": "Separate company account",
+      "twoColumns": true,
+      "options": [
+        { "label": "Yes", "value": "yes" },
+        { "label": "No", "value": "no" }
+      ]
+    },
+    {
+      "id": "taxReserve",
+      "account": "main",
+      "businessOnly": true,
+      "question": "Do you set aside a reserve for taxes and ZUS every month?",
+      "why": "Tax and ZUS (social security) deadlines will appear in the game just like in real life.",
+      "shortLabel": "Tax reserve",
+      "twoColumns": true,
+      "options": [
+        { "label": "Yes", "value": "yes" },
+        { "label": "No", "value": "no" }
+      ]
+    },
+    {
+      "id": "cushion",
+      "account": "cushion",
+      "question": "How many months of expenses would your savings cover?",
+      "why": "That's the reserve you'll start the game with.",
+      "shortLabel": "Reserve",
+      "options": [
+        { "label": "I have no savings", "value": "0" },
+        { "label": "Less than 1 month", "value": "0.5" },
+        { "label": "1–3 months", "value": "2" },
+        { "label": "3–6 months", "value": "4.5" },
+        { "label": "Over 6 months", "value": "7" }
+      ]
+    },
+    {
+      "id": "saveRate",
+      "account": "future",
+      "ages": ["18", "26", "36", "51"],
+      "question": "What part of your income do you put aside for the future each month?",
+      "why": "That's how much will go into the Future account in the game every month.",
+      "shortLabel": "You save",
+      "twoColumns": true,
+      "options": [
+        { "label": "Nothing", "value": "0" },
+        { "label": "Up to 10%", "value": "5" },
+        { "label": "10–20%", "value": "15" },
+        { "label": "Over 20%", "value": "25" }
+      ]
+    },
+    {
+      "id": "retire",
+      "account": "future",
+      "ages": ["18", "26", "36", "51"],
+      "multi": true,
+      "question": "Which retirement accounts do you use?",
+      "why": "Your retirement accounts will appear in the game with their own rules.",
+      "shortLabel": "Retirement accounts",
+      "options": [
+        { "label": "IKE", "value": "IKE", "note": "individual retirement account" },
+        { "label": "IKZE", "value": "IKZE", "note": "deductible from income tax (PIT)" },
+        { "label": "PPK", "value": "PPK", "note": "employee capital plan" },
+        { "label": "PPE", "value": "PPE", "note": "employee pension plan" },
+        { "label": "OIPE", "value": "OIPE", "note": "pan-European personal pension" }
+      ]
+    },
+    {
+      "id": "seniorInvest",
+      "account": "future",
+      "ages": ["65"],
+      "question": "Where do you keep your savings?",
+      "why": "Your savings will start the game where they are today.",
+      "shortLabel": "Savings",
+      "options": [
+        { "label": "In an account or cash", "value": "cash" },
+        { "label": "In deposits", "value": "deposit" },
+        { "label": "In treasury bonds", "value": "bonds" },
+        { "label": "In funds or stocks", "value": "funds" },
+        { "label": "I have no savings", "value": "none" }
+      ]
+    },
+    {
+      "id": "insSpend",
+      "account": "protection",
+      "question": "How much do you spend on all insurance each month?",
+      "why": "We'll move this protection cost into your budget in the game.",
+      "shortLabel": "Insurance",
+      "twoColumns": true,
+      "options": [
+        { "label": "Nothing", "value": "0" },
+        { "label": "Up to 3% of income", "value": "2" },
+        { "label": "3–7% of income", "value": "5" },
+        { "label": "Over 7% of income", "value": "9" }
+      ]
+    },
+    {
+      "id": "health",
+      "account": "protection",
+      "ages": ["18", "65"],
+      "question": "Do you have health or accident (NNW) insurance?",
+      "why": "Your health protection in the game will be the same as in real life.",
+      "shortLabel": "Health / accident",
+      "twoColumns": true,
+      "options": [
+        { "label": "Yes", "value": "yes" },
+        { "label": "No", "value": "no" }
+      ]
+    },
+    {
+      "id": "life",
+      "account": "protection",
+      "ages": ["26", "36", "51"],
+      "question": "Do you have life insurance?",
+      "why": "The game will include this policy in your budget and in events.",
+      "shortLabel": "Life",
+      "twoColumns": true,
+      "options": [
+        { "label": "Yes", "value": "yes" },
+        { "label": "No", "value": "no" }
+      ]
+    },
+    {
+      "id": "car",
+      "account": "protection",
+      "question": "How is your car insured?",
+      "why": "Your car will drive in the game with the same policy it has today.",
+      "shortLabel": "Car",
+      "options": [
+        { "label": "Liability + comprehensive (OC + AC)", "value": "ac" },
+        { "label": "Liability only (OC)", "value": "oc" },
+        { "label": "I don't have a car", "value": "none" }
+      ]
+    },
+    {
+      "id": "home",
+      "account": "protection",
+      "question": "Where do you live?",
+      "why": "The game will mirror your housing situation.",
+      "shortLabel": "Home",
+      "options": [
+        { "label": "In my own place, insured", "value": "own_ins" },
+        { "label": "In my own place, no policy", "value": "own_no" },
+        { "label": "I rent", "value": "rent" }
+      ],
+      "optionsByAge": {
+        "18": [
+          { "label": "With my parents", "value": "parents" },
+          { "label": "I rent", "value": "rent" },
+          { "label": "In my own place, insured", "value": "own_ins" },
+          { "label": "In my own place, no policy", "value": "own_no" }
+        ]
+      }
+    },
+    {
+      "id": "bizIns",
+      "account": "protection",
+      "businessOnly": true,
+      "question": "Does your company have business liability insurance and insured assets?",
+      "why": "Your company in the game will have the same protection it has today.",
+      "shortLabel": "Company protection",
+      "options": [
+        { "label": "Yes", "value": "yes" },
+        { "label": "Partly", "value": "part" },
+        { "label": "No", "value": "no" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "gastronomy",
+    "name": "Gastronomy",
+    "description": "A small restaurant.",
+    "monthlyRevenue": 70000,
+    "startingCash": 5000,
+    "employees": 5,
+    "costCategories": [
+      { "id": "salaries", "label": "Salaries", "monthlyCost": 28000 },
+      { "id": "supplies", "label": "Food & supplies", "monthlyCost": 21000 },
+      { "id": "rent", "label": "Rent", "monthlyCost": 8000 },
+      { "id": "energy", "label": "Energy & water", "monthlyCost": 4500 },
+      { "id": "marketing", "label": "Marketing", "monthlyCost": 1500 },
+      { "id": "logistics", "label": "Deliveries", "monthlyCost": 1500 }
+    ]
+  },
+  {
+    "id": "it_software",
+    "name": "IT & Software Development",
+    "description": "A small software house.",
+    "monthlyRevenue": 90000,
+    "startingCash": 20000,
+    "employees": 4,
+    "costCategories": [
+      { "id": "salaries", "label": "Salaries", "monthlyCost": 60000 },
+      { "id": "it_hardware", "label": "Hardware & software", "monthlyCost": 3000 },
+      { "id": "rent", "label": "Office", "monthlyCost": 5000 },
+      { "id": "marketing", "label": "Marketing & B2B relations", "monthlyCost": 2000 },
+      { "id": "bookkeeping", "label": "Bookkeeping", "monthlyCost": 1500 },
+      { "id": "energy", "label": "Energy", "monthlyCost": 800 }
+    ]
+  },
+  {
+    "id": "manufacturing",
+    "name": "Manufacturing",
+    "description": "A small production workshop.",
+    "monthlyRevenue": 120000,
+    "startingCash": 30000,
+    "employees": 8,
+    "costCategories": [
+      { "id": "salaries", "label": "Salaries", "monthlyCost": 56000 },
+      { "id": "materials", "label": "Materials", "monthlyCost": 30000 },
+      { "id": "rent", "label": "Production hall", "monthlyCost": 10000 },
+      { "id": "energy", "label": "Energy", "monthlyCost": 9000 },
+      { "id": "logistics", "label": "Transport", "monthlyCost": 6000 },
+      { "id": "maintenance", "label": "Machine maintenance", "monthlyCost": 4000 }
+    ]
+  }
+]

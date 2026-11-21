@@ -1,0 +1,11 @@
+{
+  "name": "piwco",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24"
+  }
+}
