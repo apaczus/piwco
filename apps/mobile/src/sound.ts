@@ -4,7 +4,7 @@
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from "expo-audio";
 import { useSyncExternalStore } from "react";
 
-export type SoundName = "pop" | "coin" | "success" | "error" | "whoosh";
+export type SoundName = "pop" | "coin" | "success" | "error" | "whoosh" | "alarm";
 
 const SOURCES: Record<SoundName, number> = {
   pop: require("../assets/sounds/pop.wav"),
@@ -12,6 +12,7 @@ const SOURCES: Record<SoundName, number> = {
   success: require("../assets/sounds/success.wav"),
   error: require("../assets/sounds/error.wav"),
   whoosh: require("../assets/sounds/whoosh.wav"),
+  alarm: require("../assets/sounds/alarm.wav"),
 };
 
 let players: Partial<Record<SoundName, AudioPlayer>> | null = null;

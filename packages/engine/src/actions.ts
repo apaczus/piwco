@@ -119,6 +119,25 @@ export function applyAction(state: GameState, action: Action): ActionResult {
       return { ok: true, state: withLog(next, action) };
     }
 
+    case "bridge_late_payment": {
+      const ev = state.event;
+      if (!ev || ev.month !== state.month || ev.effect !== "late_payment" || ev.variant !== "full") {
+        return { ok: false, error: "There is no late payment to bridge this month." };
+      }
+      if (ev.loans.length > 0) return { ok: false, error: "The late payment is already bridged." };
+      const terms = state.financing[action.product];
+      if (!terms) return { ok: false, error: `Unknown loan product: "${action.product}".` };
+      if (terms.side !== "business") return { ok: false, error: "A late payment can only be bridged with a company loan." };
+      const { total, installment } = loanCost(ev.amount, terms);
+      const loan = { product: action.product, side: terms.side, principal: ev.amount, total, installment };
+      const next: GameState = {
+        ...state,
+        business: { ...state.business, cash: state.business.cash + ev.amount },
+        event: { ...ev, loans: [...ev.loans, loan] },
+      };
+      return { ok: true, state: withLog(next, action) };
+    }
+
     default: {
       // Actions can come from untrusted JSON (server replay), so unknown types are rejected.
       const unknown: never = action;

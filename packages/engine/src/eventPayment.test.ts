@@ -154,6 +154,38 @@ describe("settleMonth with an event", () => {
   });
 });
 
+describe("bridge_late_payment", () => {
+  const late = () => start({ side: "business", effect: "late_payment", amount: 3_000, remaining: 0 });
+
+  it("puts the late amount on the company account now and adds a company loan after the settlement", () => {
+    const s = act(late(), { type: "bridge_late_payment", product: "business_overdraft" });
+    expect(s.business.cash).toBe(23_000);
+    const { total, installment } = loanCost(3_000, FIN.business_overdraft!);
+    expect(s.event!.loans).toEqual([{ product: "business_overdraft", side: "business", principal: 3_000, total, installment }]);
+    const { state, report } = settleMonth(s);
+    // 23 000 + 42 000 − 39 000: the bridge makes up for the late revenue.
+    expect(report.business.endCash).toBe(26_000);
+    expect(state.business.debt).toEqual({ balance: total, monthlyInstallment: installment });
+    expect(state.business.receivables).toBe(3_000);
+    expect(report.event!.loans).toHaveLength(1);
+  });
+
+  it("is allowed once, only for a late payment, only with a company loan", () => {
+    const once = act(late(), { type: "bridge_late_payment", product: "business_overdraft" });
+    expect(error(once, { type: "bridge_late_payment", product: "business_overdraft" })).toMatch(/already bridged/);
+    expect(error(start({}), { type: "bridge_late_payment", product: "business_overdraft" })).toMatch(/no late payment/);
+    expect(error(late(), { type: "bridge_late_payment", product: "credit_card" })).toMatch(/company loan/);
+    expect(error(late(), { type: "bridge_late_payment", product: "nope" })).toMatch(/Unknown loan product/);
+  });
+
+  it("does not mutate the input and is logged", () => {
+    const s = deepFreeze(late());
+    const r = applyAction(s, { type: "bridge_late_payment", product: "business_overdraft" });
+    expect(r.ok && r.state.log).toHaveLength(1);
+    expect(s.business.cash).toBe(20_000);
+  });
+});
+
 describe("January with the real events", () => {
   it("every January event can be survived in every industry (company loan if needed)", () => {
     for (const industry of industries) {

@@ -33,7 +33,9 @@ import { MonthSheet } from "./MonthSheet";
 import {
   act,
   addToPlan,
+  afterDecision,
   endMonth,
+  eventPending,
   endReview,
   monthStartPhase,
   newSession,
@@ -43,6 +45,7 @@ import {
   rewindTo,
   startReview,
   undoEndMonth,
+  visibleGame,
   type Phase,
   type Session,
 } from "./session";
@@ -116,7 +119,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
   // The city during the month = the month-end forecast (same as the HUD). Only while playing the month.
   const playForecast =
     session && session.phase === "play"
-      ? forecastCity(session.game, session.completedMonth, cityConfigFor(session.game))
+      ? forecastCity(visibleGame(session), session.completedMonth, cityConfigFor(session.game))
       : null;
   useEffect(() => {
     if (!playForecast || !session) return;
@@ -216,11 +219,11 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
         break;
       case "play": {
         const config = cityConfigFor(session.game);
-        const forecast = playForecast ?? forecastCity(session.game, session.completedMonth, config);
+        const forecast = playForecast ?? forecastCity(visibleGame(session), session.completedMonth, config);
         const seen = shown ?? { levels: forecast.city.levels, worth: forecast.netWorth };
         const learn = (
           <GameScreen
-            state={session.game}
+            state={visibleGame(session)}
             level={level}
             dir={dir}
             celebrated={celebrated.current}
@@ -233,6 +236,11 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
               else if (id === "budget") toPhase("budget");
             }}
             onEndMonth={() => {
+              // An event not seen yet hits before the month can end: the player has to decide first.
+              if (eventPending(session)) {
+                go(afterDecision);
+                return;
+              }
               buzz("medium", "pop");
               if (shown) shownBeforeEnd.current[session.game.month] = shown;
               go(endMonth);
@@ -267,12 +275,13 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
       case "draw":
         screen = (
           <DrawSheet
-            state={session.game}
+            state={visibleGame(session)}
             dir={dir}
             onCancel={() => toPhase("play", -1)}
             onConfirm={(amount) => {
               buzz("light", "coin");
-              go((s) => act(s, { type: "owner_draw", amount }).session, -1);
+              // The month's event hits after the player's first decision (alarm screen), else back to the game.
+              go((s) => afterDecision(act(s, { type: "owner_draw", amount }).session), -1);
             }}
           />
         );
@@ -280,7 +289,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
       case "budget":
         screen = (
           <BudgetScreen
-            state={session.game}
+            state={visibleGame(session)}
             dir={dir}
             onCancel={() => toPhase("play", -1)}
             onSave={(spending: Record<HouseholdCategory, number>) => {
@@ -290,7 +299,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
                 return;
               }
               buzz("light");
-              go(() => r.session, -1);
+              go(() => afterDecision(r.session), -1);
             }}
           />
         );

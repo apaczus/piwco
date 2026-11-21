@@ -1,7 +1,7 @@
 # Piwco: project context
 
 > Claude reads this file at the start of every session. **Update it after every decision.**
-> Last updated: 2026-11-21 (session 3: step 32 done)
+> Last updated: 2026-11-21 (session 3: step 32 + events rework done)
 
 ## Handoff: continuing the project (read first in a new session)
 
@@ -120,7 +120,7 @@ Three sheets:
 - Git: branch `master`. **Pushed to GitHub on the user's request (2026-11-21): private repo https://github.com/apaczus/piwco** (account `apaczus`, the one logged in with `gh` on the developer laptop), so someone else can clone the project and continue. Local commit after every step; push only on explicit request.
 - Money in the engine: **integers, whole PLN** (no grosze).
 - Engine model:
-  - **random events are drawn at the start of the month**, the player reacts with actions. Month 3 (insurance) keeps this rule: an event may hit before the player is insured, the player buys insurance afterwards and **learns from the mistake**;
+  - **random events are drawn at the start of the month** (from the seed, so replay meets the same one) but **revealed mid-month** (see "Events rework" below), the player reacts with actions. Month 3 (insurance) keeps this rule: an event may hit before the player is insured, the player buys insurance afterwards and **learns from the mistake**;
   - **business and personal money are separate accounts**;
   - actions are **one-off** (repay, buy) **and recurring** (hire, insurance: change monthly costs/revenue);
   - **each level has its own goal logic in code** (in `packages/engine`), not a generic condition list;
@@ -195,6 +195,11 @@ Three sheets:
   - ~~January input stays the big number + ±100/±500 buttons (no sliders)~~ **changed by the user (2026-11-21): the household budget uses sliders** (see "Household budget sliders" below); "Pay yourself" keeps the big number + buttons;
   - **March stays "learn from the mistake"** (the event can hit before the player is insured), not the spec's "choose policies before the event";
   - not taken from the spec (for now): the spec's name "Finance Quest" (brand is PIWCO), sliders, the Office building unlocking later (the company exists from January), analytics/pre-post questions (needs storage, later with the server).
+- **Events rework** (user: "events can't hit right away in January, they must follow what the month teaches, raise awareness and force a decision; when one hits the screen shakes, alarming, then click through and decide"; answers 2026-11-21):
+  - **timing:** the month starts on the game screen; the event hits **after the player's first decision** (Pay yourself or budget saved) or, at the latest, when they tap "End month" (the month can't end before deciding). Until then the game screens see the state **without the event** (no spoilers in the HUD / city forecast). Replay / rewind = not revealed again until the next first decision. March keeps "learn from the mistake": the event's variant is fixed at the draw, so insurance bought mid-month doesn't cover it;
+  - **events follow the month's topic:** January (budget, cash flow) = only "client pays late"; February (cushion) = equipment failure + washing machine, dental, phone; March (insurance) = car, apartment, medical (+ equipment failure, covered by the equipment policy);
+  - **late payment = 2 decision cards:** "Wait it out" (no action: less cash this month, re-plan your pay and budget) or **"Bridge it: business overdraft"** (engine action `bridge_late_payment`: the late amount comes into the company account now, company loan from next month);
+  - **alarm flow:** full-screen ALERT (dark red, red flash, pulsing red layer, screen shake, yellow "!" badge, impact pill, push notification, **alarm sound** `alarm.wav` (synthetic), 3 heavy haptic hits + error haptic; reduced motion = no shake) → **"What happened"** (what it is, what it does to your money, "decide now") → **decision cards** → outcome. No way back to the game without deciding.
 - **Event lesson + "Add to my plan"** (user answers, 2026-11-21, step 32):
   - shown **at the end of the month**, after the result (success only), **before the month's lesson**: result → event lesson → month lesson → "Your city grew"; "Review" of a completed month skips it; ‹ back goes event lesson → result, month lesson → event lesson;
   - 3 swipeable info cards ("What happened" with how it was paid, "What is X", "The math" with the player's numbers and a counterfactual line; variants without debt / with a loan / prepared) → **2 myth/fact quiz cards** (the month's lesson keeps its 6) → "Add to my plan" (one real-world step) or "Not now";
@@ -269,6 +274,7 @@ Three sheets:
 - In `apps/mobile`, add packages with `npx expo install <pkg>` (run inside `apps/mobile`): it picks versions compatible with the SDK. Don't run `npm audit fix --force` there.
 - Metro is started with `REACT_NATIVE_PACKAGER_HOSTNAME=$(tailscale ip -4)`, so the QR code points phones at the laptop's Tailscale address.
 - The Expo template's extra files (`AGENTS.md`, `.claude/settings.json`, `LICENSE`) were removed on purpose.
+- **Checking that Metro serves new code:** use the bundle URL from the Expo manifest (`curl -H "expo-platform: android" -H "Accept: application/expo+json" http://localhost:8081/` → `launchAsset.url`, it has `transform.routerRoot=src%2Fapp`). The plain `entry.bundle?platform=android&dev=true` URL builds without the app routes, so it doesn't prove anything.
 - Engine and content versions must be identical on the phone and the server, otherwise the recomputation won't match. Proposal: store these versions in the decision log.
 
 ## Progress
@@ -433,6 +439,11 @@ Three sheets:
   - content: `EventLesson` type, `lesson` on `client_pays_late` and `equipment_failure` in `events.json` (Claude's texts, **waiting for team review**); placeholders {amount}, {revenue}, {costs}, {companyLeft}, {homeLeft}, {cushionLeft}, {borrowed}, {loanTotal}, {installment}, {months}, {interest};
   - mobile: `game/eventLesson.ts` (pure: `hasEventLesson`, `eventLessonValues`, `buildEventLesson`), `game/EventLesson.tsx` (paging info cards with dots, quiz on `SwipeLesson` which now takes `eyebrow` / `doneSub` / `doneLabel`, plan card with a ticking box + confetti), `session.ts` (phase `eventLesson`, `plan: PlanItem[]`, `addToPlan` (once per event and month), `repairing`), `GameFlow` wiring + back routes, `city/CityScene.tsx` scaffolding (`repairing` prop), `city/MyPlan.tsx` on `CityPage` and the `Roadmap`;
   - checked: typecheck, 110 engine tests, simulation for 3 industries × both January events (cards filled, loan math, damaged → scaffolding, double add = 1 item, undo / rewind drop the item), Android + iOS bundles built. **Not yet checked on phones.**
+- [x] Events rework (after step 32):
+  - content: `equipment_failure` moved to months 2–3 (January = only `client_pays_late`); `mathBorrowed` for the late payment's lesson;
+  - engine: action `bridge_late_payment { product }` (late payment only, once, company loan only; cash in now, debt after the settlement); 3 new tests (113);
+  - mobile: `session.ts` `eventShown`, `eventPending`, `afterDecision`, `visibleGame` (`monthStartPhase` now always `play`); `GameFlow` reveals the event after Pay yourself / budget / on End month and feeds `visibleGame` to the game screens; `EventScreen.tsx` stages alarm → details → decision (late payment: wait / bridge outcome); `assets/sounds/alarm.wav` + `alarm` in `sound.ts`; receipt line "Bridge loan (overdraft)"; event lesson lines "Bridged" / "You waited it out";
+  - checked: typecheck, 113 tests, simulation for 3 industries × wait/bridge (event hidden until the first decision, receipt adds up, lesson filled, replay/rewind hide it again), the real phone bundles (manifest URL) contain the new code. **Not yet checked on phones.**
 - [ ] **MVP plan for the team spec (proposed 2026-11-21, each step approved separately):**
   - 28: onboarding profile → game: the profile (income D, flags like `car_oc_only`, `cushion`, `loans`) is passed to `/game`; the household side scales with D (decided earlier); the company stays the industry package;
   - 29: events as data + engine: `events.json` (8 MVP events, Claude's numbers for team review), drawn at the month start from the seed, filtered by month and profile (full / prepared / skipped), protection by policy / cushion; Vitest;

@@ -55,7 +55,13 @@ export function eventLessonValues(report: MonthReport, terms: Record<string, Fin
 // How the event was paid, one line per source (for the "What happened" card).
 function paidLines(report: MonthReport): string[] {
   const ev = report.event;
-  if (!ev || ev.effect !== "cost") return [];
+  if (!ev) return [];
+  if (ev.effect === "late_payment") {
+    return ev.loans.length > 0
+      ? ev.loans.map((l) => `Bridged (${financing.find((f) => f.id === l.product)?.label ?? l.product}): ${formatPln(l.principal)}`)
+      : ["You waited it out: no debt"];
+  }
+  if (ev.effect !== "cost") return [];
   if (ev.variant === "prepared") return ["Covered by your policy"];
   const lines = ev.paidBefore.map((p) => `${SOURCE_LABELS[p.source] ?? p.source}: ${formatPln(p.amount)}`);
   for (const l of ev.loans) {

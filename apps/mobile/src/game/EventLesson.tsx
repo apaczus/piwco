@@ -143,7 +143,7 @@ function Card({ card, n, total }: { card: InfoCard; n: number; total: number }) 
       {card.lines && card.lines.length > 0 ? (
         <View style={styles.lines}>
           {card.lines.map((l, i) => (
-            <Text key={i} style={[styles.line, l.startsWith("Borrowed") || l.startsWith("Unpaid") ? { color: colors.danger } : null]}>
+            <Text key={i} style={[styles.line, l.startsWith("Borrowed") || l.startsWith("Bridged") || l.startsWith("Unpaid") ? { color: colors.danger } : null]}>
               {`• ${l}`}
             </Text>
           ))}

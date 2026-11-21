@@ -72,7 +72,9 @@ export type Action =
   // account, business events from the company account.
   | { type: "cover_event"; source: EventSource; amount: number }
   // Cover what is left of this month's event with a loan (product from the game's financing list).
-  | { type: "borrow_for_event"; product: string };
+  | { type: "borrow_for_event"; product: string }
+  // Late payment: bridge the missing revenue with a company loan now (the cash arrives at once; once per event).
+  | { type: "bridge_late_payment"; product: string };
 
 export type EventSource = "cushion" | "personal" | "company";
 

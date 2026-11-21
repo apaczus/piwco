@@ -57,6 +57,9 @@ export type Session = {
   reviewing: number | null;
   // "My plan", oldest first. Items belong to the month they were added in (a rewind drops later months' items).
   plan: PlanItem[];
+  // The month's event has been revealed (it hits mid-month, after the player's first decision). Until then the
+  // game screens see the month without it (no spoilers in the HUD forecast).
+  eventShown: boolean;
 };
 
 export type MonthRecord = {
@@ -92,6 +95,7 @@ export function newSession(industryId: string, seed: number, answers?: Household
     history: [],
     reviewing: null,
     plan: [],
+    eventShown: false,
   };
 }
 
@@ -101,9 +105,26 @@ export function act(s: Session, action: Action, phase: Phase = "play"): { sessio
   return { session: { ...s, game: r.state, phase }, error: null };
 }
 
-// The month starts with its event screen when there is one to see or decide (otherwise straight to the game).
-export function monthStartPhase(game: GameState): Phase {
-  return game.event && game.event.month === game.month ? "event" : "play";
+// The month always starts on the game screen; its event hits later (decided 2026-11-21: mid-month).
+export function monthStartPhase(_game: GameState): Phase {
+  return "play";
+}
+
+// This month has an event the player hasn't seen yet.
+export function eventPending(s: Session): boolean {
+  const ev = s.game.event;
+  return !s.eventShown && !!ev && ev.month === s.game.month;
+}
+
+// After a decision (Pay yourself / budget saved) or on "End month": the pending event hits now (alarm screen);
+// otherwise back to the game. The event screen ends back on the game screen.
+export function afterDecision(s: Session): Session {
+  return eventPending(s) ? { ...s, phase: "event", eventShown: true } : { ...s, phase: "play" };
+}
+
+// What the game screens show: the state without the event until it has been revealed.
+export function visibleGame(s: Session): GameState {
+  return eventPending(s) ? { ...s.game, event: null } : s.game;
 }
 
 export function endMonth(s: Session): Session {
@@ -165,11 +186,12 @@ export function rewindTo(s: Session, month: number): Session {
     history: s.history.filter((h) => h.month < month),
     reviewing: null,
     plan: s.plan.filter((p) => p.month < month),
+    eventShown: false,
   };
 }
 
 export function replay(s: Session): Session {
-  return { ...s, game: s.snapshot, phase: monthStartPhase(s.snapshot), result: null, beforeEnd: null };
+  return { ...s, game: s.snapshot, phase: monthStartPhase(s.snapshot), result: null, beforeEnd: null, eventShown: false };
 }
 
 // "Add to my plan": the same event's item is added once per month (going back and adding again changes nothing).
