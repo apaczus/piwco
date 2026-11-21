@@ -226,8 +226,9 @@ export type CityThresholds = {
   vault: { fundLevels: number[] };
   // Protection: active policies (business + personal) needed for levels 1, 2, 3.
   shield: { policyLevels: number[] };
-  // Future tower: empty until this month (investments).
-  future: { unlockMonth: number };
+  // Future tower: built by the investing chapter (month `unlockMonth`). Each step in order adds a level:
+  // "try1Done" (Try 1 finished), "lessonDone" (the lesson finished), "try2Better" (Try 2 beat Try 1 in real terms).
+  future: { unlockMonth: number; steps: string[] };
 };
 
 export const cityThresholds: CityThresholds = cityData;

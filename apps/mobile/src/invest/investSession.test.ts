@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  investProgress,
   allocationOf,
   alternatives,
   backStage,
@@ -123,5 +124,18 @@ describe("investing chapter: try 2", () => {
     expect(backStage("split2")).toBe("horizon");
     expect(backStage("topup")).toBe("split2");
     expect(backStage("result2")).toBe("topup");
+  });
+});
+
+describe("investing chapter: Future tower progress", () => {
+  it("try 1 done → lesson done → try 2 better, in that order", () => {
+    expect(investProgress(null)).toBeUndefined();
+    let s = newInvest();
+    expect(investProgress(s)).toEqual({ try1Done: false, lessonDone: false, try2Better: false });
+    s = startTry1({ ...s, draft: { stock: 10000 } });
+    expect(investProgress(s)).toEqual({ try1Done: true, lessonDone: false, try2Better: false });
+    s = { ...s, lessonDone: true, horizon: 10, draft2: { etf: 6000, bonds: 4000 }, topUp: 100 };
+    s = startTry2(s);
+    expect(investProgress(s)).toEqual({ try1Done: true, lessonDone: true, try2Better: true });
   });
 });

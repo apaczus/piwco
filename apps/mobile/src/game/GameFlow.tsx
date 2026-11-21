@@ -1,6 +1,6 @@
 // The game: welcome (first mission) -> play (mission, HUD, actions) -> draw / budget -> receipt -> result -> lesson -> city -> roadmap.
 import { gameEvents, levels } from "@piwco/content";
-import { cityLevels, forecastCity, netWorth, type HouseholdCategory } from "@piwco/engine";
+import { cityLevels, forecastCity, netWorth, type BuildingId, type HouseholdCategory } from "@piwco/engine";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
@@ -39,6 +39,7 @@ import {
   endMonth,
   eventPending,
   endReview,
+  finishChapter,
   monthStartPhase,
   newSession,
   openInvest,
@@ -61,7 +62,7 @@ import { skipsMonth, startMonthFor } from "./startMonth";
 import { WelcomeToGame } from "./WelcomeToGame";
 import { CoachOverlay, CoachProvider, type CoachRegistry } from "./coach";
 import { InvestScreen } from "../invest/InvestFlow";
-import { backStage, investNight } from "../invest/investSession";
+import { backStage, investNight, investProgress } from "../invest/investSession";
 
 function timeOfDay(phase: Phase): TimeOfDay {
   switch (phase) {
@@ -87,22 +88,30 @@ function timeOfDay(phase: Phase): TimeOfDay {
 }
 
 // A new game for the industry, with the onboarding profile (if the player came through the onboarding).
-function startSession(industryId: string | null, chapter: "invest" | null): Session | null {
+function startSession(industryId: string | null): Session | null {
   if (!industryId) return null;
   const profile = getPlayerProfile();
-  const s = newSession(industryId, randomSeed(), householdAnswers(profile), profile?.flags ?? []);
-  return s && chapter === "invest" ? openInvest(s) : s;
+  return newSession(industryId, randomSeed(), householdAnswers(profile), profile?.flags ?? []);
 }
 
-export function GameFlow({ industryId, startChapter = null }: { industryId: string | null; startChapter?: "invest" | null }) {
+// Building cards on the chapter's "Your city grew" (the Future tower first).
+const CHAPTER_CARDS: BuildingId[] = ["future", "home", "firm", "vault"];
+
+// The investing chapter's month (it isn't a simulated month: its own screens, then ✓ on the year map).
+const INVEST_MONTH = 8;
+
+export function GameFlow({ industryId }: { industryId: string | null }) {
   const insets = useSafeAreaInsets();
-  const [session, setSession] = useState<Session | null>(() => startSession(industryId, startChapter));
+  const [session, setSession] = useState<Session | null>(() => startSession(industryId));
   // Finance knowledge from the survey ("Skip to game" = intermediate): months it skips get a badge on the maps.
   const knowledge = playerKnowledge();
   const skipped = (month: number) => {
     const l = levels.find((x) => x.month === month);
     return !!l && skipsMonth(l, knowledge);
   };
+  // Intermediate / advanced start with the investing chapter (decided); beginners with January.
+  const start = startMonthFor(knowledge, levels);
+  const chapterStart = start.month === INVEST_MONTH;
   // Guided tour of the game screen: every time the game is entered (survey or "Skip to game"), before the first
   // move; "?" plays it again. "Start a new game" in the same visit doesn't repeat it.
   const [coachPending, setCoachPending] = useState(true);
@@ -143,7 +152,7 @@ export function GameFlow({ industryId, startChapter = null }: { industryId: stri
   // The city during the month = the month-end forecast (same as the HUD). Only while playing the month.
   const playForecast =
     session && session.phase === "play"
-      ? forecastCity(visibleGame(session), session.completedMonth, cityConfigFor(session.game))
+      ? forecastCity(visibleGame(session), session.completedMonth, cityConfigFor(session.game), investProgress(session.invest))
       : null;
   useEffect(() => {
     if (!playForecast || !session) return;
@@ -217,6 +226,7 @@ export function GameFlow({ industryId, startChapter = null }: { industryId: stri
     const viewGame = rec ? rec.settled : session.game;
     const viewCompleted = rec ? rec.month : session.completedMonth;
     const level = levels.find((l) => l.month === (rec ? rec.month : session.game.month)) ?? levels[0]!;
+    const investLevel = levels.find((l) => l.month === INVEST_MONTH) ?? level;
     // The event lesson is part of the month's first pass only ("Review" skips it).
     const eventLessonNext = !rec && !!viewResult && hasEventLesson(viewResult.report);
     const afterEventLesson: Phase = level.lesson ? "lesson" : "city";
@@ -224,13 +234,14 @@ export function GameFlow({ industryId, startChapter = null }: { industryId: stri
       case "welcome":
         screen = (
           <WelcomeToGame
-            warmUp={startMonthFor(knowledge, levels).fallback}
+            warmUp={start.fallback}
             state={session.game}
-            level={level}
+            level={chapterStart ? investLevel : level}
             dir={dir}
             onAccept={() => {
               buzz("light");
-              toPhase(monthStartPhase(session.game));
+              if (chapterStart) go(openInvest);
+              else toPhase(monthStartPhase(session.game));
             }}
           />
         );
@@ -261,7 +272,7 @@ export function GameFlow({ industryId, startChapter = null }: { industryId: stri
         break;
       case "play": {
         const config = cityConfigFor(session.game);
-        const forecast = playForecast ?? forecastCity(visibleGame(session), session.completedMonth, config);
+        const forecast = playForecast ?? forecastCity(visibleGame(session), session.completedMonth, config, investProgress(session.invest));
         const seen = shown ?? { levels: forecast.city.levels, worth: forecast.netWorth };
         const learn = (
           <GameScreen
@@ -293,7 +304,7 @@ export function GameFlow({ industryId, startChapter = null }: { industryId: stri
         screen = (
           <GamePager
             controlRef={pagerControl}
-            year={<YearPage completedMonth={session.completedMonth} currentMonth={session.game.month} skipped={skipped} />}
+            year={<YearPage completedMonth={session.completedMonth} chaptersDone={session.chaptersDone} currentMonth={session.game.month} skipped={skipped} />}
             learn={learn}
             city={
               <CityPage
@@ -317,20 +328,46 @@ export function GameFlow({ industryId, startChapter = null }: { industryId: stri
         );
         break;
       }
-      case "invest":
-        screen = session.invest ? (
-          <InvestScreen state={session.invest} dir={dir} onChange={(next, d = 1) => go((s) => ({ ...s, invest: next }), d)} />
-        ) : null;
+      case "invest": {
+        const inv = session.invest;
+        if (inv?.stage === "city") {
+          // The chapter's "Your city grew": the Future tower grows from what the player did in the chapter.
+          const config = cityConfigFor(session.game);
+          const real = cityLevels(session.game, session.completedMonth, config, investProgress(inv));
+          const worth = netWorth(session.game);
+          const seenLevels = { ...(shown?.levels ?? real.levels), future: inv.seenFuture };
+          screen = (
+            <CityGrew
+              city={real}
+              netWorth={worth}
+              shown={seenLevels}
+              shownWorth={shown?.worth ?? worth}
+              repairing={repairing(session.plan, real.damaged)}
+              onSeen={() => {
+                setShown({ levels: real.levels, worth });
+                setSession((s) => (s?.invest ? { ...s, invest: { ...s.invest, seenFuture: real.levels.future } } : s));
+              }}
+              monthName={investLevel.monthName}
+              title={real.levels.future >= 3 ? "Your Future tower is built!" : "Your Future tower grew!"}
+              cards={CHAPTER_CARDS}
+              dir={dir}
+              onContinue={() => go((s) => finishChapter(s, INVEST_MONTH))}
+            />
+          );
+        } else {
+          screen = inv ? <InvestScreen state={inv} dir={dir} onChange={(next, d = 1) => go((s) => ({ ...s, invest: next }), d)} /> : null;
+        }
         break;
+      }
       case "hub": {
         // Between months: the completed month's real city (no forecast, nothing left to level up).
         const config = cityConfigFor(session.game);
-        const real = cityLevels(session.game, session.completedMonth, config);
+        const real = cityLevels(session.game, session.completedMonth, config, investProgress(session.invest));
         const worth = netWorth(session.game);
         const nextLevel = levels.find((l) => l.month === session.completedMonth + 1);
         screen = (
           <GamePager
-            year={<YearPage completedMonth={session.completedMonth} currentMonth={null} backLabel={`Back to ${level.monthName}`} skipped={skipped} />}
+            year={<YearPage completedMonth={session.completedMonth} chaptersDone={session.chaptersDone} currentMonth={null} backLabel={`Back to ${level.monthName}`} skipped={skipped} />}
             learn={
               <MonthDonePage
                 level={level}
@@ -418,7 +455,7 @@ export function GameFlow({ industryId, startChapter = null }: { industryId: stri
         break;
       case "eventLesson": {
         const built = viewResult ? buildEventLesson(viewResult.report, viewGame.financing) : null;
-        const damaged = built ? cityLevels(viewGame, viewCompleted, cityConfigFor(viewGame)).damaged[built.building] : false;
+        const damaged = built ? cityLevels(viewGame, viewCompleted, cityConfigFor(viewGame), investProgress(session.invest)).damaged[built.building] : false;
         screen = built ? (
           <EventLesson
             lesson={built}
@@ -451,7 +488,7 @@ export function GameFlow({ industryId, startChapter = null }: { industryId: stri
       case "city": {
         // The month is settled: the city of the real state (no forecast).
         const config = cityConfigFor(viewGame);
-        const real = cityLevels(viewGame, viewCompleted, config);
+        const real = cityLevels(viewGame, viewCompleted, config, investProgress(session.invest));
         const worth = netWorth(viewGame);
         const seen = rec ? reviewShown : shown;
         screen = (
@@ -474,7 +511,17 @@ export function GameFlow({ industryId, startChapter = null }: { industryId: stri
           <>
             <Roadmap
               skipped={skipped}
+              chaptersDone={session.chaptersDone}
               completedMonth={session.completedMonth}
+              onPlayBasics={
+                // After the chapter, a player who skipped the basics can still play January.
+                session.completedMonth === 0 && session.chaptersDone.length > 0
+                  ? () => {
+                      buzz("light");
+                      toPhase(monthStartPhase(session.game));
+                    }
+                  : undefined
+              }
               dir={dir}
               plan={session.plan}
               onBackToGame={session.completedMonth > 0 ? () => toPhase("hub") : undefined}
@@ -489,7 +536,7 @@ export function GameFlow({ industryId, startChapter = null }: { industryId: stri
                 monthStartShown.current = {};
                 shownBeforeEnd.current = {};
                 lastBadge.current = 0;
-                go((s) => startSession(industryId, null) ?? s, -1);
+                go((s) => startSession(industryId) ?? s, -1);
               }}
             />
             {sheetMonth !== null ? (
@@ -551,19 +598,18 @@ export function GameFlow({ industryId, startChapter = null }: { industryId: stri
         back = () => toPhase(lvl.lesson ? "lesson" : hadEventLesson ? "eventLesson" : "result", -1);
         break;
       case "roadmap":
-        back = () => toPhase("city", -1);
+        // After the investing chapter (no month played yet): back to its "Your city grew".
+        back = session.completedMonth === 0 && session.invest ? () => toPhase("invest", -1) : () => toPhase("city", -1);
         break;
       case "hub":
         back = () => toPhase("roadmap", -1);
         break;
       case "invest": {
         const prev = session.invest ? backStage(session.invest.stage) : null;
-        // TEMPORARY until step 5: leaving the chapter from its intro goes back to the onboarding.
+        // From the chapter's intro: back to "Welcome to the game" (its mission).
         back = prev
           ? () => go((s) => ({ ...s, invest: s.invest ? { ...s.invest, stage: prev } : s.invest }), -1)
-          : router.canGoBack()
-            ? () => router.back()
-            : null;
+          : () => toPhase("welcome", -1);
         break;
       }
       default:

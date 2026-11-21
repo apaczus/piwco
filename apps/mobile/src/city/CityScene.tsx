@@ -415,7 +415,7 @@ export function CityScene({
                   style={{ position: "absolute", left: (cx - pw / 2) * u, bottom: (GROUND - 6) * u, width: pw * u, alignItems: "center" }}
                 >
                   <Text style={[styles.plotText, { color: plotInk, fontSize: Math.max(8, 8.5 * u) }]} numberOfLines={2}>
-                    {id === "future" ? "Future · Aug" : `+ ${info.name}`}
+                    {id === "future" ? "+ Future" : `+ ${info.name}`}
                   </Text>
                   <View style={[styles.plot, { height: 10 * u, borderColor: mix(info.color, night ? colors.petrol900 : "#FFFFFF", 70) }]} />
                 </Pressable>

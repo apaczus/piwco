@@ -13,7 +13,6 @@ export function Hud({
   fraction,
   counter,
   onSkipToGame,
-  onSkipToInvest,
 }: {
   petrol: boolean;
   backHidden: boolean;
@@ -22,8 +21,6 @@ export function Hud({
   counter: string;
   // TEMPORARY (devFlags.DEV_SKIP_TO_GAME): jump straight into the game.
   onSkipToGame?: () => void;
-  // TEMPORARY (devFlags.DEV_SKIP_TO_INVEST): jump straight into the investing chapter.
-  onSkipToInvest?: () => void;
 }) {
   // The fill is a full-width bar slid in from the left (translateX), so it animates on the native thread.
   const bar = useRef(new Animated.Value(fraction)).current;
@@ -96,15 +93,6 @@ export function Hud({
           style={[styles.skip, petrol ? styles.skipPetrol : null]}
         >
           <Text style={[styles.skipText, petrol ? { color: "#FFFFFF" } : null]}>Skip to game ›</Text>
-        </PressScale>
-      ) : null}
-      {onSkipToInvest ? (
-        <PressScale
-          onPress={onSkipToInvest}
-          accessibilityLabel="Skip to the investing chapter"
-          style={[styles.skip, petrol ? styles.skipPetrol : null]}
-        >
-          <Text style={[styles.skipText, petrol ? { color: "#FFFFFF" } : null]}>Invest ›</Text>
         </PressScale>
       ) : null}
     </View>

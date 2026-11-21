@@ -1,7 +1,7 @@
 import { cityThresholds, type CityThresholds } from "@piwco/content";
 import { describe, expect, it } from "vitest";
 import { applyAction } from "./actions";
-import { cityLevels, forecastCity, netWorth, nextLevel, type CityConfig } from "./city";
+import { cityLevels, forecastCity, futureLevel, netWorth, nextLevel, type CityConfig } from "./city";
 import { createInitialState } from "./initialState";
 import type { Action, GameState } from "./state";
 import { deepFreeze, makeSetup } from "./testFixtures";
@@ -14,7 +14,7 @@ const THRESHOLDS: CityThresholds = {
   firm: { revenueRatioLevel2: 1.0, revenueRatioLevel3: 1.2 },
   vault: { fundLevels: [1, 1500, 4500] },
   shield: { policyLevels: [1, 2, 4] },
-  future: { unlockMonth: 8 },
+  future: { unlockMonth: 8, steps: ["try1Done", "lessonDone", "try2Better"] },
 };
 const CONFIG: CityConfig = { thresholds: THRESHOLDS, startingRevenue: 45_000 };
 
@@ -82,9 +82,23 @@ describe("cityLevels", () => {
     expect([at(0, 0), at(1, 0), at(1, 1), at(2, 1), at(2, 2), at(3, 3)]).toEqual([0, 1, 2, 2, 3, 3]);
   });
 
-  it("Future tower stays empty in the MVP", () => {
+  it("Future tower: empty without the investing chapter, whatever the money", () => {
     const rich = withState(start(), (s) => (s.personal.emergencyFund = 1_000_000));
     expect(cityLevels(rich, 11, CONFIG).levels.future).toBe(0);
+  });
+
+  it("Future tower grows with the chapter's steps, in order", () => {
+    const at = (try1Done: boolean, lessonDone: boolean, try2Better: boolean) =>
+      cityLevels(start(), 0, CONFIG, { try1Done, lessonDone, try2Better }).levels.future;
+    expect([at(false, false, false), at(true, false, false), at(true, true, false), at(true, true, true)]).toEqual([0, 1, 2, 3]);
+    // A step reached out of order doesn't count until the ones before it are done.
+    expect(at(false, true, true)).toBe(0);
+    expect(at(true, false, true)).toBe(1);
+    expect(futureLevel(undefined, CONFIG)).toBe(0);
+    // Other buildings don't move.
+    const a = cityLevels(start(), 0, CONFIG).levels;
+    const b = cityLevels(start(), 0, CONFIG, { try1Done: true, lessonDone: true, try2Better: true }).levels;
+    expect({ ...b, future: 0 }).toEqual(a);
   });
 
   it("shows rain clouds for arrears and a rented flat without a house", () => {
@@ -172,6 +186,9 @@ describe("nextLevel", () => {
     expect(nextLevel("home", 1, CONFIG)).toEqual({ kind: "months", months: 1 });
     expect(nextLevel("home", 3, CONFIG)).toBeNull();
     expect(nextLevel("future", 0, CONFIG)).toEqual({ kind: "locked", unlockMonth: 8 });
+    expect(nextLevel("future", 1, CONFIG)).toEqual({ kind: "invest", step: "lessonDone" });
+    expect(nextLevel("future", 2, CONFIG)).toEqual({ kind: "invest", step: "try2Better" });
+    expect(nextLevel("future", 3, CONFIG)).toBeNull();
   });
 });
 

@@ -12,14 +12,17 @@ export function BuildingCards({
   city,
   night = false,
   barFor,
+  ids = CARD_BUILDINGS,
 }: {
+  // Which buildings get a card (2×2; the default leaves the Future tower out).
+  ids?: BuildingId[];
   city: CityView;
   night?: boolean;
   barFor?: (id: BuildingId, color: string) => ReactNode;
 }) {
   return (
     <View style={styles.grid}>
-      {CARD_BUILDINGS.map((id) => {
+      {ids.map((id) => {
         const level = city.levels[id];
         const info = BUILDING_INFO[id];
         return (

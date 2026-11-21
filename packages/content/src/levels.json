@@ -169,13 +169,22 @@
     "monthName": "August",
     "title": "Stocks and bonds",
     "subtitle": "Putting surplus money to work",
-    "playable": false,
+    "playable": true,
     "topics": [
       "Investing surplus capital once the budget, debt and legal form are in order.",
       "Stocks (a share in a company's ownership and growth) and bonds (lending money to the issuer).",
       "Risk, liquidity, time horizon and diversification in personal and business portfolios."
     ],
     "challenge": "Build a diversified portfolio with the capital you have and react to market swings.",
+    "mission": {
+      "title": "Grow 10 000 PLN without fear",
+      "steps": [
+        { "id": "try1", "label": "Invest 10 000 PLN for one year" },
+        { "id": "lesson", "label": "Learn what stocks, bonds and ETFs do" },
+        { "id": "try2", "label": "Beat your first try" }
+      ],
+      "reward": "Builds your Future tower"
+    },
     "lesson": {
       "title": "Investing basics",
       "cards": [

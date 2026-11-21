@@ -160,7 +160,13 @@ export function Roadmap({
   plan = [],
   onBackToGame,
   skipped = () => false,
+  chaptersDone = [],
+  onPlayBasics,
 }: {
+  // Chapters finished outside the month simulation (8 = investing): ✓, not tappable.
+  chaptersDone?: number[];
+  // "Play the basics anyway": a player who skipped January (and finished a chapter) can still play it.
+  onPlayBasics?: () => void;
   // Months the player's knowledge level skips ("Skipped: you know this"; not blocked).
   skipped?: (month: number) => boolean;
   // "Back to the game": the game's main page (between months: the completed month's pager).
@@ -179,17 +185,29 @@ export function Roadmap({
       dir={dir}
       footer={
         <View style={{ gap: 4 }}>
+          {onPlayBasics ? <Cta label="Play the basics anyway ›" onPress={onPlayBasics} /> : null}
           {onBackToGame ? <Cta label="Back to the game ›" onPress={onBackToGame} /> : null}
           <LinkButton label="Start a new game" onPress={onNewGame} />
         </View>
       }
     >
       <Eyebrow>Your year</Eyebrow>
-      <Title>{nextLevel ? `${nextLevel.monthName} is coming soon` : "That's the whole year!"}</Title>
-      {nextLevel ? <Sub>{`Next: ${nextLevel.title}. ${nextLevel.subtitle}.`}</Sub> : null}
+      {onPlayBasics ? (
+        <>
+          <Title>Want a quick warm-up?</Title>
+          <Sub>You skipped the basics. Play January anyway: your budget, cash flow and first month in the city.</Sub>
+        </>
+      ) : (
+        <>
+          <Title>{nextLevel ? `${nextLevel.monthName} is coming soon` : "That's the whole year!"}</Title>
+          {nextLevel ? <Sub>{`Next: ${nextLevel.title}. ${nextLevel.subtitle}.`}</Sub> : null}
+        </>
+      )}
       <View style={styles.roadmap}>
         {levels.map((l) => {
-          const done = l.month <= completedMonth;
+          const chapter = chaptersDone.includes(l.month);
+          const done = l.month <= completedMonth || chapter;
+          const basics = !done && !!onPlayBasics && l.month === completedMonth + 1;
           const row = (
             <View style={[styles.month, done ? styles.monthDone : null, !done && !l.playable ? { opacity: 0.55 } : null]}>
               <Text style={styles.monthNo}>{String(l.month).padStart(2, "0")}</Text>
@@ -198,7 +216,9 @@ export function Roadmap({
                 <Text style={styles.monthTitle}>{l.title}</Text>
               </View>
               {done ? (
-                <Text style={styles.doneMark}>✓ ›</Text>
+                <Text style={styles.doneMark}>{chapter && l.month > completedMonth ? "✓" : "✓ ›"}</Text>
+              ) : basics ? (
+                <Text style={styles.play}>PLAY ›</Text>
               ) : skipped(l.month) ? (
                 <SkippedBadge />
               ) : l.playable ? (
@@ -208,7 +228,11 @@ export function Roadmap({
               )}
             </View>
           );
-          return done ? (
+          return basics ? (
+            <PressScale key={l.id} onPress={onPlayBasics} accessibilityLabel={`Play ${l.monthName} anyway`}>
+              {row}
+            </PressScale>
+          ) : done && l.month <= completedMonth ? (
             <PressScale key={l.id} onPress={() => onPickMonth(l.month)} accessibilityLabel={`${l.monthName}: review or replay`}>
               {row}
             </PressScale>
@@ -258,4 +282,5 @@ const styles = StyleSheet.create({
   skipped: { backgroundColor: mix(colors.petrol700, colors.surface, 12), borderRadius: 99, paddingVertical: 3, paddingHorizontal: 8 },
   skippedText: { fontFamily: font.extrabold, fontSize: 10.5, color: colors.petrol700 },
   soon: { fontFamily: font.extrabold, fontSize: 10.5, letterSpacing: 0.8, color: colors.muted },
+  play: { fontFamily: font.extrabold, fontSize: 11, letterSpacing: 0.8, color: colors.petrol700 },
 });

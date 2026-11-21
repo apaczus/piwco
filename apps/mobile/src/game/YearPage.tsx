@@ -14,7 +14,10 @@ export function YearPage({
   currentMonth,
   backLabel,
   skipped = () => false,
+  chaptersDone = [],
 }: {
+  // Chapters finished outside the month simulation (8 = investing): ✓.
+  chaptersDone?: number[];
   skipped?: (month: number) => boolean;
   completedMonth: number;
   // The month being played (null between months).
@@ -22,9 +25,11 @@ export function YearPage({
   backLabel?: string;
 }) {
   const bar = useRef(new Animated.Value(0)).current;
+  const isDone = (month: number) => month <= completedMonth || chaptersDone.includes(month);
+  const doneCount = levels.filter((l) => isDone(l.month)).length;
   useEffect(() => {
-    Animated.spring(bar, { toValue: completedMonth / 12, ...springs.bar, useNativeDriver: false }).start();
-  }, [bar, completedMonth]);
+    Animated.spring(bar, { toValue: doneCount / 12, ...springs.bar, useNativeDriver: false }).start();
+  }, [bar, doneCount]);
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <BackToMonth side="right" label={backLabel} />
@@ -32,8 +37,8 @@ export function YearPage({
       <CoachTarget id="year">
       <View style={{ gap: 12 }}>
       <View style={styles.head}>
-        <Text style={styles.title}>{currentMonth ? `Level ${currentMonth} of 12` : `${completedMonth} of 12 done`}</Text>
-        <Text style={styles.done}>{`${completedMonth} / 12 ✓`}</Text>
+        <Text style={styles.title}>{currentMonth ? `Level ${currentMonth} of 12` : `${doneCount} of 12 done`}</Text>
+        <Text style={styles.done}>{`${doneCount} / 12 ✓`}</Text>
       </View>
       <View style={styles.track}>
         <Animated.View style={[styles.fill, { width: bar.interpolate({ inputRange: [0, 1], outputRange: ["0%", "100%"] }) }]} />
@@ -42,7 +47,7 @@ export function YearPage({
       </CoachTarget>
       <View style={{ gap: 6 }}>
         {levels.map((l) => {
-          const done = l.month <= completedMonth;
+          const done = isDone(l.month);
           const current = l.month === currentMonth;
           return (
             <View

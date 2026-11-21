@@ -1,6 +1,6 @@
 // After a completed month: lesson -> "Your city grew" -> roadmap. Night scene of the real (settled) state.
 // Plays the month's level up (Home +1 for the completed month, plus anything not seen during the month).
-import type { CityView } from "@piwco/engine";
+import type { BuildingId, CityView } from "@piwco/engine";
 import { StyleSheet, Text, View } from "react-native";
 import { ScreenLayout, type Dir } from "../onboarding/screens";
 import { Cta } from "../onboarding/ui";
@@ -20,7 +20,12 @@ export function CityGrew({
   dir,
   onContinue,
   repairing,
+  title = "Your city grew!",
+  cards,
 }: {
+  title?: string;
+  // Buildings with a card (default: Home, Company, Cushion vault, Protection).
+  cards?: BuildingId[];
   repairing?: { home: boolean; firm: boolean };
   city: CityView;
   netWorth: number;
@@ -37,13 +42,13 @@ export function CityGrew({
   return (
     <ScreenLayout dir={dir} footer={<Cta label="See your year" onPress={onContinue} />}>
       <Text style={styles.eyebrow}>{`${monthName.toUpperCase()} · YOUR CITY`}</Text>
-      <Text style={styles.title}>Your city grew!</Text>
+      <Text style={styles.title}>{title}</Text>
       <View style={styles.worth}>
         <Text style={styles.worthLabel}>Net worth</Text>
         <RollingNumber value={lu.waiting ? shownWorth : netWorth} from={shownWorth} duration={650} style={styles.worthValue} />
       </View>
       <CityScene city={shownCity} night decorate={lu.decorate} repairing={repairing} />
-      <BuildingCards city={shownCity} night barFor={lu.barFor} />
+      <BuildingCards city={shownCity} night barFor={lu.barFor} ids={cards} />
     </ScreenLayout>
   );
 }

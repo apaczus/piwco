@@ -1,6 +1,6 @@
 // Pure helpers (no React): where a player of a given finance knowledge level starts, and which months they skip.
-// levels.json `skipFor` decides it (data, not code). Until the credit / investing chapters are playable, everyone
-// still plays January: intermediate / advanced get it as a "warm-up" (fallback).
+// levels.json `skipFor` decides it (data, not code). Intermediate / advanced start with the first playable chapter
+// they don't skip (August, investing); with nothing playable past the basics they get January as a "warm-up".
 import type { KnowledgeLevel, Level } from "@piwco/content";
 
 export const DEFAULT_LEVEL: KnowledgeLevel = "intermediate";

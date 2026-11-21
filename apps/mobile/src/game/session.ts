@@ -67,6 +67,8 @@ export type Session = {
   eventShown: boolean;
   // Investing chapter progress (in memory only, not in GameState). null = not started.
   invest: InvestState | null;
+  // Chapters finished outside the month simulation (8 = investing): ✓ on the year map.
+  chaptersDone: number[];
 };
 
 export type MonthRecord = {
@@ -104,6 +106,7 @@ export function newSession(industryId: string, seed: number, answers?: Household
     plan: [],
     eventShown: false,
     invest: null,
+    chaptersDone: [],
   };
 }
 
@@ -219,4 +222,9 @@ export function repairing(plan: PlanItem[], damaged: { home: boolean; firm: bool
 // Open the investing chapter (from its start, or where the player left it).
 export function openInvest(s: Session): Session {
   return { ...s, phase: "invest", invest: s.invest ?? newInvest() };
+}
+
+// The chapter's "Your city grew" is done: the month counts as done on the year map, then the year map.
+export function finishChapter(s: Session, month: number): Session {
+  return { ...s, phase: "roadmap", chaptersDone: s.chaptersDone.includes(month) ? s.chaptersDone : [...s.chaptersDone, month] };
 }

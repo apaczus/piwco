@@ -10,9 +10,14 @@ describe("startMonthFor", () => {
     expect(startMonthFor("beginner", levels)).toEqual({ month: 1, fallback: false });
   });
 
-  it("intermediate and advanced fall back to January while only the basics are playable", () => {
-    expect(startMonthFor("intermediate", levels)).toEqual({ month: 1, fallback: true });
-    expect(startMonthFor("advanced", levels)).toEqual({ month: 1, fallback: true });
+  it("intermediate and advanced start with the investing chapter (August)", () => {
+    expect(startMonthFor("intermediate", levels)).toEqual({ month: 8, fallback: false });
+    expect(startMonthFor("advanced", levels)).toEqual({ month: 8, fallback: false });
+  });
+
+  it("falls back to January when nothing past the basics is playable", () => {
+    const basics = levels.map((l) => (l.month > 3 ? { ...l, playable: false } : l));
+    expect(startMonthFor("intermediate", basics)).toEqual({ month: 1, fallback: true });
   });
 
   it("no argument behaves like intermediate", () => {

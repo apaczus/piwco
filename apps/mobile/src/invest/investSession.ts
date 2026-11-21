@@ -1,7 +1,8 @@
 // Investing chapter (month 8): pure chapter state (no UI). Kept in the game Session, in memory only (not in GameState).
-// Stages: intro → split1 → run1 → result1 → lesson → horizon → split2 → topup → run2 → result2 → city (step 5 placeholder).
+// Stages: intro → split1 → run1 → result1 → lesson → horizon → split2 → topup → run2 → result2 → city ("Your city grew",
+// drawn by the game: the Future tower's level up).
 import { invest } from "@piwco/content";
-import { compareAlternatives, marketPath, simulatePortfolio, splitByShares, type Alternatives, type SimulateResult } from "@piwco/engine";
+import { compareAlternatives, marketPath, type CityLevel, type InvestProgress, simulatePortfolio, splitByShares, type Alternatives, type SimulateResult } from "@piwco/engine";
 import { formatPln } from "../game/format";
 
 export type InvestStage =
@@ -56,6 +57,8 @@ export type InvestState = {
   try2: InvestTry | null;
   // Try 2 attempts so far (no limit; "Try again" starts a new one).
   attempts: number;
+  // Future tower level the player has already seen grow (the chapter's "Your city grew" plays the difference).
+  seenFuture: CityLevel;
 };
 
 // One market history for the whole chapter (deterministic, the same for every player).
@@ -64,7 +67,7 @@ export const START = invest.startAmount;
 export const TRY1_MONTHS = 12;
 
 export function newInvest(): InvestState {
-  return { stage: "intro", draft: {}, try1: null, lessonDone: false, horizon: null, draft2: null, topUp: null, try2: null, attempts: 0 };
+  return { stage: "intro", draft: {}, try1: null, lessonDone: false, horizon: null, draft2: null, topUp: null, try2: null, attempts: 0, seenFuture: 0 };
 }
 
 // Placed on the sliders (everything except cash).
@@ -122,6 +125,12 @@ export function try2Edge(s: InvestState): number {
 // Try 2 beat Try 1 in real terms (Future tower level 3, decided).
 export function try2Better(s: InvestState): boolean {
   return try2Edge(s) > 0;
+}
+
+// What the Future tower is built from (decided: try 1 done → Lv 1, lesson done → Lv 2, try 2 beats try 1 → Lv 3).
+export function investProgress(s: InvestState | null): InvestProgress | undefined {
+  if (!s) return undefined;
+  return { try1Done: s.try1 !== null, lessonDone: s.lessonDone, try2Better: try2Better(s) };
 }
 
 // "Try again": back to the horizon, the last choices stay selected.

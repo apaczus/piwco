@@ -13,6 +13,7 @@
     "policyLevels": [1, 2, 4]
   },
   "future": {
-    "unlockMonth": 8
+    "unlockMonth": 8,
+    "steps": ["try1Done", "lessonDone", "try2Better"]
   }
 }

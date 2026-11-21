@@ -22,7 +22,11 @@ export function cityConfigFor(state: GameState): CityConfig {
 // Tooltip text for a tapped building, e.g. "Level 2 of 3 · Next level at 4 500 PLN in your cushion".
 export function buildingHint(id: BuildingId, level: CityLevel, config: CityConfig): string {
   const next = nextLevel(id, level, config);
-  if (id === "future") return `Unlocks in ${MONTHS[(next?.kind === "locked" ? next.unlockMonth : 8) - 1]}: investing builds it.`;
+  if (id === "future") {
+    if (level === 0) return `Play the investing chapter (${MONTHS[(next?.kind === "locked" ? next.unlockMonth : 8) - 1]}) to build it.`;
+    if (!next) return `Level ${level} of 3 · Fully built!`;
+    return `Level ${level} of 3 · ${next.kind === "invest" && next.step === "lessonDone" ? "Finish the investing lesson to grow it" : "Beat your first try to build the top"}`;
+  }
   if (level === 0) {
     if (id === "vault") return "Save to your cushion to build it.";
     if (id === "shield") return "Buy your first insurance policy to build it.";
@@ -39,6 +43,7 @@ export function buildingHint(id: BuildingId, level: CityLevel, config: CityConfi
     case "policies":
       return `${head} · Next level with ${next.count} insurance ${next.count === 1 ? "policy" : "policies"}`;
     case "locked":
+    case "invest":
       return head;
   }
 }

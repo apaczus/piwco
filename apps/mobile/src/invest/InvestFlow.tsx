@@ -523,18 +523,6 @@ function Result2Screen({
   );
 }
 
-// ---------- City: placeholder until step 5 ----------
-
-function CityPlaceholder({ state, dir, onBack }: { state: InvestState; dir: Dir; onBack: () => void }) {
-  return (
-    <ScreenLayout dir={dir} footer={<Cta label="Back to the result" onPress={onBack} />}>
-      <StepEyebrow state={state} />
-      <Title>Your Future tower comes next</Title>
-      <Sub>The city part of the chapter is built in the next step.</Sub>
-    </ScreenLayout>
-  );
-}
-
 export function InvestScreen({
   state,
   dir,
@@ -593,7 +581,8 @@ export function InvestScreen({
         />
       );
     case "city":
-      return <CityPlaceholder state={state} dir={dir} onBack={() => onChange({ ...state, stage: "result2" }, -1)} />;
+      // Drawn by the game (GameFlow): the city with the Future tower's level up.
+      return null;
   }
 }
 

@@ -15,6 +15,20 @@ export type CityConfig = {
   startingRevenue: number;
 };
 
+// Investing chapter progress (kept by the app, not in GameState): what the Future tower is built from.
+export type InvestProgress = { try1Done: boolean; lessonDone: boolean; try2Better: boolean };
+
+// Future tower level: the chapter's steps reached in order (city.json future.steps). Unknown step names count as not reached.
+export function futureLevel(invest: InvestProgress | undefined, config: CityConfig): CityLevel {
+  if (!invest) return 0;
+  let n = 0;
+  for (const step of config.thresholds.future.steps) {
+    if (!(invest as Record<string, boolean>)[step]) break;
+    n++;
+  }
+  return clampLevel(n);
+}
+
 export type CityView = {
   levels: Record<BuildingId, CityLevel>;
   // Rain cloud over the building (arrears).
@@ -39,8 +53,11 @@ function activePolicies(state: GameState): number {
   );
 }
 
-/** Levels of the city for a given state. `monthsPassed` = completed months (session.completedMonth). */
-export function cityLevels(state: GameState, monthsPassed: number, config: CityConfig): CityView {
+/**
+ * Levels of the city for a given state. `monthsPassed` = completed months (session.completedMonth).
+ * `invest` = the investing chapter's progress (builds the Future tower); missing = not started.
+ */
+export function cityLevels(state: GameState, monthsPassed: number, config: CityConfig, invest?: InvestProgress): CityView {
   const t = config.thresholds;
   const ratio = config.startingRevenue > 0 ? state.business.monthlyRevenue / config.startingRevenue : 1;
   const firm: CityLevel = ratio >= t.firm.revenueRatioLevel3 ? 3 : ratio >= t.firm.revenueRatioLevel2 ? 2 : 1;
@@ -50,8 +67,7 @@ export function cityLevels(state: GameState, monthsPassed: number, config: CityC
       firm,
       vault: levelFrom(state.personal.emergencyFund, t.vault.fundLevels),
       shield: levelFrom(activePolicies(state), t.shield.policyLevels),
-      // Investments start in month `future.unlockMonth`; nothing builds it in the MVP.
-      future: 0,
+      future: futureLevel(invest, config),
     },
     clouds: { home: state.personal.arrears > 0, firm: state.business.arrears > 0 },
     damaged: { home: state.personal.debt.balance > 0, firm: state.business.debt.balance > 0 },
@@ -80,9 +96,10 @@ export function forecastCity(
   state: GameState,
   monthsPassed: number,
   config: CityConfig,
+  invest?: InvestProgress,
 ): { city: CityView; netWorth: number } {
   const settled = settleMonth(state).state;
-  return { city: cityLevels(settled, monthsPassed, config), netWorth: netWorth(settled) };
+  return { city: cityLevels(settled, monthsPassed, config, invest), netWorth: netWorth(settled) };
 }
 
 // What the next level needs (the app turns it into a sentence). null = already at the top.
@@ -92,6 +109,8 @@ export type NextLevel =
   | { kind: "fund"; amount: number }
   | { kind: "policies"; count: number }
   | { kind: "locked"; unlockMonth: number }
+  // Future tower: the next chapter step (a name from city.json future.steps).
+  | { kind: "invest"; step: string }
   | null;
 
 export function nextLevel(building: BuildingId, level: CityLevel, config: CityConfig): NextLevel {
@@ -112,7 +131,10 @@ export function nextLevel(building: BuildingId, level: CityLevel, config: CityCo
       const count = t.shield.policyLevels[level];
       return count === undefined ? null : { kind: "policies", count };
     }
-    case "future":
-      return { kind: "locked", unlockMonth: t.future.unlockMonth };
+    case "future": {
+      if (level === 0) return { kind: "locked", unlockMonth: t.future.unlockMonth };
+      const step = t.future.steps[level];
+      return step === undefined ? null : { kind: "invest", step };
+    }
   }
 }
