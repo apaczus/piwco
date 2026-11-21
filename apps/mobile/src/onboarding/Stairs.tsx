@@ -4,7 +4,7 @@ import type { AccountId } from "@piwco/content";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Animated, Easing, StyleSheet, Text, View, type LayoutRectangle } from "react-native";
-import Svg, { Circle, Path, Rect, Text as SvgText } from "react-native-svg";
+import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { accountColors, colors, font, mix, shadow1, shadow2, springs } from "../theme";
 import { DrawPath, PopG, useMountSpring } from "./anim";
 import { accountById } from "./flow";
@@ -117,18 +117,21 @@ function Block({
 
 // ---------- Company house ----------
 
+// Words are app Text laid over the drawing: react-native-svg text rendered Manrope with filled counters on phones.
 function House() {
   return (
+    <View style={{ width: 108, height: 62 }}>
     <Svg width={108} height={62} viewBox="0 0 108 62">
       <Path d="M8 25 54 4l46 21" fill="none" stroke={colors.petrol900} strokeWidth={3} strokeLinejoin="round" strokeLinecap="round" />
       <Rect x={17} y={23} width={74} height={37} rx={6} fill="#fff" stroke={colors.petrol900} strokeWidth={2} />
       <Rect x={27} y={32} width={14} height={10} rx={2} fill={colors.yellow} />
       <Rect x={67} y={32} width={14} height={10} rx={2} fill={colors.yellow} />
       <Rect x={47} y={39} width={14} height={21} rx={2} fill={colors.petrol900} />
-      <SvgText x={54} y={20} textAnchor="middle" fontFamily={font.extrabold} fontSize={8} letterSpacing={0.9} fill={colors.petrol900}>
-        COMPANY
-      </SvgText>
     </Svg>
+      <Text pointerEvents="none" style={styles.houseLabel}>
+        COMPANY
+      </Text>
+    </View>
   );
 }
 
@@ -306,16 +309,18 @@ function FocusVisual({ id, color }: { id: AccountId; color: string }) {
   }
   if (id === "future") {
     return (
-      <Svg width={118} height={62} viewBox="0 0 118 62">
+      <View style={{ width: 118, height: 62 }}>
+      <Text pointerEvents="none" style={styles.inflation}>
+        inflation
+      </Text>
+      <Svg width={118} height={62} viewBox="0 0 118 62" style={StyleSheet.absoluteFill}>
         <Path d="M4 44 H114" stroke="#9FB2B6" strokeWidth={2} strokeDasharray={[4, 5]} />
-        <SvgText x={114} y={56} textAnchor="end" fontSize={9} fontFamily={font.bold} fill="#7A8E93">
-          inflation
-        </SvgText>
         <DrawPath length={140} delay={250} duration={700} d="M4 52 C 40 48, 70 34, 112 8" fill="none" stroke={color} strokeWidth={3.5} strokeLinecap="round" />
         <PopG delay={520}>
           <Circle cx={112} cy={8} r={5} fill={color} />
         </PopG>
       </Svg>
+      </View>
     );
   }
   const bars = [
@@ -433,6 +438,20 @@ export function FinalFocusCard() {
 }
 
 const styles = StyleSheet.create({
+  // Same places as the former SVG text (baselines y 20 and y 56 in the drawings).
+  houseLabel: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 11,
+    textAlign: "center",
+    fontFamily: font.extrabold,
+    fontSize: 8,
+    lineHeight: 10,
+    letterSpacing: 0.9,
+    color: colors.petrol900,
+  },
+  inflation: { position: "absolute", right: 4, top: 46, fontFamily: font.bold, fontSize: 9, lineHeight: 12, color: "#7A8E93" },
   stairs: { gap: 6, paddingLeft: 30 },
   block: { alignSelf: "flex-end", borderRadius: 14, borderWidth: 1.5, borderColor: "transparent" },
   ghost: { borderStyle: "dashed", borderColor: colors.line },
