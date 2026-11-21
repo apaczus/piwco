@@ -1,8 +1,10 @@
-// Coach tips on the real game screen (after the tutorial slides): the screen dims, one element is cut out and
-// outlined (mission, actions + HUD, the Year · Learn · City switch), with a card explaining it. "Next" / "Skip".
+// Guided tour of the real game screen (a presentation, shown when entering the game and from "?"): the screen dims,
+// one element is cut out and outlined (mission, company / home money, actions, End month, the year page, the city
+// page, ? and sound), with a card explaining it; the pager scrolls to YEAR / CITY by itself. Tips without an
+// element ("Watch out", "What you get") are plain cards. "Next" / "Skip".
 // Elements register themselves with <CoachTarget id>; the overlay measures them in window coordinates (a Modal
 // covers the whole window, so the numbers match).
-import { tutorial } from "@piwco/content";
+import { tutorial, type TutorialTip } from "@piwco/content";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { Animated, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View, type ViewInstance } from "react-native";
 import { buzz } from "../onboarding/anim";
@@ -45,7 +47,16 @@ function measure(v: ViewInstance | undefined): Promise<Rect | null> {
 const PAD = 8;
 const DIM = "rgba(0,20,25,0.72)";
 
-export function CoachOverlay({ registry, onDone }: { registry: Registry | null; onDone: () => void }) {
+export function CoachOverlay({
+  registry,
+  onDone,
+  onPage,
+}: {
+  registry: Registry | null;
+  onDone: () => void;
+  // Scrolls the game pager to the tip's page.
+  onPage: (page: TutorialTip["page"]) => void;
+}) {
   const tips = tutorial.tips;
   const { width: W, height: H } = useWindowDimensions();
   const [index, setIndex] = useState(0);
@@ -53,18 +64,29 @@ export function CoachOverlay({ registry, onDone }: { registry: Registry | null; 
   const fade = useRef(new Animated.Value(0)).current;
   const pop = useRef(new Animated.Value(0)).current;
   const tip = tips[index];
+  const lastPage = useRef<TutorialTip["page"]>("learn");
 
   useEffect(() => {
     let alive = true;
     if (!tip) return;
-    measure(registry?.get(tip.id)).then((r) => {
-      if (!alive) return;
-      setRect(r);
-      pop.setValue(0);
-      Animated.spring(pop, { toValue: 1, ...springs.snappy, useNativeDriver: true }).start();
-    });
+    pop.setValue(0);
+    setRect(null);
+    const moved = tip.page !== lastPage.current;
+    lastPage.current = tip.page;
+    onPage(tip.page);
+    // Give the pager time to scroll before measuring.
+    const t = setTimeout(
+      () =>
+        measure(registry?.get(tip.id)).then((r) => {
+          if (!alive) return;
+          setRect(r);
+          Animated.spring(pop, { toValue: 1, ...springs.snappy, useNativeDriver: true }).start();
+        }),
+      moved ? 480 : 40,
+    );
     return () => {
       alive = false;
+      clearTimeout(t);
     };
   }, [tip, registry, pop]);
 
@@ -84,10 +106,13 @@ export function CoachOverlay({ registry, onDone }: { registry: Registry | null; 
   };
 
   const r = rect ? { x: rect.x - PAD, y: rect.y - PAD, w: rect.w + 2 * PAD, h: rect.h + 2 * PAD } : null;
-  // Card below the highlight when there is room, otherwise above it.
-  const below = !r || r.y + r.h + 200 < H;
-  const cardTop = r ? (below ? r.y + r.h + 12 : undefined) : H * 0.4;
-  const cardBottom = r && !below ? H - r.y + 12 : undefined;
+  // Card below the highlight when there is room, otherwise above it, otherwise at the bottom of the screen.
+  const CARD = 210;
+  const roomBelow = !!r && r.y + r.h + CARD + 24 < H;
+  const roomAbove = !!r && r.y - CARD - 24 > 0;
+  const below = !r || roomBelow || !roomAbove;
+  const cardTop = !r ? H * 0.34 : roomBelow ? r.y + r.h + 12 : undefined;
+  const cardBottom = !r ? undefined : roomBelow ? undefined : roomAbove ? H - r.y + 12 : 28;
 
   return (
     <Modal transparent visible animationType="none" statusBarTranslucent onRequestClose={onDone}>
@@ -113,7 +138,7 @@ export function CoachOverlay({ registry, onDone }: { registry: Registry | null; 
           ]}
         >
           <View style={styles.cardHead}>
-            <Text style={styles.count}>{`TIP ${index + 1} / ${tips.length}`}</Text>
+            <Text style={styles.count}>{`HOW TO PLAY · ${index + 1} / ${tips.length}`}</Text>
             <Pressable hitSlop={10} onPress={() => { buzz("light"); onDone(); }} accessibilityRole="button" accessibilityLabel="Skip the tips">
               <Text style={styles.skip}>Skip</Text>
             </Pressable>
@@ -121,7 +146,7 @@ export function CoachOverlay({ registry, onDone }: { registry: Registry | null; 
           <Text style={styles.title}>{tip.title}</Text>
           <Text style={styles.text}>{tip.text}</Text>
           <Pressable onPress={next} style={styles.btn} accessibilityRole="button">
-            <Text style={styles.btnText}>{index >= tips.length - 1 ? "Got it ✓" : "Next ›"}</Text>
+            <Text style={styles.btnText}>{index >= tips.length - 1 ? "Let's play ›" : "Next ›"}</Text>
           </Pressable>
         </Animated.View>
       </Animated.View>

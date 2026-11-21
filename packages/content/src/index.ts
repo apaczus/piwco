@@ -247,10 +247,10 @@ export type FinancingProduct = {
 
 export const financing = financingData as FinancingProduct[];
 
-// Tutorial after the survey: slides (how to play, what's ahead, what you get) and tips on the game screen.
-// Tip ids are matched in code (apps/mobile/src/game/coach.tsx); texts are editable.
-export type TutorialSlide = { id: string; eyebrow: string; title: string; text: string; points: string[] };
-export type TutorialTip = { id: string; title: string; text: string };
-export type Tutorial = { slides: TutorialSlide[]; tips: TutorialTip[] };
+// Guided tour of the game screen (a presentation over the real app, shown when entering the game and from "?").
+// `id` = the highlighted element (matched in apps/mobile/src/game/coach.tsx; "alarm" and "gain" have no element,
+// they are plain cards). `page` = the pager page that is scrolled to first. Texts are editable.
+export type TutorialTip = { id: string; page: "year" | "learn" | "city"; title: string; text: string };
+export type Tutorial = { tips: TutorialTip[] };
 
-export const tutorial: Tutorial = tutorialData;
+export const tutorial = tutorialData as Tutorial;

@@ -35,7 +35,10 @@ export function GamePager({
   cityBadge = 0,
   badgeFrom = 0,
   onPage,
+  controlRef,
 }: {
+  // Lets the owner scroll the pager (the guided tour shows YEAR and CITY).
+  controlRef?: { current: { goTo: (p: PagerPage) => void } | null };
   year: ReactNode;
   learn: ReactNode;
   city: ReactNode;
@@ -77,6 +80,7 @@ export function GamePager({
     scroller.current?.scrollTo({ x: p * width, animated: true });
     setPage(p);
   };
+  if (controlRef) controlRef.current = { goTo };
 
   const segment = switchWidth > 0 ? (switchWidth - 8) / PAGES.length : 0;
   const indicatorX =

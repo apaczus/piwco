@@ -19,8 +19,6 @@ import {
 // "eventLesson" = the month's event lesson (info cards, quiz, "Add to my plan"), after the result, before "lesson".
 export type Phase =
   | "welcome"
-  // Tutorial slides (after the survey, or from "?" on the game screen).
-  | "tutorial"
   | "intro"
   | "event"
   | "play"

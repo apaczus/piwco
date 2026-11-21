@@ -74,17 +74,21 @@ export function GameScreen({
       <ScreenLayout
         dir={dir}
         footer={
-          <Pulse active={!!mission?.allDone}>
-            <Cta label={mission?.allDone ? "End month ✓" : "End month"} onPress={onEndMonth} />
-          </Pulse>
+          <CoachTarget id="endMonth">
+            <Pulse active={!!mission?.allDone}>
+              <Cta label={mission?.allDone ? "End month ✓" : "End month"} onPress={onEndMonth} />
+            </Pulse>
+          </CoachTarget>
         }
       >
         <View style={styles.headRow}>
           <Eyebrow>{`Month ${level.month} · ${level.monthName}`}</Eyebrow>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            {onHelp ? <HelpButton onPress={onHelp} /> : null}
-            <SoundToggle />
-          </View>
+          <CoachTarget id="icons">
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              {onHelp ? <HelpButton onPress={onHelp} /> : null}
+              <SoundToggle />
+            </View>
+          </CoachTarget>
         </View>
         {mission ? (
           <CoachTarget id="mission">
@@ -100,14 +104,14 @@ export function GameScreen({
           />
           </CoachTarget>
         ) : null}
-        <CoachTarget id="actions">
-          <View style={styles.top}>
+        <View style={styles.top}>
+          <CoachTarget id="actions">
             <ActionBar month={state.month} onAction={onAction} />
-            <View style={{ flex: 1 }}>
-              <GameHud state={state} memory={hudMemory} />
-            </View>
+          </CoachTarget>
+          <View style={{ flex: 1 }}>
+            <GameHud state={state} memory={hudMemory} />
           </View>
-        </CoachTarget>
+        </View>
         {showSwipeHint ? <SwipeHint /> : null}
       </ScreenLayout>
     </View>

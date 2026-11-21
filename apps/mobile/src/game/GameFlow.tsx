@@ -11,7 +11,7 @@ import { CityGrew } from "../city/CityGrew";
 import { CityPage } from "../city/CityPage";
 import { changedBuildings, type Levels } from "../city/levelUp";
 import { CityScene } from "../city/CityScene";
-import { CITY_PAGE, GamePager } from "../city/GamePager";
+import { CITY_PAGE, GamePager, LEARN_PAGE, type PagerPage } from "../city/GamePager";
 import { YearPage } from "./YearPage";
 import { MonthDonePage } from "./MonthDonePage";
 import { buzz } from "../onboarding/anim";
@@ -57,7 +57,6 @@ import { EventLesson } from "./EventLesson";
 import { buildEventLesson, hasEventLesson } from "./eventLesson";
 import { getPlayerProfile, householdAnswers } from "./profile";
 import { WelcomeToGame } from "./WelcomeToGame";
-import { Tutorial } from "./Tutorial";
 import { CoachOverlay, CoachProvider, type CoachRegistry } from "./coach";
 
 function timeOfDay(phase: Phase): TimeOfDay {
@@ -72,7 +71,6 @@ function timeOfDay(phase: Phase): TimeOfDay {
     case "receipt":
       return "sunset";
     case "welcome":
-    case "tutorial":
     case "result":
     case "eventLesson":
     case "lesson":
@@ -91,15 +89,11 @@ function startSession(industryId: string | null): Session | null {
 
 export function GameFlow({ industryId }: { industryId: string | null }) {
   const insets = useSafeAreaInsets();
-  // Coming from the survey (a profile exists): the tutorial comes first, then "Welcome to the game".
-  const [session, setSession] = useState<Session | null>(() => {
-    const s = startSession(industryId);
-    return s && getPlayerProfile() ? { ...s, phase: "tutorial" } : s;
-  });
-  // Where the tutorial was opened from: the start of the game, or the "?" on the game screen.
-  const [tutorialFrom, setTutorialFrom] = useState<"start" | "play">("start");
-  // Coach tips on the game screen are waiting (after the tutorial).
-  const [coachPending, setCoachPending] = useState(false);
+  const [session, setSession] = useState<Session | null>(() => startSession(industryId));
+  // Guided tour of the game screen: every time the game is entered (survey or "Skip to game"), before the first
+  // move; "?" plays it again. "Start a new game" in the same visit doesn't repeat it.
+  const [coachPending, setCoachPending] = useState(true);
+  const pagerControl = useRef<{ goTo: (p: PagerPage) => void } | null>(null);
   const [coachOn, setCoachOn] = useState(false);
   const coachRegistry = useRef<CoachRegistry>(new Map()).current;
 
@@ -154,7 +148,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
   const time: TimeOfDay = session ? timeOfDay(session.phase) : "day";
   const night = time === "night";
 
-  // Coach tips: once the game screen is in after the tutorial.
+  // The tour starts once the game screen is in.
   useEffect(() => {
     if (!coachPending || session?.phase !== "play") {
       setCoachOn(false);
@@ -208,17 +202,6 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
     const eventLessonNext = !rec && !!viewResult && hasEventLesson(viewResult.report);
     const afterEventLesson: Phase = level.lesson ? "lesson" : "city";
     switch (session.phase) {
-      case "tutorial":
-        screen = (
-          <Tutorial
-            finishLabel={tutorialFrom === "play" ? "Back to the game ›" : "Let's play ›"}
-            onDone={() => {
-              setCoachPending(true);
-              toPhase(tutorialFrom === "play" ? "play" : "welcome");
-            }}
-          />
-        );
-        break;
       case "welcome":
         screen = (
           <WelcomeToGame
@@ -270,10 +253,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
             hudMemory={hudMemory}
             backdrop={<CityScene city={forecast.city} repairing={repairing(session.plan, forecast.city.damaged)} />}
             showSwipeHint={!cityOpened}
-            onHelp={() => {
-              setTutorialFrom("play");
-              toPhase("tutorial");
-            }}
+            onHelp={() => setCoachPending(true)}
             onAction={(id: ActionId) => {
               if (id === "draw") toPhase("draw");
               else if (id === "budget") toPhase("budget");
@@ -292,6 +272,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
         );
         screen = (
           <GamePager
+            controlRef={pagerControl}
             year={<YearPage completedMonth={session.completedMonth} currentMonth={session.game.month} />}
             learn={learn}
             city={
@@ -519,18 +500,8 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
     const lvl = levels.find((l) => l.month === (session.reviewing ?? session.game.month)) ?? levels[0]!;
     const hadEventLesson = session.reviewing === null && !!session.result && hasEventLesson(session.result.report);
     switch (session.phase) {
-      case "tutorial":
-        back = tutorialFrom === "play" ? () => toPhase("play", -1) : router.canGoBack() ? () => router.back() : null;
-        break;
       case "welcome":
-        back = getPlayerProfile()
-          ? () => {
-              setTutorialFrom("start");
-              toPhase("tutorial", -1);
-            }
-          : router.canGoBack()
-            ? () => router.back()
-            : null;
+        back = router.canGoBack() ? () => router.back() : null;
         break;
       case "receipt":
         back =
@@ -605,7 +576,9 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
     {coachOn ? (
       <CoachOverlay
         registry={coachRegistry}
+        onPage={(p) => pagerControl.current?.goTo(p === "year" ? 0 : p === "city" ? CITY_PAGE : LEARN_PAGE)}
         onDone={() => {
+          pagerControl.current?.goTo(LEARN_PAGE);
           setCoachOn(false);
           setCoachPending(false);
         }}

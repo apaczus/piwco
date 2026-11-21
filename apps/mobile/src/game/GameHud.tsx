@@ -9,6 +9,7 @@ import { buzz, useReducedMotion } from "../onboarding/anim";
 import { accountColors, colors, font, shadow1 } from "../theme";
 import { formatPln } from "./format";
 import { RollingNumber } from "./RollingNumber";
+import { CoachTarget } from "./coach";
 
 type CardValues = { cash: number; end: number; ok: boolean };
 export type HudMemory = { company: CardValues; home: CardValues };
@@ -132,6 +133,7 @@ export function GameHud({ state, memory }: { state: GameState; memory?: { curren
 
   return (
     <View style={styles.wrap}>
+      <CoachTarget id="hudCompany">
       <AccountCard
         title="COMPANY"
         color={colors.petrol700}
@@ -140,6 +142,8 @@ export function GameHud({ state, memory }: { state: GameState; memory?: { curren
         detail={`+${short(b.monthlyRevenue)} revenue · −${short(costs)} costs`}
         extra={bizExtra}
       />
+      </CoachTarget>
+      <CoachTarget id="hudHome">
       <AccountCard
         title="HOME"
         color={accountColors.main.color}
@@ -148,6 +152,7 @@ export function GameHud({ state, memory }: { state: GameState; memory?: { curren
         detail={`−${short(bills)} bills this month`}
         extra={homeExtra || undefined}
       />
+      </CoachTarget>
     </View>
   );
 }

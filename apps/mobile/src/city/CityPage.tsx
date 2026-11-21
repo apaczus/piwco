@@ -15,6 +15,7 @@ import type { CityConfig } from "@piwco/engine";
 import { repairing, type PlanItem } from "../game/session";
 import { MyPlan } from "./MyPlan";
 import { BackToMonth } from "./BackToMonth";
+import { CoachTarget } from "../game/coach";
 
 export function CityPage({
   city,
@@ -47,6 +48,8 @@ export function CityPage({
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <BackToMonth side="left" label={backLabel} />
       <Eyebrow>Your city</Eyebrow>
+      <CoachTarget id="city">
+      <View style={{ gap: 14 }}>
       <View style={styles.worthRow}>
         <Text style={styles.worthLabel}>Net worth at month end</Text>
         <View style={styles.worthPill}>
@@ -62,6 +65,8 @@ export function CityPage({
           setPicked((p) => (p === id ? null : id));
         }}
       />
+      </View>
+      </CoachTarget>
       {picked ? (
         <Enter key={picked} from="below" distance={10}>
           <Panel title={BUILDING_INFO[picked].name} text={buildingHint(picked, shownCity.levels[picked], config)} />

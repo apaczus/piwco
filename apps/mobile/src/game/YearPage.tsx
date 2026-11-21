@@ -7,6 +7,7 @@ import { BackToMonth } from "../city/BackToMonth";
 import { Eyebrow } from "../onboarding/ui";
 import { colors, font, mix, shadow2, springs } from "../theme";
 import { LockIcon } from "./MonthResult";
+import { CoachTarget } from "./coach";
 
 export function YearPage({
   completedMonth,
@@ -26,6 +27,8 @@ export function YearPage({
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <BackToMonth side="right" label={backLabel} />
       <Eyebrow>Your year</Eyebrow>
+      <CoachTarget id="year">
+      <View style={{ gap: 12 }}>
       <View style={styles.head}>
         <Text style={styles.title}>{currentMonth ? `Level ${currentMonth} of 12` : `${completedMonth} of 12 done`}</Text>
         <Text style={styles.done}>{`${completedMonth} / 12 ✓`}</Text>
@@ -33,6 +36,8 @@ export function YearPage({
       <View style={styles.track}>
         <Animated.View style={[styles.fill, { width: bar.interpolate({ inputRange: [0, 1], outputRange: ["0%", "100%"] }) }]} />
       </View>
+      </View>
+      </CoachTarget>
       <View style={{ gap: 6 }}>
         {levels.map((l) => {
           const done = l.month <= completedMonth;
