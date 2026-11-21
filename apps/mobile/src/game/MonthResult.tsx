@@ -133,7 +133,7 @@ export function MonthResult({
   );
 }
 
-function LockIcon() {
+export function LockIcon() {
   return (
     <Svg width={16} height={16} viewBox="0 0 24 24">
       <Rect x={5} y={11} width={14} height={10} rx={3} fill="none" stroke={colors.muted} strokeWidth={2} />
@@ -149,7 +149,10 @@ export function Roadmap({
   onNewGame,
   onPickMonth,
   plan = [],
+  onBackToGame,
 }: {
+  // "Back to the game": the game's main page (between months: the completed month's pager).
+  onBackToGame?: () => void;
   completedMonth: number;
   // "My plan" summary under the months (hidden while empty).
   plan?: PlanItem[];
@@ -162,7 +165,12 @@ export function Roadmap({
   return (
     <ScreenLayout
       dir={dir}
-      footer={<LinkButton label="Start a new game" onPress={onNewGame} />}
+      footer={
+        <View style={{ gap: 4 }}>
+          {onBackToGame ? <Cta label="Back to the game ›" onPress={onBackToGame} /> : null}
+          <LinkButton label="Start a new game" onPress={onNewGame} />
+        </View>
+      }
     >
       <Eyebrow>Your year</Eyebrow>
       <Title>{nextLevel ? `${nextLevel.monthName} is coming soon` : "That's the whole year!"}</Title>

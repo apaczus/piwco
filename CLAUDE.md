@@ -1,7 +1,7 @@
 # Piwco: project context
 
 > Claude reads this file at the start of every session. **Update it after every decision.**
-> Last updated: 2026-11-21 (session 3: step 32 + events rework done)
+> Last updated: 2026-11-21 (session 3: step 32, events rework, Year page done)
 
 ## Handoff: continuing the project (read first in a new session)
 
@@ -195,6 +195,11 @@ Three sheets:
   - ~~January input stays the big number + ±100/±500 buttons (no sliders)~~ **changed by the user (2026-11-21): the household budget uses sliders** (see "Household budget sliders" below); "Pay yourself" keeps the big number + buttons;
   - **March stays "learn from the mistake"** (the event can hit before the player is insured), not the spec's "choose policies before the event";
   - not taken from the spec (for now): the spec's name "Finance Quest" (brand is PIWCO), sliders, the Office building unlocking later (the company exists from January), analytics/pre-post questions (needs storage, later with the server).
+- **Year page + back to the main page** (user: "swipe to the left side like City, it only shows the levels; at the right moments let me go back to the main page"; answers 2026-11-21):
+  - the game pager has **three pages: YEAR (left) · LEARN (middle, the main page, shown first) · CITY (right)**; switch "Year · Learn · City";
+  - YEAR = the year map, **read only**: "Level n of 12", year progress bar, 12 months (done ✓, current "YOU ARE HERE", playable ahead "SOON", rest locked);
+  - "main page" = LEARN: **"Back to the month ›" pill on YEAR and "‹ Back to the month" on CITY** (scroll back to LEARN);
+  - the **year map after a month** gets **"Back to the game ›"** → new phase `hub` (between months, daytime): the same pager for the completed month (YEAR, LEARN = "January done ✓ / Next: February… coming soon" + "See your year", CITY = the real city, no level up); ‹ on the hub → the year map. With step 33 the hub's LEARN becomes the next month's start.
 - **Events rework** (user: "events can't hit right away in January, they must follow what the month teaches, raise awareness and force a decision; when one hits the screen shakes, alarming, then click through and decide"; answers 2026-11-21):
   - **timing:** the month starts on the game screen; the event hits **after the player's first decision** (Pay yourself or budget saved) or, at the latest, when they tap "End month" (the month can't end before deciding). Until then the game screens see the state **without the event** (no spoilers in the HUD / city forecast). Replay / rewind = not revealed again until the next first decision. March keeps "learn from the mistake": the event's variant is fixed at the draw, so insurance bought mid-month doesn't cover it;
   - **events follow the month's topic:** January (budget, cash flow) = only "client pays late"; February (cushion) = equipment failure + washing machine, dental, phone; March (insurance) = car, apartment, medical (+ equipment failure, covered by the equipment policy);
@@ -444,6 +449,7 @@ Three sheets:
   - engine: action `bridge_late_payment { product }` (late payment only, once, company loan only; cash in now, debt after the settlement); 3 new tests (113);
   - mobile: `session.ts` `eventShown`, `eventPending`, `afterDecision`, `visibleGame` (`monthStartPhase` now always `play`); `GameFlow` reveals the event after Pay yourself / budget / on End month and feeds `visibleGame` to the game screens; `EventScreen.tsx` stages alarm → details → decision (late payment: wait / bridge outcome); `assets/sounds/alarm.wav` + `alarm` in `sound.ts`; receipt line "Bridge loan (overdraft)"; event lesson lines "Bridged" / "You waited it out";
   - checked: typecheck, 113 tests, simulation for 3 industries × wait/bridge (event hidden until the first decision, receipt adds up, lesson filled, replay/rewind hide it again), the real phone bundles (manifest URL) contain the new code. **Not yet checked on phones.**
+- [x] Year page: `city/GamePager.tsx` (3 pages, starts on LEARN, `PagerContext` / `usePager`, `LEARN_PAGE`, `CITY_PAGE`), `city/BackToMonth.tsx`, `game/YearPage.tsx`, `game/MonthDonePage.tsx`, `CityPage` back pill (`backLabel`), phase `hub` in `session.ts` / `GameFlow`, `Roadmap` `onBackToGame`; `LockIcon` exported from `MonthResult`. Checked: typecheck, 113 tests, phone bundles contain the new code. **Not yet checked on phones** (start on the middle page on Android, swipe feel with 3 pages).
 - [ ] **MVP plan for the team spec (proposed 2026-11-21, each step approved separately):**
   - 28: onboarding profile → game: the profile (income D, flags like `car_oc_only`, `cushion`, `loans`) is passed to `/game`; the household side scales with D (decided earlier); the company stays the industry package;
   - 29: events as data + engine: `events.json` (8 MVP events, Claude's numbers for team review), drawn at the month start from the seed, filtered by month and profile (full / prepared / skipped), protection by policy / cushion; Vitest;

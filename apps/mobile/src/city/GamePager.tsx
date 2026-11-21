@@ -1,12 +1,22 @@
-// Game screen in phase "play": two pages, LEARN (the month's game screen) and CITY, switched by a horizontal swipe
-// or the "Learn · City" switch on top. Built on a paging ScrollView: the vertical scroll inside LEARN keeps working,
+// Game screen: three pages, YEAR (the year map, left), LEARN (the month's game screen, the "home" page in the
+// middle, shown first) and CITY (right), switched by a horizontal swipe or the "Year · Learn · City" switch on top.
+// The side pages get a "back to the month" button through PagerContext. Built on a paging ScrollView: the vertical scroll inside LEARN keeps working,
 // iOS gives a rubber band at the edges, and the switch indicator follows the finger (native-driver scroll event).
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { Animated, Pressable, StyleSheet, Text, View, type LayoutChangeEvent, type ScrollViewInstance } from "react-native";
 import { buzz, useMountSpring } from "../onboarding/anim";
 import { colors, font, shadow1, springs } from "../theme";
 
-const PAGES = ["Learn", "City"] as const;
+const PAGES = ["Year", "Learn", "City"] as const;
+export type PagerPage = 0 | 1 | 2;
+export const LEARN_PAGE: PagerPage = 1;
+export const CITY_PAGE: PagerPage = 2;
+
+// Lets a page scroll the pager (e.g. "Back to the month" on YEAR / CITY).
+const PagerContext = createContext<{ goTo: (p: PagerPage) => void } | null>(null);
+export function usePager() {
+  return useContext(PagerContext);
+}
 
 function Badge({ count }: { count: number }) {
   const pop = useMountSpring(springs.lively);
@@ -18,25 +28,34 @@ function Badge({ count }: { count: number }) {
 }
 
 export function GamePager({
+  year,
   learn,
   city,
   cityBadge = 0,
   badgeFrom = 0,
   onPage,
 }: {
+  year: ReactNode;
   learn: ReactNode;
   city: ReactNode;
   // Buildings waiting to be upgraded (shown on the "City" segment; hidden at 0).
   cityBadge?: number;
   // Badge value the player saw last; a higher one gets a haptic tick once the screen is in.
   badgeFrom?: number;
-  onPage?: (page: 0 | 1) => void;
+  onPage?: (page: PagerPage) => void;
 }) {
   const [width, setWidth] = useState(0);
   const [switchWidth, setSwitchWidth] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
   const scroller = useRef<ScrollViewInstance>(null);
-  const page = useRef<0 | 1>(0);
+  const page = useRef<PagerPage>(LEARN_PAGE);
+  // Start on LEARN (the middle page) without an animation once the width is known.
+  useEffect(() => {
+    if (width <= 0) return;
+    scrollX.setValue(LEARN_PAGE * width);
+    const t = setTimeout(() => scroller.current?.scrollTo({ x: page.current * width, animated: false }), 0);
+    return () => clearTimeout(t);
+  }, [width, scrollX]);
 
   useEffect(() => {
     if (cityBadge <= badgeFrom) return;
@@ -46,17 +65,22 @@ export function GamePager({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const setPage = (p: 0 | 1) => {
+  const setPage = (p: PagerPage) => {
     if (p === page.current) return;
     page.current = p;
     buzz("tick");
     onPage?.(p);
   };
 
-  const segment = switchWidth > 0 ? (switchWidth - 8) / 2 : 0;
+  const goTo = (p: PagerPage) => {
+    scroller.current?.scrollTo({ x: p * width, animated: true });
+    setPage(p);
+  };
+
+  const segment = switchWidth > 0 ? (switchWidth - 8) / PAGES.length : 0;
   const indicatorX =
     width > 0
-      ? scrollX.interpolate({ inputRange: [0, width], outputRange: [0, segment], extrapolate: "clamp" })
+      ? scrollX.interpolate({ inputRange: [0, 2 * width], outputRange: [0, 2 * segment], extrapolate: "clamp" })
       : 0;
 
   return (
@@ -72,13 +96,10 @@ export function GamePager({
               accessibilityRole="tab"
               accessibilityLabel={label}
               style={styles.segment}
-              onPress={() => {
-                scroller.current?.scrollTo({ x: i * width, animated: true });
-                setPage(i as 0 | 1);
-              }}
+              onPress={() => goTo(i as PagerPage)}
             >
               <Text style={styles.segmentText}>{label}</Text>
-              {i === 1 && cityBadge > 0 ? <Badge key={cityBadge} count={cityBadge} /> : null}
+              {i === CITY_PAGE && cityBadge > 0 ? <Badge key={cityBadge} count={cityBadge} /> : null}
             </Pressable>
           ))}
         </View>
@@ -93,11 +114,15 @@ export function GamePager({
           showsHorizontalScrollIndicator={false}
           scrollEventThrottle={16}
           onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: true })}
-          onMomentumScrollEnd={(e) => setPage(Math.round(e.nativeEvent.contentOffset.x / width) === 1 ? 1 : 0)}
+          contentOffset={{ x: LEARN_PAGE * width, y: 0 }}
+          onMomentumScrollEnd={(e) => setPage(Math.max(0, Math.min(2, Math.round(e.nativeEvent.contentOffset.x / width))) as PagerPage)}
           style={{ flex: 1 }}
         >
-          <View style={[styles.page, { width }]}>{learn}</View>
-          <View style={[styles.page, { width }]}>{city}</View>
+          <PagerContext.Provider value={{ goTo }}>
+            <View style={[styles.page, { width }]}>{year}</View>
+            <View style={[styles.page, { width }]}>{learn}</View>
+            <View style={[styles.page, { width }]}>{city}</View>
+          </PagerContext.Provider>
         </Animated.ScrollView>
       ) : null}
     </View>
@@ -110,7 +135,7 @@ const styles = StyleSheet.create({
   switchRow: { paddingHorizontal: 18, paddingBottom: 6, alignItems: "center" },
   switch: {
     flexDirection: "row",
-    width: 220,
+    width: 276,
     padding: 4,
     borderRadius: 99,
     backgroundColor: colors.surface,

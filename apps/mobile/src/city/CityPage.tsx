@@ -14,6 +14,7 @@ import { CityScene } from "./CityScene";
 import type { CityConfig } from "@piwco/engine";
 import { repairing, type PlanItem } from "../game/session";
 import { MyPlan } from "./MyPlan";
+import { BackToMonth } from "./BackToMonth";
 
 export function CityPage({
   city,
@@ -24,7 +25,10 @@ export function CityPage({
   plan,
   active,
   onSeen,
+  backLabel,
 }: {
+  // Text of the "‹ Back to the month" pill (scrolls back to LEARN).
+  backLabel?: string;
   // "My plan" items (real-world steps from the event lessons); they also put scaffolding on damaged buildings.
   plan: PlanItem[];
   city: CityView;
@@ -41,6 +45,7 @@ export function CityPage({
   const shownCity = { ...city, levels: lu.display };
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <BackToMonth side="left" label={backLabel} />
       <Eyebrow>Your city</Eyebrow>
       <View style={styles.worthRow}>
         <Text style={styles.worthLabel}>Net worth at month end</Text>

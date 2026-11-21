@@ -29,7 +29,9 @@ export type Phase =
   | "eventLesson"
   | "lesson"
   | "city"
-  | "roadmap";
+  | "roadmap"
+  // Between months: the pager (Year · Learn · City) for a completed month, nothing to play until the next one.
+  | "hub";
 
 // A real-world step the player added with "Add to my plan" (kept in memory; storage comes with the server).
 export type PlanItem = {

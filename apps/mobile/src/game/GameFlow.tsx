@@ -11,7 +11,9 @@ import { CityGrew } from "../city/CityGrew";
 import { CityPage } from "../city/CityPage";
 import { changedBuildings, type Levels } from "../city/levelUp";
 import { CityScene } from "../city/CityScene";
-import { GamePager } from "../city/GamePager";
+import { CITY_PAGE, GamePager } from "../city/GamePager";
+import { YearPage } from "./YearPage";
+import { MonthDonePage } from "./MonthDonePage";
 import { buzz } from "../onboarding/anim";
 import { preloadSounds } from "../sound";
 import { Sky, type TimeOfDay } from "../sky/Sky";
@@ -63,6 +65,7 @@ function timeOfDay(phase: Phase): TimeOfDay {
     case "play":
     case "draw":
     case "budget":
+    case "hub":
       return "day";
     case "receipt":
       return "sunset";
@@ -249,6 +252,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
         );
         screen = (
           <GamePager
+            year={<YearPage completedMonth={session.completedMonth} currentMonth={session.game.month} />}
             learn={learn}
             city={
               <CityPage
@@ -265,9 +269,43 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
             cityBadge={badge}
             badgeFrom={lastBadge.current}
             onPage={(p) => {
-              setOnCity(p === 1);
-              if (p === 1) setCityOpened(true);
+              setOnCity(p === CITY_PAGE);
+              if (p === CITY_PAGE) setCityOpened(true);
             }}
+          />
+        );
+        break;
+      }
+      case "hub": {
+        // Between months: the completed month's real city (no forecast, nothing left to level up).
+        const config = cityConfigFor(session.game);
+        const real = cityLevels(session.game, session.completedMonth, config);
+        const worth = netWorth(session.game);
+        const nextLevel = levels.find((l) => l.month === session.completedMonth + 1);
+        screen = (
+          <GamePager
+            year={<YearPage completedMonth={session.completedMonth} currentMonth={null} backLabel={`Back to ${level.monthName}`} />}
+            learn={
+              <MonthDonePage
+                level={level}
+                next={nextLevel}
+                backdrop={<CityScene city={real} repairing={repairing(session.plan, real.damaged)} />}
+                onYear={() => toPhase("roadmap")}
+              />
+            }
+            city={
+              <CityPage
+                city={real}
+                netWorth={worth}
+                config={config}
+                shown={real.levels}
+                shownWorth={worth}
+                plan={session.plan}
+                active={false}
+                onSeen={() => {}}
+                backLabel={`Back to ${level.monthName}`}
+              />
+            }
           />
         );
         break;
@@ -392,6 +430,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
               completedMonth={session.completedMonth}
               dir={dir}
               plan={session.plan}
+              onBackToGame={session.completedMonth > 0 ? () => toPhase("hub") : undefined}
               onPickMonth={(m) => {
                 buzz("tick");
                 setSheetMonth(m);
@@ -466,6 +505,9 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
         break;
       case "roadmap":
         back = () => toPhase("city", -1);
+        break;
+      case "hub":
+        back = () => toPhase("roadmap", -1);
         break;
       default:
         back = null;
