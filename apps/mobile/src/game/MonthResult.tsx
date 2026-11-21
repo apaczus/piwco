@@ -21,6 +21,10 @@ function reasonText(r: GoalReason): string {
       return `${categoryLabel(r.category)}: ${formatPln(r.amount)} unpaid`;
     case "below_minimum":
       return `${categoryLabel(r.category)}: budget ${formatPln(r.amount)} below the minimum`;
+    case "event_unpaid":
+      return `${r.side === "business" ? "Company" : "Home"}: ${formatPln(r.amount)} of the surprise cost unpaid`;
+    case "business_installment_unpaid":
+      return `Company loan installment: ${formatPln(r.amount)} unpaid`;
   }
 }
 

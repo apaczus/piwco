@@ -2,6 +2,7 @@ import householdData from "./household.json";
 import industriesData from "./industries.json";
 import cityData from "./city.json";
 import eventsData from "./events.json";
+import financingData from "./financing.json";
 import levelsData from "./levels.json";
 import onboardingData from "./onboarding.json";
 
@@ -208,3 +209,15 @@ export type GameEventDef = {
 
 // The JSON is not validated at runtime; this cast gives the literal types (side, effect, base).
 export const gameEvents = eventsData as GameEventDef[];
+
+// Ways to cover an event when the money isn't there ("plot twist"; Claude's numbers for team review).
+// Simple interest: total = amount × (1 + monthlyRate × months), paid in equal monthly installments from next month.
+export type FinancingProduct = {
+  id: string;
+  side: "personal" | "business";
+  label: string;
+  months: number;
+  monthlyRate: number;
+};
+
+export const financing = financingData as FinancingProduct[];

@@ -396,6 +396,15 @@ Three sheets:
   - engine: `personal.income` (D) and `flags` in the game state (from the onboarding; baseline income = 5 500), `event: ActiveEvent | null`; `events.ts`: `eventAmount` (share of D or revenue, clamped, rounded to 50), `eventVariant` (skipped / prepared by a policy or flag / full), `drawEvent(state, defs)` (weighted pick among the month's applicable events with the seeded RNG, stored in the state, same event if drawn twice in a month);
   - onboarding profile: new flag `home_insured` ("own place, insured");
   - 12 new tests (95 total). Cushion is not a "prepared" protection: paying from it stays a decision (step 30).
+- [x] Fix (user report): the welcome slides' titles used Manrope ExtraBold with negative tracking; on phones the counters of b, d, e looked filled. Now Manrope Bold, no negative tracking (`welcome.title` in `onboarding/screens.tsx`).
+- [x] Step 30: paying for an event (engine, no UI yet):
+  - `packages/content/src/financing.json` (`financing`, type `FinancingProduct`, **Claude's numbers for team review**): credit card (3 months, 2.5%/month), bank cash loan (6, 1.2%), quick non-bank loan (3, 8%), business overdraft (3, 1.5%), business loan (6, 1%); simple interest, equal installments rounded up, first installment next month;
+  - state: `financing` terms stored at game start (server can replay), company `debt` and `receivables`, event `remaining` / `paid` / `loans`;
+  - actions: `cover_event` (personal event from the cushion or the personal account, business event from the company account; partial payments allowed), `borrow_for_event` (covers what's left with a loan of the event's side);
+  - `settleMonth`: revenue in = revenue − this month's late payment + last month's; company: old arrears → loan installment → costs → what's left of a business event; home: … bills → what's left of a personal event → savings; shortfalls become arrears; new loans are added after this month's installments; report has `event` (paid before, loans, leftover, unpaid), `lateRevenue`, `receivablesCollected`, company installment;
+  - goal reasons: `event_unpaid` (side + amount), `business_installment_unpaid`; `costs_unpaid` now only counts the costs;
+  - mobile: sessions get the financing terms; "what went wrong" texts for the new reasons; receipt start balances include event payments and the company installment;
+  - 14 new tests (109 total), incl. "every January event can be survived in every industry (with a company loan if needed)".
 - [ ] **MVP plan for the team spec (proposed 2026-11-21, each step approved separately):**
   - 28: onboarding profile → game: the profile (income D, flags like `car_oc_only`, `cushion`, `loans`) is passed to `/game`; the household side scales with D (decided earlier); the company stays the industry package;
   - 29: events as data + engine: `events.json` (8 MVP events, Claude's numbers for team review), drawn at the month start from the seed, filtered by month and profile (full / prepared / skipped), protection by policy / cushion; Vitest;

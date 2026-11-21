@@ -29,9 +29,14 @@ export function buildReceipt(report: MonthReport, log: readonly LogEntry[]): Rec
   const draw = drawsThisMonth(log, report.month);
 
   // Cash before the month: the settlement only adds revenue and pays out, so it can be worked back.
-  const companyStart = b.endCash + b.costsPaid + b.oldArrearsPaid - b.revenue + draw;
+  const ev = report.event;
+  const eventFrom = (source: string) => (ev ? ev.paidBefore.filter((x) => x.source === source).reduce((s, x) => s + x.amount, 0) : 0);
+  const bizEventAtEnd = ev?.side === "business" ? ev.leftoverPaid : 0;
+  const persEventAtEnd = ev?.side === "personal" ? ev.leftoverPaid : 0;
+  const companyStart =
+    b.endCash + b.costsPaid + b.oldArrearsPaid + b.installmentPaid + bizEventAtEnd - b.revenue + draw + eventFrom("company");
   const billsPaid = p.bills.reduce((s, x) => s + x.paid, 0);
-  const homeStart = p.oldArrearsPaid + p.installmentPaid + billsPaid + p.savedToFund + p.endCash;
+  const homeStart = p.oldArrearsPaid + p.installmentPaid + billsPaid + persEventAtEnd + p.savedToFund + p.endCash + eventFrom("personal");
 
   const company: ReceiptLine[] = [
     { id: "c_start", sign: "+", label: "On the account", amount: companyStart },

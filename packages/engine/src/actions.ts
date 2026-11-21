@@ -1,3 +1,4 @@
+import { loanCost } from "./events";
 import { HOUSEHOLD_CATEGORIES, type Action, type ActionResult, type GameState, type HouseholdCategory } from "./state";
 
 // Returns an error message, or null when the budget is valid: exactly the 6 household categories,
@@ -79,6 +80,43 @@ export function applyAction(state: GameState, action: Action): ActionResult {
         personal: { ...state.personal, monthlySpending: spending },
       };
       return { ok: true, state: withLog(next, { type: "set_household_budget", spending: { ...spending } }) };
+    }
+
+    case "cover_event": {
+      const ev = state.event;
+      if (!ev || ev.month !== state.month || ev.remaining <= 0) return { ok: false, error: "There is nothing left to pay for this month's event." };
+      const allowed = ev.side === "personal" ? ["cushion", "personal"] : ["company"];
+      if (!allowed.includes(action.source)) {
+        return { ok: false, error: `A ${ev.side} event can't be paid from the ${action.source} account.` };
+      }
+      const balance =
+        action.source === "cushion" ? state.personal.emergencyFund : action.source === "personal" ? state.personal.cash : state.business.cash;
+      const error = validateTransfer(action.amount, balance, `${action.source} account`);
+      if (error) return { ok: false, error };
+      if (action.amount > ev.remaining) return { ok: false, error: `Only ${ev.remaining} PLN is left to pay.` };
+      const next: GameState = {
+        ...state,
+        personal: {
+          ...state.personal,
+          emergencyFund: state.personal.emergencyFund - (action.source === "cushion" ? action.amount : 0),
+          cash: state.personal.cash - (action.source === "personal" ? action.amount : 0),
+        },
+        business: { ...state.business, cash: state.business.cash - (action.source === "company" ? action.amount : 0) },
+        event: { ...ev, remaining: ev.remaining - action.amount, paid: [...ev.paid, { source: action.source, amount: action.amount }] },
+      };
+      return { ok: true, state: withLog(next, action) };
+    }
+
+    case "borrow_for_event": {
+      const ev = state.event;
+      if (!ev || ev.month !== state.month || ev.remaining <= 0) return { ok: false, error: "There is nothing left to pay for this month's event." };
+      const terms = state.financing[action.product];
+      if (!terms) return { ok: false, error: `Unknown loan product: "${action.product}".` };
+      if (terms.side !== ev.side) return { ok: false, error: `This loan is for ${terms.side} costs, the event is ${ev.side}.` };
+      const { total, installment } = loanCost(ev.remaining, terms);
+      const loan = { product: action.product, side: terms.side, principal: ev.remaining, total, installment };
+      const next: GameState = { ...state, event: { ...ev, remaining: 0, loans: [...ev.loans, loan] } };
+      return { ok: true, state: withLog(next, action) };
     }
 
     default: {

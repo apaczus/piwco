@@ -1,5 +1,5 @@
 import { createRng } from "./rng";
-import type { BusinessState, GameState, PersonalState } from "./state";
+import type { BusinessState, FinancingTerms, GameState, PersonalState } from "./state";
 
 // Everything needed to start a game. The numbers come from outside the engine
 // (industry content + onboarding answers); the engine has no amounts of its own.
@@ -7,7 +7,9 @@ export type InitialSetup = {
   seed: number;
   // Onboarding profile flags (optional; none = baseline player).
   flags?: string[];
-  business: Omit<BusinessState, "arrears">;
+  // Loan products for covering events (optional; none = no borrowing).
+  financing?: Record<string, FinancingTerms>;
+  business: Omit<BusinessState, "arrears" | "debt" | "receivables">;
   personal: Omit<PersonalState, "arrears">;
 };
 
@@ -22,6 +24,8 @@ export function createInitialState(setup: InitialSetup): GameState {
       monthlyCosts: { ...business.monthlyCosts },
       policies: { ...business.policies },
       arrears: 0,
+      debt: { balance: 0, monthlyInstallment: 0 },
+      receivables: 0,
     },
     personal: {
       ...personal,
@@ -34,5 +38,6 @@ export function createInitialState(setup: InitialSetup): GameState {
     log: [],
     flags: [...(setup.flags ?? [])],
     event: null,
+    financing: Object.fromEntries(Object.entries(setup.financing ?? {}).map(([k, v]) => [k, { ...v }])),
   };
 }

@@ -1,9 +1,20 @@
 // Random events: drawn at the start of a month from the seed (decided), filtered by month and the player's
 // profile. Pure; the event definitions (amounts, months, protection) come from content (events.json).
 // Paying for an event and its effect on the month are a separate step.
-import type { GameEventDef } from "@piwco/content";
+import type { FinancingProduct, GameEventDef } from "@piwco/content";
 import { nextFloat } from "./rng";
-import type { ActiveEvent, BusinessPolicy, GameState, PersonalPolicy } from "./state";
+import type { ActiveEvent, BusinessPolicy, FinancingTerms, GameState, PersonalPolicy } from "./state";
+
+/** Content loan products → the terms stored in the game state at start. */
+export function financingTerms(products: readonly FinancingProduct[]): Record<string, FinancingTerms> {
+  return Object.fromEntries(products.map((p) => [p.id, { side: p.side, months: p.months, monthlyRate: p.monthlyRate }]));
+}
+
+/** Simple-interest loan: total = principal × (1 + rate × months), equal installments (rounded up). */
+export function loanCost(principal: number, terms: FinancingTerms): { total: number; installment: number } {
+  const total = Math.round(principal * (1 + terms.monthlyRate * terms.months));
+  return { total, installment: Math.ceil(total / terms.months) };
+}
 
 export type EventVariant = "full" | "prepared" | "skipped";
 
@@ -59,6 +70,10 @@ export function drawEvent(state: GameState, defs: readonly GameEventDef[]): { st
     amount: eventAmount(chosen.def, state),
     variant: chosen.variant === "prepared" ? "prepared" : "full",
     coveredBy: chosen.coveredBy,
+    // Only a full cost event has to be paid; a prepared one is covered, a late payment just delays revenue.
+    remaining: chosen.variant === "full" && chosen.def.effect === "cost" ? eventAmount(chosen.def, state) : 0,
+    paid: [],
+    loans: [],
   };
   return { state: { ...state, rng: roll.state, event }, event };
 }

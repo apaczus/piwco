@@ -7,7 +7,11 @@ export type GoalReason =
   | { kind: "costs_unpaid"; amount: number }
   | { kind: "installment_unpaid"; amount: number }
   | { kind: "bill_unpaid"; category: HouseholdCategory; amount: number }
-  | { kind: "below_minimum"; category: HouseholdCategory; amount: number };
+  | { kind: "below_minimum"; category: HouseholdCategory; amount: number }
+  // The month's random event couldn't be fully paid (personal or company side).
+  | { kind: "event_unpaid"; side: "personal" | "business"; amount: number }
+  // The company's loan installment couldn't be paid.
+  | { kind: "business_installment_unpaid"; amount: number };
 
 export type GoalResult = {
   passed: boolean;
@@ -17,8 +21,12 @@ export type GoalResult = {
 // Everything that created new arrears this month, in the order it happened.
 function newArrearsReasons(report: MonthReport): GoalReason[] {
   const reasons: GoalReason[] = [];
-  if (report.business.arrearsAdded > 0) {
-    reasons.push({ kind: "costs_unpaid", amount: report.business.arrearsAdded });
+  const costsUnpaid = report.business.costs - report.business.costsPaid;
+  if (costsUnpaid > 0) reasons.push({ kind: "costs_unpaid", amount: costsUnpaid });
+  const bizInstallmentUnpaid = report.business.installmentDue - report.business.installmentPaid;
+  if (bizInstallmentUnpaid > 0) reasons.push({ kind: "business_installment_unpaid", amount: bizInstallmentUnpaid });
+  if (report.event && report.event.unpaid > 0) {
+    reasons.push({ kind: "event_unpaid", side: report.event.side, amount: report.event.unpaid });
   }
   const installmentUnpaid = report.personal.installmentDue - report.personal.installmentPaid;
   if (installmentUnpaid > 0) reasons.push({ kind: "installment_unpaid", amount: installmentUnpaid });

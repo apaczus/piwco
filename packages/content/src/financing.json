@@ -1,0 +1,7 @@
+[
+  { "id": "credit_card", "side": "personal", "label": "Credit card", "months": 3, "monthlyRate": 0.025 },
+  { "id": "cash_loan", "side": "personal", "label": "Bank cash loan", "months": 6, "monthlyRate": 0.012 },
+  { "id": "payday_loan", "side": "personal", "label": "Quick non-bank loan", "months": 3, "monthlyRate": 0.08 },
+  { "id": "business_overdraft", "side": "business", "label": "Business overdraft", "months": 3, "monthlyRate": 0.015 },
+  { "id": "business_loan", "side": "business", "label": "Business loan", "months": 6, "monthlyRate": 0.01 }
+]

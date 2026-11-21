@@ -1,9 +1,10 @@
 // Pure game-session logic (no UI): start a game, apply actions, end the month, replay from the snapshot.
-import { household, industries } from "@piwco/content";
+import { financing, household, industries } from "@piwco/content";
 import {
   applyAction,
   buildInitialSetup,
   checkMonthGoal,
+  financingTerms,
   createInitialState,
   settleMonth,
   type Action,
@@ -52,7 +53,7 @@ export function randomSeed(): number {
 export function newSession(industryId: string, seed: number, answers?: HouseholdAnswers, flags: string[] = []): Session | null {
   const industry = industries.find((i) => i.id === industryId);
   if (!industry) return null;
-  const game = createInitialState({ ...buildInitialSetup(industry, household, seed, answers), flags });
+  const game = createInitialState({ ...buildInitialSetup(industry, household, seed, answers), flags, financing: financingTerms(financing) });
   return {
     game,
     snapshot: game,
