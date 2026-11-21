@@ -4,7 +4,7 @@ import type { GoalReason, GoalResult, MonthReport } from "@piwco/engine";
 import { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Svg, { Path, Rect } from "react-native-svg";
-import { buzz } from "../onboarding/anim";
+import { buzz, PressScale } from "../onboarding/anim";
 import { DoneCheck, ScreenLayout, type Dir } from "../onboarding/screens";
 import { Confetti } from "./Confetti";
 import { Cta, Eyebrow, LinkButton, Panel, Sub, Title } from "../onboarding/ui";
@@ -85,7 +85,7 @@ export function MonthResult({
 }) {
   if (goal.passed) {
     return (
-      <ScreenLayout dir={dir} footer={<Cta label="Continue" onPress={onContinue} />}>
+      <ScreenLayout dir={dir} footer={<Cta label={level.lesson ? "Start lesson" : "Continue"} onPress={onContinue} />}>
         <View style={styles.done}>
           <SuccessBuzz />
           <DoneCheck />
@@ -99,7 +99,8 @@ export function MonthResult({
           {`Company: ${formatPln(report.business.endCash)} left. Home: ${formatPln(report.personal.endCash)} left` +
             (report.personal.savedToFund > 0 ? `, ${formatPln(report.personal.savedToFund)} in your cushion.` : ".")}
         </Sub>
-        <LessonCard level={level} />
+        {/* Interactive lesson comes on its own screens; the old text card only for months not converted yet. */}
+        {level.lesson ? <Sub>Your reward: a quick lesson. Swipe through it in under a minute.</Sub> : <LessonCard level={level} />}
       </ScreenLayout>
     );
   }
@@ -136,12 +137,23 @@ function LockIcon() {
 }
 
 // The 12-month learning program: done / coming soon / locked (visible, not clickable).
-export function Roadmap({ completedMonth, dir, onPlayAgain }: { completedMonth: number; dir: Dir; onPlayAgain: () => void }) {
+export function Roadmap({
+  completedMonth,
+  dir,
+  onNewGame,
+  onPickMonth,
+}: {
+  completedMonth: number;
+  dir: Dir;
+  onNewGame: () => void;
+  // A completed month was tapped (Review / Replay month).
+  onPickMonth: (month: number) => void;
+}) {
   const nextLevel = levels.find((l) => l.month === completedMonth + 1);
   return (
     <ScreenLayout
       dir={dir}
-      footer={<LinkButton label={`Play ${levels[completedMonth - 1]?.monthName ?? "the month"} again`} onPress={onPlayAgain} />}
+      footer={<LinkButton label="Start a new game" onPress={onNewGame} />}
     >
       <Eyebrow>Your year</Eyebrow>
       <Title>{nextLevel ? `${nextLevel.monthName} is coming soon` : "That's the whole year!"}</Title>
@@ -149,21 +161,28 @@ export function Roadmap({ completedMonth, dir, onPlayAgain }: { completedMonth: 
       <View style={styles.roadmap}>
         {levels.map((l) => {
           const done = l.month <= completedMonth;
-          return (
-            <View key={l.id} style={[styles.month, done ? styles.monthDone : null, !done && !l.playable ? { opacity: 0.55 } : null]}>
+          const row = (
+            <View style={[styles.month, done ? styles.monthDone : null, !done && !l.playable ? { opacity: 0.55 } : null]}>
               <Text style={styles.monthNo}>{String(l.month).padStart(2, "0")}</Text>
               <View style={{ flex: 1 }}>
                 <Text style={styles.monthName}>{l.monthName}</Text>
                 <Text style={styles.monthTitle}>{l.title}</Text>
               </View>
               {done ? (
-                <Text style={styles.doneMark}>✓</Text>
+                <Text style={styles.doneMark}>✓ ›</Text>
               ) : l.playable ? (
                 <Text style={styles.soon}>SOON</Text>
               ) : (
                 <LockIcon />
               )}
             </View>
+          );
+          return done ? (
+            <PressScale key={l.id} onPress={() => onPickMonth(l.month)} accessibilityLabel={`${l.monthName}: review or replay`}>
+              {row}
+            </PressScale>
+          ) : (
+            <View key={l.id}>{row}</View>
           );
         })}
       </View>

@@ -1,5 +1,6 @@
 import householdData from "./household.json";
 import industriesData from "./industries.json";
+import cityData from "./city.json";
 import levelsData from "./levels.json";
 import onboardingData from "./onboarding.json";
 
@@ -69,6 +70,20 @@ export type LessonCard = {
   points: string[];
 };
 
+// One "myth or fact?" card. Texts may contain placeholders filled with the player's month report:
+// {revenue}, {costs}, {companyLeft}, {homeLeft} (see apps/mobile/src/game/lesson.ts).
+export type MythFactCard = {
+  statement: string;
+  isFact: boolean;
+  // Shown after the answer (right or wrong).
+  explain: string;
+};
+
+export type SwipeLesson = {
+  title: string;
+  cards: MythFactCard[];
+};
+
 // The month's mission shown in the game: a title and steps the player ticks off.
 // Step ids are checked in code (apps/mobile/src/game/mission.ts); the labels are editable text.
 export type Mission = {
@@ -91,8 +106,10 @@ export type Level = {
   challenge: string;
   // Present for months that have a playable mission.
   mission?: Mission;
-  // Shown after the month is completed. Present for playable months only.
+  // Old text-only lesson (months not yet converted to the interactive lesson).
   lessonCard?: LessonCard;
+  // Interactive lesson shown after the month is completed: swipe "myth or fact?".
+  lesson?: SwipeLesson;
 };
 
 export const levels: Level[] = levelsData;
@@ -141,3 +158,19 @@ export type HouseholdProfile = {
 };
 
 export const household: HouseholdProfile = householdData;
+
+// City view thresholds (CITY_THRESHOLDS). Edit the numbers in city.json; the logic is in @piwco/engine (city.ts).
+export type CityThresholds = {
+  // Home: 1 + completed months, up to maxLevel.
+  home: { maxLevel: number };
+  // Company: monthly revenue / the industry's starting revenue. Below level 2 ratio → 1.
+  firm: { revenueRatioLevel2: number; revenueRatioLevel3: number };
+  // Cushion vault: emergency fund (PLN) needed for levels 1, 2, 3.
+  vault: { fundLevels: number[] };
+  // Protection: active policies (business + personal) needed for levels 1, 2, 3.
+  shield: { policyLevels: number[] };
+  // Future tower: empty until this month (investments).
+  future: { unlockMonth: number };
+};
+
+export const cityThresholds: CityThresholds = cityData;

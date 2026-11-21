@@ -2,7 +2,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { buzz, PressScale } from "../onboarding/anim";
 import { colors, font } from "../theme";
-import { formatPln } from "./format";
+import { RollingNumber } from "./RollingNumber";
 
 const STEPS = [-500, -100, 100, 500] as const;
 
@@ -67,16 +67,14 @@ export function AmountStepper({
     return (
       <View style={styles.compactRow}>
         {buttons(STEPS.slice(0, 2))}
-        <Text style={styles.compactValue} numberOfLines={1}>
-          {formatPln(value)}
-        </Text>
+        <RollingNumber value={value} duration={260} containerStyle={{ flex: 1 }} style={styles.compactValue} numberOfLines={1} />
         {buttons(STEPS.slice(2))}
       </View>
     );
   }
   return (
     <View style={{ gap: 12 }}>
-      <Text style={styles.big}>{formatPln(value)}</Text>
+      <RollingNumber value={value} duration={300} style={styles.big} />
       <View style={styles.row}>{buttons(STEPS)}</View>
     </View>
   );

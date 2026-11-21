@@ -7,7 +7,9 @@ import { Animated, Easing, StyleSheet, View } from "react-native";
 import { ScreenLayout, type Dir } from "../onboarding/screens";
 import { Cta, Eyebrow } from "../onboarding/ui";
 import { ActionBar, type ActionId } from "./ActionBar";
-import { GameHud } from "./GameHud";
+import { GameHud, type HudMemory } from "./GameHud";
+import { SoundToggle } from "./SoundToggle";
+import { SwipeHint } from "./SwipeHint";
 import { MissionCard } from "./MissionCard";
 import { missionStatus } from "./mission";
 
@@ -37,6 +39,9 @@ export function GameScreen({
   dir,
   celebrated,
   onCelebrated,
+  hudMemory,
+  backdrop,
+  showSwipeHint = false,
   onAction,
   onEndMonth,
 }: {
@@ -45,42 +50,61 @@ export function GameScreen({
   dir: Dir;
   celebrated: ReadonlySet<string>;
   onCelebrated: (ids: string[]) => void;
+  // What the HUD showed last time, so its numbers roll from there (kept by GameFlow).
+  hudMemory: { current: HudMemory | null };
+  // The player's city drawn faintly behind the content (static).
+  backdrop?: ReactNode;
+  showSwipeHint?: boolean;
   onAction: (id: ActionId) => void;
   onEndMonth: () => void;
 }) {
   const mission = missionStatus(level, state);
   return (
-    <ScreenLayout
-      dir={dir}
-      footer={
-        <Pulse active={!!mission?.allDone}>
-          <Cta label={mission?.allDone ? "End month ✓" : "End month"} onPress={onEndMonth} />
-        </Pulse>
-      }
-    >
-      <Eyebrow>{`Month ${level.month} · ${level.monthName}`}</Eyebrow>
-      {mission ? (
-        <MissionCard
-          monthName={level.monthName}
-          status={mission}
-          celebrated={celebrated}
-          onCelebrated={onCelebrated}
-          onStep={(id) => {
-            if (id === "pay_yourself") onAction("draw");
-            else if (id === "plan_budget") onAction("budget");
-          }}
-        />
-      ) : null}
-      <View style={styles.top}>
-        <ActionBar month={state.month} onAction={onAction} />
-        <View style={{ flex: 1 }}>
-          <GameHud state={state} />
+    <View style={{ flex: 1 }}>
+      {backdrop ? (
+        <View pointerEvents="none" style={styles.backdrop}>
+          {backdrop}
         </View>
-      </View>
-    </ScreenLayout>
+      ) : null}
+      <ScreenLayout
+        dir={dir}
+        footer={
+          <Pulse active={!!mission?.allDone}>
+            <Cta label={mission?.allDone ? "End month ✓" : "End month"} onPress={onEndMonth} />
+          </Pulse>
+        }
+      >
+        <View style={styles.headRow}>
+          <Eyebrow>{`Month ${level.month} · ${level.monthName}`}</Eyebrow>
+          <SoundToggle />
+        </View>
+        {mission ? (
+          <MissionCard
+            monthName={level.monthName}
+            status={mission}
+            celebrated={celebrated}
+            onCelebrated={onCelebrated}
+            onStep={(id) => {
+              if (id === "pay_yourself") onAction("draw");
+              else if (id === "plan_budget") onAction("budget");
+            }}
+          />
+        ) : null}
+        <View style={styles.top}>
+          <ActionBar month={state.month} onAction={onAction} />
+          <View style={{ flex: 1 }}>
+            <GameHud state={state} memory={hudMemory} />
+          </View>
+        </View>
+        {showSwipeHint ? <SwipeHint /> : null}
+      </ScreenLayout>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // Above the "End month" button, behind the cards (which are opaque, so numbers stay readable).
+  backdrop: { position: "absolute", left: 0, right: 0, bottom: 74, opacity: 0.16 },
+  headRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   top: { flexDirection: "row", gap: 12, alignItems: "flex-start" },
 });

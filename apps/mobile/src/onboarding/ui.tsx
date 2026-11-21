@@ -1,5 +1,5 @@
 // Shared visual pieces of the onboarding, ported from the artifact's CSS.
-import { useEffect, useRef, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, type ReactNode } from "react";
 import { Animated, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { colors, font, mix, shadow1, shadow2, springs } from "../theme";
@@ -7,21 +7,33 @@ import { DrawPath, Enter, PressScale } from "./anim";
 
 // ---------- Text ----------
 
+// Time of day behind the screen (game day/night cycle). "night" switches titles, subtitles and links to light
+// colours; cards keep their own colours. Default "day" (the onboarding never sets it).
+export type SkyTone = "day" | "night";
+export const SkyToneContext = createContext<SkyTone>("day");
+const useNight = () => useContext(SkyToneContext) === "night";
+
+// Orange text reads poorly on the night sky; a lighter one is used there.
+const nightInk = (c: string) => (c === colors.danger ? "#FF9A6B" : c === colors.petrol700 ? colors.yellow : c);
+
 export function Eyebrow({ children, color, ink }: { children: ReactNode; color?: string; ink?: string }) {
+  const night = useNight();
+  const mark = color ?? colors.petrol700;
+  const text = ink ?? color ?? colors.petrol700;
   return (
     <View style={styles.eyebrow}>
-      <View style={[styles.diamond, { backgroundColor: color ?? colors.petrol700 }]} />
-      <Text style={[styles.eyebrowText, { color: ink ?? color ?? colors.petrol700 }]}>{children}</Text>
+      <View style={[styles.diamond, { backgroundColor: night ? nightInk(mark) : mark }]} />
+      <Text style={[styles.eyebrowText, { color: night ? nightInk(text) : text }]}>{children}</Text>
     </View>
   );
 }
 
 export function Title({ children }: { children: ReactNode }) {
-  return <Text style={styles.title}>{children}</Text>;
+  return <Text style={[styles.title, useNight() ? { color: colors.onPetrol } : null]}>{children}</Text>;
 }
 
 export function Sub({ children }: { children: ReactNode }) {
-  return <Text style={styles.sub}>{children}</Text>;
+  return <Text style={[styles.sub, useNight() ? { color: colors.onPetrolSub } : null]}>{children}</Text>;
 }
 
 function InfoIcon() {
@@ -40,7 +52,7 @@ export function Why({ children }: { children: ReactNode }) {
       <View style={{ paddingTop: 3 }}>
         <InfoIcon />
       </View>
-      <Text style={styles.whyText}>{children}</Text>
+      <Text style={[styles.whyText, useNight() ? { color: colors.onPetrolSub } : null]}>{children}</Text>
     </View>
   );
 }
@@ -193,10 +205,12 @@ export function LinkButton({
   onPetrol?: boolean;
   hidden?: boolean;
 }) {
+  const night = useNight();
+  const light = onPetrol || night;
   return (
     <View style={{ opacity: hidden ? 0 : 1, alignItems: "center" }} pointerEvents={hidden ? "none" : "auto"}>
       <PressScale onPress={onPress} accessibilityLabel={label} style={{ padding: 10 }}>
-        <Text style={[styles.link, onPetrol ? { color: colors.onPetrolMuted } : null]}>{label}</Text>
+        <Text style={[styles.link, light ? { color: colors.onPetrolMuted } : null]}>{label}</Text>
       </PressScale>
     </View>
   );

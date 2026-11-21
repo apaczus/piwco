@@ -1,0 +1,18 @@
+{
+  "home": {
+    "maxLevel": 3
+  },
+  "firm": {
+    "revenueRatioLevel2": 1.0,
+    "revenueRatioLevel3": 1.2
+  },
+  "vault": {
+    "fundLevels": [1, 1500, 4500]
+  },
+  "shield": {
+    "policyLevels": [1, 2, 4]
+  },
+  "future": {
+    "unlockMonth": 8
+  }
+}

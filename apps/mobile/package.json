@@ -7,6 +7,7 @@
     "@piwco/content": "^0.0.0",
     "@piwco/engine": "^0.0.0",
     "expo": "~58.0.26",
+    "expo-audio": "~58.0.12",
     "expo-constants": "~58.0.16",
     "expo-font": "~58.0.12",
     "expo-haptics": "~58.0.8",

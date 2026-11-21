@@ -1,7 +1,8 @@
 // Animation building blocks (React Native Animated + react-native-svg), mirroring the artifact's motion.
 import * as Haptics from "expo-haptics";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
+  AccessibilityInfo,
   Animated,
   Easing,
   Pressable,
@@ -9,14 +10,30 @@ import {
   type ViewStyle,
 } from "react-native";
 import { Circle, G, Path, type CircleProps, type PathProps } from "react-native-svg";
+import { playSound, type SoundName } from "../sound";
 import { springs } from "../theme";
 
 type SpringConfig = { stiffness: number; damping: number; mass: number };
 
+// The phone's "reduce motion" setting: when on, skip decorative motion (tilts, wiggles, confetti, rolling numbers).
+export function useReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduced).catch(() => {});
+    const sub = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduced);
+    return () => sub.remove();
+  }, []);
+  return reduced;
+}
+
 export const drawEasing = Easing.bezier(0.6, 0, 0.2, 1);
 
 // Light haptic tick (the artifact's navigator.vibrate). "success" = the celebratory double tap.
-export function buzz(strength: "tick" | "light" | "medium" | "success" = "tick") {
+// Haptic + sound. Default sounds: "success" -> success chime, "light" -> soft pop; "tick" and "medium" are silent
+// unless a sound is passed (e.g. "error" for a wrong answer, "coin" for a transfer). null = haptic only.
+export function buzz(strength: "tick" | "light" | "medium" | "success" = "tick", sound?: SoundName | null) {
+  const s = sound === undefined ? (strength === "success" ? "success" : strength === "light" ? "pop" : null) : sound;
+  if (s) playSound(s);
   const p =
     strength === "tick"
       ? Haptics.selectionAsync()

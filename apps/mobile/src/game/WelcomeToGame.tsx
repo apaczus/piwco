@@ -131,7 +131,7 @@ export function WelcomeToGame({
     <ScreenLayout dir={dir} center footer={<Cta label="Accept mission" onPress={onAccept} onPetrol appear />}>
       <View style={styles.brand}>
         <View style={styles.brandMark} />
-        <Text style={styles.brandText}>FINANCE QUEST</Text>
+        <Text style={styles.brandText}>PIWCO</Text>
       </View>
       <View style={styles.badgeWrap}>
         <Badge industry={industry} />

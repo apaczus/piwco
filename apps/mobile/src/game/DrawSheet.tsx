@@ -7,16 +7,20 @@ import { Cta, Eyebrow, LinkButton, Title, Why } from "../onboarding/ui";
 import { accountColors, colors, font, shadow1 } from "../theme";
 import { AmountStepper } from "./AmountStepper";
 import { formatPln } from "./format";
+import { RollingNumber } from "./RollingNumber";
 
 function AccountCard({ title, color, now, after, endOfMonth }: { title: string; color: string; now: number; after: number; endOfMonth: number }) {
   return (
     <View style={[styles.card, { borderTopColor: color }]}>
       <Text style={styles.cardTitle}>{title}</Text>
-      <Text style={styles.cardNow}>{formatPln(after)}</Text>
+      <RollingNumber value={after} duration={300} style={styles.cardNow} numberOfLines={1} adjustsFontSizeToFit />
       <Text style={styles.cardSub}>{`now ${formatPln(now)}`}</Text>
-      <Text style={[styles.cardSub, endOfMonth < 0 ? { color: colors.danger } : null]}>
-        {`end of month: ${formatPln(endOfMonth)}`}
-      </Text>
+      <RollingNumber
+        value={endOfMonth}
+        duration={300}
+        format={(n) => `end of month: ${formatPln(n)}`}
+        style={[styles.cardSub, endOfMonth < 0 ? { color: colors.danger } : null]}
+      />
     </View>
   );
 }

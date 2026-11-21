@@ -21,13 +21,39 @@
       ],
       "reward": "Unlocks February and your first lesson"
     },
-    "lessonCard": {
+    "lesson": {
       "title": "Cash keeps you alive",
-      "points": [
-        "Revenue is not profit, and profit is not cash. A month can look profitable on paper and still leave you unable to pay rent if customers pay late.",
-        "Fixed costs (rent, salaries, loan installments) must be paid no matter what. Variable costs (ingredients, packaging) grow and shrink with sales.",
-        "Keep business and personal money in separate accounts. Pay yourself a planned amount from the business instead of dipping into the company account whenever you need cash.",
-        "A budget is a plan made before the month starts: money in, money out, and what is left."
+      "cards": [
+        {
+          "statement": "Revenue and profit are the same thing.",
+          "isFact": false,
+          "explain": "Revenue is everything that comes in. Profit is what is left after costs. And profit on paper is not cash: if a client pays late, a profitable month can still leave you unable to pay rent."
+        },
+        {
+          "statement": "Your company took in {revenue} this month, so all of it was yours to spend.",
+          "isFact": false,
+          "explain": "Costs took {costs}. After costs and paying yourself, the company account ended the month with {companyLeft}."
+        },
+        {
+          "statement": "Rent and salaries must be paid even in a month with no sales.",
+          "isFact": true,
+          "explain": "These are fixed costs: rent, salaries, loan installments. They come every month, with or without sales, so plan them first."
+        },
+        {
+          "statement": "Materials and packaging cost the same every month, however much you sell.",
+          "isFact": false,
+          "explain": "These are variable costs: they grow and shrink with sales. Sell more, and you buy more materials."
+        },
+        {
+          "statement": "Paying for groceries from the company account is fine, as long as the company has cash.",
+          "isFact": false,
+          "explain": "Keep company and personal money apart. Pay yourself a planned amount, like you just did, instead of dipping into the company account whenever you need cash."
+        },
+        {
+          "statement": "Planning where the money goes before the month starts is what kept every bill paid. You ended with {homeLeft} at home.",
+          "isFact": true,
+          "explain": "That is a budget: a plan made before the month starts. Money in, money out, and what is left. You just made one."
+        }
       ]
     }
   },

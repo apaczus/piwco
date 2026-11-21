@@ -7,6 +7,7 @@ import { Cta, Eyebrow, LinkButton, Title, Why } from "../onboarding/ui";
 import { colors, font, shadow1 } from "../theme";
 import { AmountStepper } from "./AmountStepper";
 import { categoryLabel, formatPln } from "./format";
+import { RollingNumber } from "./RollingNumber";
 
 const HINTS: Partial<Record<HouseholdCategory, string>> = {
   savings: "goes to your safety cushion",
@@ -56,13 +57,16 @@ export function BudgetScreen({
         ) : null}
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Planned</Text>
-          <Text style={styles.summaryValue}>{`−${formatPln(planned)}`}</Text>
+          <RollingNumber value={planned} duration={260} format={(n) => `−${formatPln(n)}`} style={styles.summaryValue} />
         </View>
         <View style={[styles.summaryRow, styles.summaryTotal]}>
           <Text style={[styles.summaryLabel, styles.bold]}>{left >= 0 ? "Left" : "Missing"}</Text>
-          <Text style={[styles.summaryValue, styles.bold, left < 0 ? { color: colors.danger } : { color: colors.success }]}>
-            {formatPln(Math.abs(left))}
-          </Text>
+          <RollingNumber
+            value={left}
+            duration={260}
+            format={(n) => formatPln(Math.abs(n))}
+            style={[styles.summaryValue, styles.bold, left < 0 ? { color: colors.danger } : { color: colors.success }]}
+          />
         </View>
         {left < 0 ? (
           <Text style={styles.tip}>Pay yourself more from the company, or plan a smaller budget.</Text>
