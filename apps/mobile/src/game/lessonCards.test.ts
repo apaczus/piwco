@@ -45,3 +45,55 @@ describe("fillCards: quiz", () => {
     expect(q).toEqual({ ...quiz, question: "115 PLN?", options: ["+115", "b", "c"], explain: "115" });
   });
 });
+
+// Loan math behind the September cards (annuity; the fee is added to the loan; APR = effective yearly rate).
+function installment(principal: number, yearlyRate: number, months: number): number {
+  const r = yearlyRate / 12;
+  return (principal * r) / (1 - Math.pow(1 + r, -months));
+}
+function apr(received: number, pay: number, months: number): number {
+  let lo = 1e-6;
+  let hi = 0.2;
+  for (let k = 0; k < 200; k++) {
+    const m = (lo + hi) / 2;
+    if ((pay * (1 - Math.pow(1 + m, -months))) / m > received) lo = m;
+    else hi = m;
+  }
+  return Math.pow(1 + lo, 12) - 1;
+}
+const pln = (v: number) => Math.round(v).toLocaleString("en-US").replace(/,/g, " ");
+
+describe("September lesson: the numbers on the cards add up", () => {
+  const sep = levels.find((l) => l.month === 9)!;
+  const all = JSON.stringify(sep.lesson);
+  const a = installment(54000, 0.075, 60);
+  const b = installment(50000, 0.09, 36);
+
+  it("is a lesson-only month with 13 cards", () => {
+    expect(sep.lessonOnly).toBe(true);
+    expect(sep.lesson!.cards).toHaveLength(13);
+  });
+
+  it("Offer A: 1 082 a month, 64 923 total, APR 11.3%", () => {
+    expect(pln(a)).toBe("1 082");
+    expect(pln(a * 60)).toBe("64 923");
+    expect((apr(50000, a, 60) * 100).toFixed(1)).toBe("11.3");
+    expect(all).toContain("1 082 PLN a month");
+    expect(all).toContain("64 923");
+  });
+
+  it("Offer B: 1 590 a month, 57 240 total, APR 9.4%; B about 7 700 cheaper", () => {
+    expect(pln(b)).toBe("1 590");
+    expect(pln(b * 36)).toBe("57 240");
+    expect((apr(50000, b, 36) * 100).toFixed(1)).toBe("9.4");
+    expect(Math.round((a * 60 - b * 36) / 100) * 100).toBe(7700);
+    expect(all).toContain("57 240");
+    expect(all).toContain("+7 240 PLN");
+  });
+
+  it("the trap: A has the lower installment and the lower nominal rate, B is right", () => {
+    const choice = sep.lesson!.cards.find((c) => c.kind === "choice")!;
+    expect(choice.kind === "choice" && choice.correct).toBe("right");
+    expect(a).toBeLessThan(b);
+  });
+});

@@ -320,13 +320,129 @@
     "title": "Debt: what it really costs",
     "subtitle": "When a loan helps and when it hurts",
     "playable": false,
-    "skipFor": ["advanced"],
+    "skipFor": [
+      "advanced"
+    ],
     "topics": [
       "What to do when current funds are not enough.",
       "\"Good\" debt (investing in growth or assets) vs. \"bad\" debt (paying for everyday spending or covering losses).",
       "The cost of money over time: interest, APR, fees and the repayment schedule."
     ],
-    "challenge": "Compare two loan offers and pay an installment on a tight budget."
+    "challenge": "Compare two loan offers and pay an installment on a tight budget.",
+    "lessonOnly": true,
+    "lesson": {
+      "title": "Debt: what it really costs",
+      "cards": [
+        {
+          "kind": "info",
+          "title": "What is debt?",
+          "text": "You borrow money today and pay back more later. The extra you pay is the cost of debt: interest and fees.",
+          "visual": {
+            "type": "number",
+            "value": "+7 240 PLN",
+            "label": "the cost of borrowing 50 000 PLN for 3 years at 9%"
+          }
+        },
+        {
+          "kind": "info",
+          "title": "APR (RRSO): the real price",
+          "text": "APR (in Polish: RRSO) puts interest AND all fees into one yearly %. Compare loans by APR and by the total you pay back, not by the monthly installment.",
+          "readMore": "Nominal rate: only the interest.\nAPR (RRSO): interest + fees + other costs, as one yearly %.\nFee (prowizja): often added to the loan, so you also pay interest on it.\nLoan insurance: sometimes required; it counts in the APR and can raise it a lot."
+        },
+        {
+          "kind": "info",
+          "title": "Inflation and debt",
+          "text": "With a fixed rate, inflation makes your debt lighter: prices and incomes grow, your installment stays the same. But high inflation usually pushes interest rates up, and then a variable-rate loan gets more expensive. More in October."
+        },
+        {
+          "kind": "info",
+          "title": "Good debt vs bad debt",
+          "text": "Good debt buys something that earns more than it costs, and you can afford the installments. Bad debt pays for things you use up and can't afford.",
+          "visual": {
+            "type": "rows",
+            "rows": [
+              {
+                "label": "Good",
+                "text": "a machine, an oven, tools that bring income"
+              },
+              {
+                "label": "Bad",
+                "text": "a holiday, gadgets, shopping on credit"
+              }
+            ]
+          }
+        },
+        {
+          "statement": "Leasing a new machine for your production line",
+          "isFact": true,
+          "leftLabel": "BAD DEBT",
+          "rightLabel": "GOOD DEBT",
+          "explain": "The machine makes products you sell, so it can pay for its own installments."
+        },
+        {
+          "statement": "A loan for a new car you can't really afford",
+          "isFact": false,
+          "leftLabel": "BAD DEBT",
+          "rightLabel": "GOOD DEBT",
+          "explain": "The car loses value every year, and the installment squeezes your budget."
+        },
+        {
+          "statement": "A payday loan for a holiday",
+          "isFact": false,
+          "leftLabel": "BAD DEBT",
+          "rightLabel": "GOOD DEBT",
+          "explain": "The most expensive kind of debt, for something that's over in a week."
+        },
+        {
+          "statement": "A loan for an oven that lets your bakery double its output",
+          "isFact": true,
+          "leftLabel": "BAD DEBT",
+          "rightLabel": "GOOD DEBT",
+          "explain": "More bread sold brings in more than the installment costs."
+        },
+        {
+          "statement": "Paying for groceries with a credit card you can't pay off",
+          "isFact": false,
+          "leftLabel": "BAD DEBT",
+          "rightLabel": "GOOD DEBT",
+          "explain": "You pay interest on food you've already eaten, and the debt keeps growing."
+        },
+        {
+          "kind": "info",
+          "title": "Can you afford it? (creditworthiness)",
+          "text": "Banks check how much of your income goes to installments (zdolność kredytowa). Late payments land in your credit history (BIK): the next loan gets pricier, or you don't get one.",
+          "visual": {
+            "type": "number",
+            "value": "30–40%",
+            "label": "of your income for all installments: a usual safe limit"
+          }
+        },
+        {
+          "kind": "choice",
+          "question": "You borrow 50 000 PLN. Which offer is better for you?",
+          "left": {
+            "title": "Offer A",
+            "text": "1 082 PLN a month, 60 months. Rate 7.5%, fee 8%."
+          },
+          "right": {
+            "title": "Offer B",
+            "text": "1 590 PLN a month, 36 months. Rate 9%, no fee."
+          },
+          "correct": "right",
+          "explain": "Lower installment ≠ cheaper loan. A's fee and 2 extra years cost about 7 700 PLN more: 64 923 vs 57 240 PLN paid back (APR 11.3% vs 9.4%). Pick B if 1 590 PLN a month fits your budget."
+        },
+        {
+          "statement": "The lowest monthly installment is always the cheapest loan.",
+          "isFact": false,
+          "explain": "A lower installment often just means more months or a fee. Compare the total you pay back and the APR."
+        },
+        {
+          "statement": "All debt is bad for a business.",
+          "isFact": false,
+          "explain": "Debt that buys something earning more than it costs, like a machine or an oven, helps a business grow."
+        }
+      ]
+    }
   },
   {
     "id": "month_10",
