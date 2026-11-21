@@ -29,6 +29,64 @@ type Stage = "card" | "feedback" | "done";
 type Res = boolean | "seen" | null;
 
 const graded = (c: SwipeCard) => c.kind !== "info";
+const isMythFact = (c: SwipeCard | undefined) => !!c && c.kind !== "info" && c.kind !== "choice";
+
+// Short alert when the myth / fact part starts (user, 2026-11-21: "make it clear you now choose FACT or MYTH").
+// Pops in over the lesson with a haptic; tap or ~3.5 s closes it. Reduced motion: appears without the pop.
+function QuizAlert({ reduced, onClose }: { reduced: boolean; onClose: () => void }) {
+  const v = useRef(new Animated.Value(reduced ? 1 : 0)).current;
+  const shake = useRef(new Animated.Value(0)).current;
+  const closed = useRef(false);
+  const close = useRef(() => {
+    if (closed.current) return;
+    closed.current = true;
+    buzz("light");
+    onClose();
+  }).current;
+  useEffect(() => {
+    buzz("medium", "pop");
+    if (!reduced) {
+      Animated.sequence([
+        Animated.spring(v, { toValue: 1, ...springs.lively, useNativeDriver: true }),
+        Animated.sequence([-1, 1, -1, 0].map((x) => Animated.timing(shake, { toValue: x, duration: 60, useNativeDriver: true }))),
+      ]).start();
+    }
+    const t = setTimeout(close, 3500);
+    return () => clearTimeout(t);
+  }, [v, shake, reduced, close]);
+  return (
+    <Pressable onPress={close} style={styles.quizBackdrop} accessibilityRole="button" accessibilityLabel="Myth or fact: start">
+      <Animated.View
+        style={[
+          styles.quizCard,
+          {
+            opacity: v.interpolate({ inputRange: [0, 0.4], outputRange: [0, 1], extrapolate: "clamp" }),
+            transform: [
+              { scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] }) },
+              { translateX: shake.interpolate({ inputRange: [-1, 1], outputRange: [-7, 7] }) },
+            ],
+          },
+        ]}
+      >
+        <View style={styles.quizChip}>
+          <Text style={styles.quizChipText}>QUIZ TIME</Text>
+        </View>
+        <Text style={styles.quizTitle}>Now you choose:</Text>
+        <View style={styles.quizPills}>
+          <View style={[styles.quizPill, { backgroundColor: colors.danger }]}>
+            <Text style={styles.quizPillText}>← MYTH</Text>
+          </View>
+          <Text style={styles.quizOr}>or</Text>
+          <View style={[styles.quizPill, { backgroundColor: colors.success }]}>
+            <Text style={styles.quizPillText}>FACT →</Text>
+          </View>
+        </View>
+        <Text style={styles.quizText}>Is the sentence true? Swipe right or tap FACT. False? Swipe left or tap MYTH.</Text>
+        <Text style={styles.quizTap}>Tap to start</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
 // Swiped / tapped towards the right?
 function isCorrect(c: SwipeCard, right: boolean): boolean {
   if (c.kind === "choice") return (c.correct === "right") === right;
@@ -442,6 +500,9 @@ export function SwipeLesson({
   const [stage, setStage] = useState<Stage>("card");
   const [results, setResults] = useState<Res[]>(() => cards.map(() => null));
   const pan = useRef(new Animated.Value(0)).current;
+  // Card indexes where the myth / fact part starts and the alert was already shown.
+  const [quizAlert, setQuizAlert] = useState(false);
+  const alerted = useRef(new Set<number>());
 
   // Refs so the (created once) pan responder always sees the current card.
   const live = useRef({ index, stage, cards, width, threshold, reduced });
@@ -522,6 +583,16 @@ export function SwipeLesson({
     a.start();
     return () => a.stop();
   }, [pan, reduced]);
+
+  // The myth / fact part starts (first card, or after info / choice cards): show the alert, answers wait for it.
+  useEffect(() => {
+    if (stage !== "card" || alerted.current.has(index)) return;
+    if (!isMythFact(cards[index]) || (index > 0 && isMythFact(cards[index - 1]))) return;
+    alerted.current.add(index);
+    busy.current = true;
+    nudge.current?.stop();
+    setQuizAlert(true);
+  }, [index, stage, cards]);
 
   const card = cards[index];
   const last = index === cards.length - 1;
@@ -620,11 +691,52 @@ export function SwipeLesson({
           <Cta appear label={last ? "Finish lesson" : "Next card"} onPress={next} />
         )}
       </View>
+      {quizAlert ? (
+        <QuizAlert
+          reduced={reduced}
+          onClose={() => {
+            busy.current = false;
+            setQuizAlert(false);
+            // The card wiggles once more to show the swipe (the first card's wiggle ran under the alert).
+            if (!reduced) {
+              const a = Animated.sequence([
+                Animated.delay(250),
+                Animated.timing(pan, { toValue: -34, duration: 230, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+                Animated.timing(pan, { toValue: 34, duration: 330, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+                Animated.spring(pan, { toValue: 0, ...springs.lively, useNativeDriver: true }),
+              ]);
+              nudge.current = a;
+              a.start();
+            }
+          }}
+        />
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  quizBackdrop: {
+    position: "absolute",
+    left: -18,
+    right: -18,
+    top: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,20,24,0.72)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 28,
+  },
+  quizCard: { width: "100%", backgroundColor: colors.surface, borderRadius: 24, padding: 22, gap: 12, alignItems: "center", borderWidth: 3, borderColor: colors.yellow },
+  quizChip: { backgroundColor: colors.yellow, borderRadius: 99, paddingVertical: 6, paddingHorizontal: 14 },
+  quizChipText: { fontFamily: font.extrabold, fontSize: 12.5, letterSpacing: 1.2, color: colors.petrol950 },
+  quizTitle: { fontFamily: font.extrabold, fontSize: 24, color: colors.petrol950 },
+  quizPills: { flexDirection: "row", alignItems: "center", gap: 10 },
+  quizPill: { borderRadius: 14, paddingVertical: 10, paddingHorizontal: 16 },
+  quizPillText: { fontFamily: font.extrabold, fontSize: 20, letterSpacing: 0.6, color: "#FFFFFF" },
+  quizOr: { fontFamily: font.bold, fontSize: 15, color: colors.muted },
+  quizText: { fontFamily: font.semibold, fontSize: 14.5, lineHeight: 20, color: colors.ink, textAlign: "center" },
+  quizTap: { fontFamily: font.bold, fontSize: 12.5, color: colors.muted },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 6 },
   eyebrow: { fontFamily: font.extrabold, fontSize: 12, letterSpacing: 1.1, color: colors.yellow },
   headerRight: { flexDirection: "row", alignItems: "center", gap: 10 },
