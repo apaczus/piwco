@@ -3,6 +3,7 @@ import {
   onboarding,
   type AccountId,
   type AgeBandId,
+  type KnowledgeLevel,
   type OnboardingQuestion,
 } from "@piwco/content";
 
@@ -58,10 +59,14 @@ export function questionsFor(s: OnboardingState): OnboardingQuestion[] {
 export function flowFor(s: OnboardingState): FlowItem[] {
   const flow: FlowItem[] = [{ kind: "welcome" }, { kind: "age" }, { kind: "type" }];
   if (s.type === "business") flow.push({ kind: "industry" });
+  const qs = questionsFor(s);
+  // "About you" questions (e.g. finance knowledge) come before the 4-account explainer.
+  for (const q of qs.filter((x) => x.atStart)) flow.push({ kind: "question", id: q.id });
   flow.push({ kind: "explain" });
   if (s.type === "business") flow.push({ kind: "firm" });
   let last: AccountId | null = null;
-  for (const q of questionsFor(s)) {
+  for (const q of qs) {
+    if (q.atStart || !q.account) continue;
     if (last && last !== q.account) flow.push({ kind: "done", account: last });
     flow.push({ kind: "question", id: q.id });
     last = q.account;
@@ -82,7 +87,9 @@ export function progressOf(s: OnboardingState): { fraction: number; counter: str
   const step = Math.min(s.step, flow.length - 1);
   const fraction = flow.length > 1 ? step / (flow.length - 1) : 0;
   const item = flow[step];
-  const ids = questionsFor(s).map((q) => q.id);
+  // Same order as the flow: "About you" questions first.
+  const qs = questionsFor(s);
+  const ids = [...qs.filter((q) => q.atStart), ...qs.filter((q) => !q.atStart)].map((q) => q.id);
   const qi = item?.kind === "question" ? ids.indexOf(item.id) : -1;
   return { fraction, counter: qi >= 0 ? `${qi + 1} / ${ids.length}` : "" };
 }
@@ -99,6 +106,8 @@ export function answerLabel(q: OnboardingQuestion, answers: Answers): string {
 }
 
 export type OnboardingProfile = {
+  // Finance knowledge (default "intermediate": the path leads to credit and investing).
+  knowledge: KnowledgeLevel;
   ageBand: AgeBandId | null;
   playerType: PlayerType | null;
   industry: string | null;
@@ -119,5 +128,21 @@ export function buildProfile(s: OnboardingState): OnboardingProfile {
   if (a.health === "yes") flags.push("health_insurance");
   if (a.separate === "no") flags.push("mixed_accounts");
   if (a.taxReserve === "no") flags.push("no_tax_reserve");
-  return { ageBand: s.age, playerType: s.type, industry: s.industry, answers: a, flags };
+  const knowledge = knowledgeOf(a.knowledge);
+  flags.push(`knowledge_${knowledge}`);
+  return { knowledge, ageBand: s.age, playerType: s.type, industry: s.industry, answers: a, flags };
+}
+
+export const DEFAULT_KNOWLEDGE: KnowledgeLevel = "intermediate";
+const KNOWLEDGE_LEVELS: readonly string[] = ["beginner", "intermediate", "advanced"];
+
+// Answer -> knowledge level; missing or unknown -> the default ("intermediate").
+export function knowledgeOf(answer: string | string[] | undefined): KnowledgeLevel {
+  return typeof answer === "string" && KNOWLEDGE_LEVELS.includes(answer) ? (answer as KnowledgeLevel) : DEFAULT_KNOWLEDGE;
+}
+
+// Result-screen line for the knowledge level.
+export function knowledgeLine(k: KnowledgeLevel): string {
+  const name = k.charAt(0).toUpperCase() + k.slice(1);
+  return `Level: ${name}: ${k === "beginner" ? "we'll start from the basics" : "we'll skip the basics"}`;
 }

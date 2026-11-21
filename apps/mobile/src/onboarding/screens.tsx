@@ -19,6 +19,8 @@ import {
   FOUNDATION_FIRST,
   accountById,
   answerLabel,
+  knowledgeLine,
+  knowledgeOf,
   buildProfile,
   questionsFor,
   type Answers,
@@ -472,12 +474,14 @@ export function QuestionScreen({
   onToggle: (value: string) => void;
   onNext: () => void;
 }) {
-  const account = accountById(question.account);
-  const { color, ink } = accountColors[question.account];
-  const index = ACCOUNT_ORDER.indexOf(question.account) + 1;
+  // "About you" questions (no account) use the petrol eyebrow.
+  const account = question.account ? accountById(question.account) : null;
+  const { color, ink } = question.account ? accountColors[question.account] : { color: colors.petrol700, ink: colors.petrol700 };
+  const index = question.account ? ACCOUNT_ORDER.indexOf(question.account) + 1 : 0;
   const current = answers[question.id];
   const multiPicked = Array.isArray(current) ? current : [];
-  const singlePicked = chosen ?? (typeof current === "string" ? current : null);
+  // A question with a default starts with it selected; "Next" accepts it.
+  const singlePicked = chosen ?? (typeof current === "string" ? current : (question.default ?? null));
   const locked = chosen !== null;
 
   return (
@@ -486,10 +490,12 @@ export function QuestionScreen({
       footer={
         question.multi ? (
           <Cta label={multiPicked.length ? `Next (${multiPicked.length})` : "I have none"} onPress={onNext} />
+        ) : question.default ? (
+          <Cta label="Next ›" onPress={() => !locked && onNext()} />
         ) : undefined
       }
     >
-      <Eyebrow color={color} ink={ink}>{`${index} of 4 · ${account.name}`}</Eyebrow>
+      <Eyebrow color={color} ink={ink}>{account ? `${index} of 4 · ${account.name}` : "About you"}</Eyebrow>
       <Title>{question.question}</Title>
       <Why>{question.why}</Why>
       <Tiles twoColumns={question.twoColumns}>
@@ -623,6 +629,7 @@ export function ResultScreen({
           ? `A ${industry?.label ?? ""} company and your personal finances, moved into the simulation.`
           : "Your personal finances, moved into the simulation."}
       </Sub>
+      <Panel title="About you" text={knowledgeLine(knowledgeOf(state.answers.knowledge))} />
       <Stairs
         built={ACCOUNT_ORDER}
         landDelays={landDelays}

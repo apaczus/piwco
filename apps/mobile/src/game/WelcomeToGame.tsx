@@ -111,11 +111,14 @@ export function WelcomeToGame({
   level,
   dir,
   onAccept,
+  warmUp = false,
 }: {
   state: GameState;
   level: Level;
   dir: Dir;
   onAccept: () => void;
+  // The player knows the basics but no later chapter is playable yet: January is a warm-up.
+  warmUp?: boolean;
 }) {
   const industry = state.business.industry;
   const mission = level.mission;
@@ -167,11 +170,19 @@ export function WelcomeToGame({
           </View>
         </Enter>
       ) : null}
+      {warmUp ? (
+        <Enter from="below" delay={1100}>
+          <Text style={styles.warmUp}>
+            You know the basics: the credit and investing chapters are coming. Start with a quick January warm-up.
+          </Text>
+        </Enter>
+      ) : null}
     </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
+  warmUp: { fontFamily: font.semibold, fontSize: 13.5, lineHeight: 19, color: colors.onPetrolSub, textAlign: "center", paddingHorizontal: 8 },
   brand: { flexDirection: "row", alignItems: "center", gap: 8 },
   brandMark: { width: 10.5, height: 10.5, borderRadius: 3, backgroundColor: colors.yellow, transform: [{ rotate: "45deg" }] },
   brandText: { fontFamily: font.extrabold, fontSize: 12.5, letterSpacing: 1.75, color: colors.yellow },

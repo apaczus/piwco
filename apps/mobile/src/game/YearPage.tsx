@@ -6,14 +6,16 @@ import { Animated, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackToMonth } from "../city/BackToMonth";
 import { Eyebrow } from "../onboarding/ui";
 import { colors, font, mix, shadow2, springs } from "../theme";
-import { LockIcon } from "./MonthResult";
+import { LockIcon, SkippedBadge } from "./MonthResult";
 import { CoachTarget } from "./coach";
 
 export function YearPage({
   completedMonth,
   currentMonth,
   backLabel,
+  skipped = () => false,
 }: {
+  skipped?: (month: number) => boolean;
   completedMonth: number;
   // The month being played (null between months).
   currentMonth: number | null;
@@ -63,6 +65,8 @@ export function YearPage({
                 <View style={styles.here}>
                   <Text style={styles.hereText}>YOU ARE HERE</Text>
                 </View>
+              ) : skipped(l.month) ? (
+                <SkippedBadge />
               ) : l.playable ? (
                 <Text style={styles.soon}>SOON</Text>
               ) : (

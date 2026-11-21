@@ -1,5 +1,6 @@
 // The onboarding profile handed to the game. Kept in app memory (no storage yet, decided).
 // "Skip to game" has no profile: the game then uses the content's baseline (test profile A).
+import type { KnowledgeLevel } from "@piwco/content";
 import type { HouseholdAnswers } from "@piwco/engine";
 import type { OnboardingProfile } from "../onboarding/flow";
 
@@ -11,6 +12,11 @@ export function setPlayerProfile(profile: OnboardingProfile | null) {
 
 export function getPlayerProfile(): OnboardingProfile | null {
   return current;
+}
+
+// The player's finance knowledge; "Skip to game" (no profile) counts as the default, intermediate.
+export function playerKnowledge(): KnowledgeLevel {
+  return current?.knowledge ?? "intermediate";
 }
 
 const one = (v: string | string[] | undefined) => (typeof v === "string" ? v : undefined);

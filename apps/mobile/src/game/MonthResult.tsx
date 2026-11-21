@@ -133,6 +133,15 @@ export function MonthResult({
   );
 }
 
+// "Skipped: you know this" on the year maps (months the player's level skips).
+export function SkippedBadge() {
+  return (
+    <View style={styles.skipped}>
+      <Text style={styles.skippedText}>Skipped: you know this</Text>
+    </View>
+  );
+}
+
 export function LockIcon() {
   return (
     <Svg width={16} height={16} viewBox="0 0 24 24">
@@ -150,7 +159,10 @@ export function Roadmap({
   onPickMonth,
   plan = [],
   onBackToGame,
+  skipped = () => false,
 }: {
+  // Months the player's knowledge level skips ("Skipped: you know this"; not blocked).
+  skipped?: (month: number) => boolean;
   // "Back to the game": the game's main page (between months: the completed month's pager).
   onBackToGame?: () => void;
   completedMonth: number;
@@ -187,6 +199,8 @@ export function Roadmap({
               </View>
               {done ? (
                 <Text style={styles.doneMark}>✓ ›</Text>
+              ) : skipped(l.month) ? (
+                <SkippedBadge />
               ) : l.playable ? (
                 <Text style={styles.soon}>SOON</Text>
               ) : (
@@ -241,5 +255,7 @@ const styles = StyleSheet.create({
   monthName: { fontFamily: font.extrabold, fontSize: 14, color: colors.ink },
   monthTitle: { fontFamily: font.regular, fontSize: 13, color: colors.muted },
   doneMark: { fontFamily: font.extrabold, fontSize: 16, color: colors.success },
+  skipped: { backgroundColor: mix(colors.petrol700, colors.surface, 12), borderRadius: 99, paddingVertical: 3, paddingHorizontal: 8 },
+  skippedText: { fontFamily: font.extrabold, fontSize: 10.5, color: colors.petrol700 },
   soon: { fontFamily: font.extrabold, fontSize: 10.5, letterSpacing: 0.8, color: colors.muted },
 });

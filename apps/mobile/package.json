@@ -23,12 +23,14 @@
   },
   "devDependencies": {
     "@types/react": "~19.3.0",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "vitest": "^5.1.1"
   },
   "scripts": {
     "start": "expo start",
     "start:tailscale": "REACT_NATIVE_PACKAGER_HOSTNAME=$(tailscale ip -4) expo start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "private": true
 }

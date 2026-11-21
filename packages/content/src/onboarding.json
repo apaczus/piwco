@@ -90,6 +90,19 @@
   "seniorFutureInGame": "You'll decide how to split your savings between safe and riskier options, and see what inflation does to them.",
   "questions": [
     {
+      "id": "knowledge",
+      "atStart": true,
+      "default": "intermediate",
+      "question": "How well do you know finance?",
+      "why": "We'll skip what you already know.",
+      "shortLabel": "Knowledge",
+      "options": [
+        { "label": "Beginner: I'm just starting", "value": "beginner" },
+        { "label": "Intermediate: I budget and save", "value": "intermediate" },
+        { "label": "Advanced: I know loans and investing", "value": "advanced" }
+      ]
+    },
+    {
       "id": "income",
       "account": "main",
       "question": "How much comes into your account each month?",

@@ -21,9 +21,17 @@ export type OnboardingOption = {
   note?: string;
 };
 
+// Finance knowledge level (onboarding question "knowledge"); levels.json skipFor decides which months it skips.
+export type KnowledgeLevel = "beginner" | "intermediate" | "advanced";
+
 export type OnboardingQuestion = {
   id: string;
-  account: AccountId;
+  // Missing only on `atStart` questions (they don't belong to one of the 4 accounts).
+  account?: AccountId;
+  // Asked right after "who are you" / the industry, before the 4-account explainer; no "goes into the game" screen.
+  atStart?: boolean;
+  // Option selected when the screen opens; a "Next" button accepts it.
+  default?: string;
   question: string;
   // "How we use it" line under the question.
   why: string;
@@ -113,9 +121,12 @@ export type Level = {
   lessonCard?: LessonCard;
   // Interactive lesson shown after the month is completed: swipe "myth or fact?".
   lesson?: SwipeLesson;
+  // Knowledge levels that skip this month (they already know it).
+  skipFor?: KnowledgeLevel[];
 };
 
-export const levels: Level[] = levelsData;
+// Cast: JSON strings ("intermediate") don't type-check as the KnowledgeLevel union.
+export const levels = levelsData as Level[];
 
 // All money values are whole PLN per month (integers).
 

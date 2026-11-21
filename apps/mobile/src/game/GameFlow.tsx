@@ -55,7 +55,8 @@ import { BackButton } from "./BackButton";
 import { EventScreen } from "./EventScreen";
 import { EventLesson } from "./EventLesson";
 import { buildEventLesson, hasEventLesson } from "./eventLesson";
-import { getPlayerProfile, householdAnswers } from "./profile";
+import { getPlayerProfile, householdAnswers, playerKnowledge } from "./profile";
+import { skipsMonth, startMonthFor } from "./startMonth";
 import { WelcomeToGame } from "./WelcomeToGame";
 import { CoachOverlay, CoachProvider, type CoachRegistry } from "./coach";
 
@@ -90,6 +91,12 @@ function startSession(industryId: string | null): Session | null {
 export function GameFlow({ industryId }: { industryId: string | null }) {
   const insets = useSafeAreaInsets();
   const [session, setSession] = useState<Session | null>(() => startSession(industryId));
+  // Finance knowledge from the survey ("Skip to game" = intermediate): months it skips get a badge on the maps.
+  const knowledge = playerKnowledge();
+  const skipped = (month: number) => {
+    const l = levels.find((x) => x.month === month);
+    return !!l && skipsMonth(l, knowledge);
+  };
   // Guided tour of the game screen: every time the game is entered (survey or "Skip to game"), before the first
   // move; "?" plays it again. "Start a new game" in the same visit doesn't repeat it.
   const [coachPending, setCoachPending] = useState(true);
@@ -205,6 +212,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
       case "welcome":
         screen = (
           <WelcomeToGame
+            warmUp={startMonthFor(knowledge, levels).fallback}
             state={session.game}
             level={level}
             dir={dir}
@@ -273,7 +281,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
         screen = (
           <GamePager
             controlRef={pagerControl}
-            year={<YearPage completedMonth={session.completedMonth} currentMonth={session.game.month} />}
+            year={<YearPage completedMonth={session.completedMonth} currentMonth={session.game.month} skipped={skipped} />}
             learn={learn}
             city={
               <CityPage
@@ -305,7 +313,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
         const nextLevel = levels.find((l) => l.month === session.completedMonth + 1);
         screen = (
           <GamePager
-            year={<YearPage completedMonth={session.completedMonth} currentMonth={null} backLabel={`Back to ${level.monthName}`} />}
+            year={<YearPage completedMonth={session.completedMonth} currentMonth={null} backLabel={`Back to ${level.monthName}`} skipped={skipped} />}
             learn={
               <MonthDonePage
                 level={level}
@@ -448,6 +456,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
         screen = (
           <>
             <Roadmap
+              skipped={skipped}
               completedMonth={session.completedMonth}
               dir={dir}
               plan={session.plan}

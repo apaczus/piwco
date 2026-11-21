@@ -189,8 +189,13 @@ export function OnboardingFlow() {
             }}
             onNext={() => {
               buzz("tick");
-              // An untouched multi-select counts as "I have none".
-              setS((p) => (Array.isArray(p.answers[q.id]) ? p : { ...p, answers: { ...p.answers, [q.id]: [] } }));
+              // An untouched multi-select counts as "I have none"; an untouched question with a default takes it.
+              setS((p) => {
+                const cur = p.answers[q.id];
+                if (q.multi) return Array.isArray(cur) ? p : { ...p, answers: { ...p.answers, [q.id]: [] } };
+                if (typeof cur === "string" || !q.default) return p;
+                return { ...p, answers: { ...p.answers, [q.id]: q.default } };
+              });
               next();
             }}
           />
