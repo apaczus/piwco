@@ -11,6 +11,7 @@ import { Cta, Eyebrow, LinkButton, Title, Why } from "../onboarding/ui";
 import { colors, font, mix, shadow1 } from "../theme";
 import { BudgetSlider } from "./BudgetSlider";
 import { categoryLabel, formatPln } from "./format";
+import { MoneyBar } from "./MoneyBar";
 
 const COLORS: Record<HouseholdCategory, string> = {
   housing: colors.petrol700,
@@ -113,13 +114,13 @@ export function BudgetScreen({
           <Text style={styles.summaryLabel}>{`On your account${installment > 0 ? " (after the loan)" : ""}`}</Text>
           <Text style={styles.summaryValue}>{formatPln(available)}</Text>
         </View>
-        <View style={styles.bar}>
-          {/* Plain flex parts: they follow the finger directly (an animation per change would lag behind it). */}
-          {HOUSEHOLD_CATEGORIES.filter((c) => draft[c] > 0).map((c) => (
-            <View key={c} style={{ flex: draft[c] / total, backgroundColor: short.has(c) ? colors.danger : COLORS[c] }} />
-          ))}
-          {left > 0 ? <View style={{ flex: left / total, backgroundColor: mix(colors.success, colors.surface, 28) }} /> : null}
-        </View>
+        <MoneyBar
+          total={total}
+          parts={[
+            ...HOUSEHOLD_CATEGORIES.map((c) => ({ key: c, value: draft[c], color: short.has(c) ? colors.danger : COLORS[c] })),
+            { key: "left", value: Math.max(0, left), color: mix(colors.success, colors.surface, 28) },
+          ]}
+        />
         <View style={styles.summaryRow}>
           <Text style={[styles.leftLabel, { color: missing ? colors.danger : colors.success }]}>{missing ? "Missing" : "Left"}</Text>
           <Text style={[styles.leftValue, { color: missing ? colors.danger : colors.success }]}>{formatPln(Math.abs(left))}</Text>
@@ -154,7 +155,6 @@ const styles = StyleSheet.create({
   summaryRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" },
   summaryLabel: { fontFamily: font.medium, fontSize: 14, color: colors.muted },
   summaryValue: { fontFamily: font.bold, fontSize: 15, color: colors.ink, fontVariant: ["tabular-nums"] },
-  bar: { flexDirection: "row", height: 16, borderRadius: 8, overflow: "hidden", backgroundColor: colors.surface2, gap: 2 },
   leftLabel: { fontFamily: font.extrabold, fontSize: 16 },
   leftValue: { fontFamily: font.extrabold, fontSize: 22, fontVariant: ["tabular-nums"] },
   tip: { fontFamily: font.semibold, fontSize: 13, color: colors.danger },

@@ -14,6 +14,7 @@ import {
   type GoalResult,
   type MonthReport,
 } from "@piwco/engine";
+import { newInvest, type InvestState } from "../invest/investSession";
 
 // "welcome" = the celebratory "Welcome to the game" screen with the first mission (start of a new game).
 // "eventLesson" = the month's event lesson (info cards, quiz, "Add to my plan"), after the result, before "lesson".
@@ -31,7 +32,9 @@ export type Phase =
   | "city"
   | "roadmap"
   // Between months: the pager (Year · Learn · City) for a completed month, nothing to play until the next one.
-  | "hub";
+  | "hub"
+  // The investing chapter (month 8): its own screens (apps/mobile/src/invest), not a simulated month.
+  | "invest";
 
 // A real-world step the player added with "Add to my plan" (kept in memory; storage comes with the server).
 export type PlanItem = {
@@ -62,6 +65,8 @@ export type Session = {
   // The month's event has been revealed (it hits mid-month, after the player's first decision). Until then the
   // game screens see the month without it (no spoilers in the HUD forecast).
   eventShown: boolean;
+  // Investing chapter progress (in memory only, not in GameState). null = not started.
+  invest: InvestState | null;
 };
 
 export type MonthRecord = {
@@ -98,6 +103,7 @@ export function newSession(industryId: string, seed: number, answers?: Household
     reviewing: null,
     plan: [],
     eventShown: false,
+    invest: null,
   };
 }
 
@@ -208,4 +214,9 @@ export function repairing(plan: PlanItem[], damaged: { home: boolean; firm: bool
     home: damaged.home && plan.some((p) => p.building === "home"),
     firm: damaged.firm && plan.some((p) => p.building === "firm"),
   };
+}
+
+// Open the investing chapter (from its start, or where the player left it).
+export function openInvest(s: Session): Session {
+  return { ...s, phase: "invest", invest: s.invest ?? newInvest() };
 }

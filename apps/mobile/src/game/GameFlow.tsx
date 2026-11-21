@@ -41,6 +41,7 @@ import {
   endReview,
   monthStartPhase,
   newSession,
+  openInvest,
   randomSeed,
   repairing,
   replay,
@@ -59,6 +60,8 @@ import { getPlayerProfile, householdAnswers, playerKnowledge } from "./profile";
 import { skipsMonth, startMonthFor } from "./startMonth";
 import { WelcomeToGame } from "./WelcomeToGame";
 import { CoachOverlay, CoachProvider, type CoachRegistry } from "./coach";
+import { InvestScreen } from "../invest/InvestFlow";
+import { backStage, investNight } from "../invest/investSession";
 
 function timeOfDay(phase: Phase): TimeOfDay {
   switch (phase) {
@@ -78,19 +81,22 @@ function timeOfDay(phase: Phase): TimeOfDay {
     case "city":
     case "roadmap":
       return "night";
+    case "invest":
+      return "day";
   }
 }
 
 // A new game for the industry, with the onboarding profile (if the player came through the onboarding).
-function startSession(industryId: string | null): Session | null {
+function startSession(industryId: string | null, chapter: "invest" | null): Session | null {
   if (!industryId) return null;
   const profile = getPlayerProfile();
-  return newSession(industryId, randomSeed(), householdAnswers(profile), profile?.flags ?? []);
+  const s = newSession(industryId, randomSeed(), householdAnswers(profile), profile?.flags ?? []);
+  return s && chapter === "invest" ? openInvest(s) : s;
 }
 
-export function GameFlow({ industryId }: { industryId: string | null }) {
+export function GameFlow({ industryId, startChapter = null }: { industryId: string | null; startChapter?: "invest" | null }) {
   const insets = useSafeAreaInsets();
-  const [session, setSession] = useState<Session | null>(() => startSession(industryId));
+  const [session, setSession] = useState<Session | null>(() => startSession(industryId, startChapter));
   // Finance knowledge from the survey ("Skip to game" = intermediate): months it skips get a badge on the maps.
   const knowledge = playerKnowledge();
   const skipped = (month: number) => {
@@ -152,7 +158,13 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
 
   // Day/night cycle, tied to the game phase (decided): the month is played in daylight, the receipt is the
   // sunset, everything after the month (result, lesson, city, year) is night; "Accept mission" / replay = sunrise.
-  const time: TimeOfDay = session ? timeOfDay(session.phase) : "day";
+  const time: TimeOfDay = session
+    ? session.phase === "invest" && session.invest
+      ? investNight(session.invest.stage)
+        ? "night"
+        : "day"
+      : timeOfDay(session.phase)
+    : "day";
   const night = time === "night";
 
   // The tour starts once the game screen is in.
@@ -305,6 +317,11 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
         );
         break;
       }
+      case "invest":
+        screen = session.invest ? (
+          <InvestScreen state={session.invest} dir={dir} onChange={(next, d = 1) => go((s) => ({ ...s, invest: next }), d)} />
+        ) : null;
+        break;
       case "hub": {
         // Between months: the completed month's real city (no forecast, nothing left to level up).
         const config = cityConfigFor(session.game);
@@ -472,7 +489,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
                 monthStartShown.current = {};
                 shownBeforeEnd.current = {};
                 lastBadge.current = 0;
-                go((s) => startSession(industryId) ?? s, -1);
+                go((s) => startSession(industryId, null) ?? s, -1);
               }}
             />
             {sheetMonth !== null ? (
@@ -539,6 +556,16 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
       case "hub":
         back = () => toPhase("roadmap", -1);
         break;
+      case "invest": {
+        const prev = session.invest ? backStage(session.invest.stage) : null;
+        // TEMPORARY until step 5: leaving the chapter from its intro goes back to the onboarding.
+        back = prev
+          ? () => go((s) => ({ ...s, invest: s.invest ? { ...s.invest, stage: prev } : s.invest }), -1)
+          : router.canGoBack()
+            ? () => router.back()
+            : null;
+        break;
+      }
       default:
         back = null;
     }

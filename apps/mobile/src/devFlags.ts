@@ -4,3 +4,5 @@
 export const DEV_SKIP_TO_GAME = true;
 // Industry used by that button.
 export const DEV_SKIP_INDUSTRY = "gastronomy";
+// Shows an "Invest ›" button next to it that opens the investing chapter (until step 5 wires the real start).
+export const DEV_SKIP_TO_INVEST = true;

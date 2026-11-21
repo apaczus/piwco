@@ -2,13 +2,12 @@
 // precision. Smooth: the thumb and the fill follow the finger through an Animated value (no React re-render per
 // pixel, transforms only); the amount snaps to 50 PLN steps (haptic tick every 100) and the thumb springs to the
 // step when released. A marker shows the minimum; below it the slider glows red, shakes once and says "Too little".
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState, type ReactNode } from "react";
 import { Animated, Easing, PanResponder, StyleSheet, Text, View, type LayoutChangeEvent } from "react-native";
 import { buzz, PressScale, useReducedMotion } from "../onboarding/anim";
 import { colors, font, mix, springs } from "../theme";
 import { formatPln } from "./format";
 
-const STEP = 50;
 const THUMB = 28;
 
 type Props = {
@@ -23,9 +22,35 @@ type Props = {
   shortfall: boolean;
   // Must be stable (useCallback): sliders are memoized so only the dragged one re-renders.
   onChange: (id: string, v: number) => void;
+  // Snap step, haptic tick distance and the − / + amount (household budget: 50 / 100 / 100).
+  step?: number;
+  tickEvery?: number;
+  plusMinus?: number;
+  // Extra content under the label row (e.g. the investing chapter's description and Return / Risk bars).
+  extra?: ReactNode;
+  // Small "i" button next to the amount.
+  onInfo?: () => void;
+  // No track and no − / + (e.g. "Keep it on your account" = whatever is left).
+  readOnly?: boolean;
 };
 
-function BudgetSliderImpl({ id, label, hint, value, max, minimum, color, shortfall, onChange }: Props) {
+function BudgetSliderImpl({
+  id,
+  label,
+  hint,
+  value,
+  max,
+  minimum,
+  color,
+  shortfall,
+  onChange,
+  step: STEP = 50,
+  tickEvery = 100,
+  plusMinus = 100,
+  extra,
+  onInfo,
+  readOnly,
+}: Props) {
   const reduced = useReducedMotion();
   const [width, setWidth] = useState(0);
   const track = Math.max(1, width - THUMB);
@@ -34,8 +59,8 @@ function BudgetSliderImpl({ id, label, hint, value, max, minimum, color, shortfa
   // Thumb position in px (left edge of the thumb). Driven directly while dragging, sprung otherwise.
   const pos = useRef(new Animated.Value(0)).current;
   const dragging = useRef(false);
-  const live = useRef({ track, max, value, onChange, id });
-  live.current = { track, max, value, onChange, id };
+  const live = useRef({ track, max, value, onChange, id, STEP, tickEvery });
+  live.current = { track, max, value, onChange, id, STEP, tickEvery };
   const lastTick = useRef(value);
   const origin = useRef(0);
   const grab = useRef(new Animated.Value(0)).current;
@@ -78,9 +103,9 @@ function BudgetSliderImpl({ id, label, hint, value, max, minimum, color, shortfa
     const l = live.current;
     const px = Math.min(l.track, Math.max(0, fingerX - THUMB / 2));
     pos.setValue(px);
-    const next = Math.round(((px / l.track) * l.max) / STEP) * STEP;
+    const next = Math.round(((px / l.track) * l.max) / l.STEP) * l.STEP;
     if (next === l.value) return;
-    if (Math.abs(next - lastTick.current) >= 100) {
+    if (Math.abs(next - lastTick.current) >= l.tickEvery) {
       lastTick.current = next;
       buzz("tick");
     }
@@ -113,7 +138,7 @@ function BudgetSliderImpl({ id, label, hint, value, max, minimum, color, shortfa
     }),
   ).current;
 
-  const step = (d: number) => {
+  const nudge = (d: number) => {
     const next = Math.max(0, Math.min(max, value + d));
     if (next !== value) {
       buzz("tick");
@@ -140,10 +165,17 @@ function BudgetSliderImpl({ id, label, hint, value, max, minimum, color, shortfa
           </Text>
         </View>
         <Text style={[styles.amount, tooLittle ? { color: colors.danger } : null]}>{formatPln(value)}</Text>
+        {onInfo ? (
+          <PressScale onPress={onInfo} accessibilityLabel={`About ${label}`} style={styles.info}>
+            <Text style={styles.infoText}>i</Text>
+          </PressScale>
+        ) : null}
       </View>
+      {extra}
 
+      {readOnly ? null : (
       <View style={styles.row}>
-        <PressScale onPress={() => step(-100)} accessibilityLabel={`Less for ${label}`} style={styles.pm}>
+        <PressScale onPress={() => nudge(-plusMinus)} accessibilityLabel={`Less for ${label}`} style={styles.pm}>
           <Text style={styles.pmText}>−</Text>
         </PressScale>
         <View
@@ -177,10 +209,11 @@ function BudgetSliderImpl({ id, label, hint, value, max, minimum, color, shortfa
             </>
           ) : null}
         </View>
-        <PressScale onPress={() => step(100)} accessibilityLabel={`More for ${label}`} style={styles.pm}>
+        <PressScale onPress={() => nudge(plusMinus)} accessibilityLabel={`More for ${label}`} style={styles.pm}>
           <Text style={styles.pmText}>+</Text>
         </PressScale>
       </View>
+      )}
     </Animated.View>
   );
 }
@@ -194,6 +227,8 @@ const styles = StyleSheet.create({
   label: { fontFamily: font.bold, fontSize: 15, color: colors.ink },
   hint: { fontFamily: font.medium, fontSize: 12.5, color: colors.muted },
   amount: { fontFamily: font.extrabold, fontSize: 18, color: colors.petrol950, fontVariant: ["tabular-nums"] },
+  info: { width: 24, height: 24, borderRadius: 12, borderWidth: 1.5, borderColor: colors.petrol700, alignItems: "center", justifyContent: "center" },
+  infoText: { fontFamily: font.extrabold, fontSize: 13, lineHeight: 16, color: colors.petrol700 },
   row: { flexDirection: "row", alignItems: "center", gap: 8 },
   pm: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: colors.line, alignItems: "center", justifyContent: "center" },
   pmText: { fontFamily: font.extrabold, fontSize: 18, lineHeight: 20, color: colors.petrol800 },

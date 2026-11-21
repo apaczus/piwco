@@ -14,35 +14,9 @@ import { ScreenLayout, type Dir } from "../onboarding/screens";
 import { Cta, Eyebrow } from "../onboarding/ui";
 import { colors, font, mix, shadow2, springs } from "../theme";
 import { formatPln } from "./format";
+import { Notification, notifyStyles } from "./notify";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-function Notification({ def, delay = 0 }: { def: GameEventDef; delay?: number }) {
-  const v = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    const t = setTimeout(() => buzz("medium", "pop"), delay + 120);
-    Animated.sequence([Animated.delay(delay), Animated.spring(v, { toValue: 1, ...springs.lively, useNativeDriver: true })]).start();
-    return () => clearTimeout(t);
-  }, [v, delay]);
-  return (
-    <Animated.View
-      style={[
-        styles.notif,
-        { opacity: v.interpolate({ inputRange: [0, 0.3], outputRange: [0, 1], extrapolate: "clamp" }), transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [-90, 0] }) }] },
-      ]}
-    >
-      <View style={styles.notifHead}>
-        <View style={styles.appIcon}>
-          <View style={styles.appMark} />
-        </View>
-        <Text style={styles.notifApp}>PIWCO</Text>
-        <Text style={styles.notifTime}>now</Text>
-      </View>
-      <Text style={styles.notifTitle}>{def.title}</Text>
-      <Text style={styles.notifText}>{def.notification}</Text>
-    </Animated.View>
-  );
-}
 
 type Option = {
   key: string;
@@ -243,7 +217,7 @@ function Alarm({ def, ev, onNext }: { def: GameEventDef; ev: ActiveEvent; onNext
               <Text style={styles.alarmImpactText}>{impact}</Text>
             </View>
           </View>
-          <Notification def={def} delay={250} />
+          <Notification title={def.title} text={def.notification} delay={250} />
         </ScreenLayout>
       </Animated.View>
     </View>
@@ -469,14 +443,6 @@ const styles = StyleSheet.create({
   detailsTitle: { fontFamily: font.extrabold, fontSize: 28, lineHeight: 34, color: colors.petrol950 },
   detailLine: { fontFamily: font.semibold, fontSize: 15, lineHeight: 22, color: colors.ink },
   sep: { height: 1, backgroundColor: colors.line, marginVertical: 6 },
-  notif: { backgroundColor: colors.surface, borderRadius: 20, padding: 14, gap: 4, ...shadow2 },
-  notifHead: { flexDirection: "row", alignItems: "center", gap: 8 },
-  appIcon: { width: 22, height: 22, borderRadius: 6, backgroundColor: colors.petrol900, alignItems: "center", justifyContent: "center" },
-  appMark: { width: 8, height: 8, borderRadius: 2, backgroundColor: colors.yellow, transform: [{ rotate: "45deg" }] },
-  notifApp: { flex: 1, fontFamily: font.bold, fontSize: 12, letterSpacing: 0.8, color: colors.muted },
-  notifTime: { fontFamily: font.medium, fontSize: 12, color: colors.muted },
-  notifTitle: { fontFamily: font.extrabold, fontSize: 18, lineHeight: 23, color: colors.petrol950, marginTop: 4 },
-  notifText: { fontFamily: font.regular, fontSize: 14.5, lineHeight: 21, color: colors.ink },
   dueRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" },
   dueLabel: { fontFamily: font.bold, fontSize: 14, color: colors.muted },
   dueValue: { fontFamily: font.extrabold, fontSize: 28, color: colors.petrol950, fontVariant: ["tabular-nums"] },
@@ -488,9 +454,9 @@ const styles = StyleSheet.create({
   warn: { fontFamily: font.bold, fontSize: 12.5, color: colors.danger },
   badge: { backgroundColor: mix(colors.danger, colors.surface, 14), borderRadius: 99, paddingVertical: 3, paddingHorizontal: 8 },
   badgeText: { fontFamily: font.extrabold, fontSize: 10.5, letterSpacing: 0.6, color: colors.danger },
-  outcome: { backgroundColor: colors.surface, borderRadius: 16, borderWidth: 2, padding: 16, gap: 6, ...shadow2 },
-  outcomeTitle: { fontFamily: font.extrabold, fontSize: 19, color: colors.petrol950 },
-  outcomeText: { fontFamily: font.regular, fontSize: 14.5, lineHeight: 21, color: colors.ink },
+  outcome: notifyStyles.outcome,
+  outcomeTitle: notifyStyles.outcomeTitle,
+  outcomeText: notifyStyles.outcomeText,
   debtNote: { fontFamily: font.bold, fontSize: 13.5, lineHeight: 19, color: colors.danger, marginTop: 4 },
   okNote: { fontFamily: font.bold, fontSize: 13.5, color: colors.success, marginTop: 4 },
 });

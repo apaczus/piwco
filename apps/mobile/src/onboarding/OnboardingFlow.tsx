@@ -3,7 +3,7 @@ import { setPlayerProfile } from "../game/profile";
 import { onboarding, type AgeBandId } from "@piwco/content";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { DEV_SKIP_INDUSTRY, DEV_SKIP_TO_GAME } from "../devFlags";
+import { DEV_SKIP_INDUSTRY, DEV_SKIP_TO_GAME, DEV_SKIP_TO_INVEST } from "../devFlags";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -247,6 +247,15 @@ export function OnboardingFlow() {
                   // Skipping = no profile: the game uses the baseline (test profile A).
                   setPlayerProfile(null);
                   router.push({ pathname: "/game", params: { industry: DEV_SKIP_INDUSTRY } });
+                }
+              : undefined
+          }
+          onSkipToInvest={
+            DEV_SKIP_TO_INVEST
+              ? () => {
+                  buzz("light");
+                  setPlayerProfile(null);
+                  router.push({ pathname: "/game", params: { industry: DEV_SKIP_INDUSTRY, chapter: "invest" } });
                 }
               : undefined
           }
