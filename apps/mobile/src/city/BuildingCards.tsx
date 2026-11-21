@@ -4,6 +4,7 @@ import type { BuildingId, CityView } from "@piwco/engine";
 import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { colors, font } from "../theme";
+import { usePrivatePlayer, withoutFirm } from "../game/privatePlayer";
 import { BUILDING_INFO } from "./buildings";
 
 export const CARD_BUILDINGS: BuildingId[] = ["home", "firm", "vault", "shield"];
@@ -20,9 +21,11 @@ export function BuildingCards({
   night?: boolean;
   barFor?: (id: BuildingId, color: string) => ReactNode;
 }) {
+  // Private persons have no Company card (the next building takes its place).
+  const shownIds = usePrivatePlayer() ? withoutFirm(ids) : ids;
   return (
     <View style={styles.grid}>
-      {ids.map((id) => {
+      {shownIds.map((id) => {
         const level = city.levels[id];
         const info = BUILDING_INFO[id];
         return (

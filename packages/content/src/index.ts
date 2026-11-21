@@ -344,7 +344,24 @@ export type YourCityTexts = {
   rule: string;
   cta: string;
 };
-export type Tutorial = { tips: TutorialTip[]; howItWorks: HowItWorks; skipBasics: SkipBasicsTexts; yourCity: YourCityTexts };
+// Private persons rated 3–5 (no company): investing + credit only; January–March are for entrepreneurs.
+export type PrivatePlayerTexts = {
+  businessOnly: string;
+  // "{month}" = the picked month's name.
+  businessCta: string;
+  knownNote: string;
+  // "{amount}" = the chapter's starting money.
+  investIntro: string;
+  beginnerNote: string;
+  welcomeSub: string;
+};
+export type Tutorial = {
+  tips: TutorialTip[];
+  howItWorks: HowItWorks;
+  skipBasics: SkipBasicsTexts;
+  yourCity: YourCityTexts;
+  privatePlayer: PrivatePlayerTexts;
+};
 
 export const tutorial = tutorialData as Tutorial;
 

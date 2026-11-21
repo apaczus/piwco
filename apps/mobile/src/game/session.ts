@@ -123,6 +123,16 @@ export function newSession(industryId: string, seed: number, answers?: Household
   };
 }
 
+// Private person (no company, decided 2026-11-22): the game runs on a hidden carrier company with no cash, so net
+// worth counts only personal money. Starts on "The goal + your city" (they don't skip months: January–March are
+// for entrepreneurs).
+export function newPrivateSession(carrierIndustry: string, seed: number, answers?: HouseholdAnswers, flags: string[] = []): Session | null {
+  const s = newSession(carrierIndustry, seed, answers, flags);
+  if (!s) return null;
+  const game = { ...s.game, business: { ...s.game.business, cash: 0 } };
+  return { ...s, game, snapshot: game, phase: "yourCity" };
+}
+
 export function act(s: Session, action: Action, phase: Phase = "play"): { session: Session; error: string | null } {
   const r = applyAction(s.game, action);
   if (!r.ok) return { session: s, error: r.error };

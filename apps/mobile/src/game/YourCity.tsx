@@ -5,6 +5,7 @@ import { tutorial } from "@piwco/content";
 import { BUILDINGS, type BuildingId, type CityView } from "@piwco/engine";
 import { StyleSheet, Text, View } from "react-native";
 import { BUILDING_INFO } from "../city/buildings";
+import { usePrivatePlayer } from "./privatePlayer";
 import { CityScene } from "../city/CityScene";
 import { Enter } from "../onboarding/anim";
 import { ScreenLayout, type Dir } from "../onboarding/screens";
@@ -13,18 +14,22 @@ import { colors, font, shadow2 } from "../theme";
 
 export function YourCity({ dir, city, onNext }: { dir: Dir; city: CityView; onNext: () => void }) {
   const t = tutorial.yourCity;
-  const built = BUILDINGS.filter((id) => city.levels[id] > 0).length;
+  // Private persons have no Company building (4 buildings).
+  const priv = usePrivatePlayer();
+  const ids = BUILDINGS.filter((id) => !(priv && id === "firm"));
+  const rows = t.buildings.filter((b) => !(priv && b.id === "firm"));
+  const built = ids.filter((id) => city.levels[id] > 0).length;
   return (
     <ScreenLayout dir={dir} footer={<Cta label={t.cta} onPress={onNext} appear />}>
       <Eyebrow>{t.eyebrow}</Eyebrow>
       <Title>{t.title}</Title>
       <Sub>{t.sub}</Sub>
       <View style={styles.cityCard}>
-        <Text style={styles.stage}>{t.stage.replace("{built}", String(built)).replace("{total}", String(BUILDINGS.length))}</Text>
+        <Text style={styles.stage}>{t.stage.replace("{built}", String(built)).replace("{total}", String(ids.length))}</Text>
         <CityScene city={city} />
       </View>
       <View style={{ gap: 6 }}>
-        {t.buildings.map((b, i) => {
+        {rows.map((b, i) => {
           const id = b.id as BuildingId;
           const info = BUILDING_INFO[id];
           if (!info) return null;
@@ -46,7 +51,7 @@ export function YourCity({ dir, city, onNext }: { dir: Dir; city: CityView; onNe
           );
         })}
       </View>
-      <Enter from="below" delay={300 + t.buildings.length * 140}>
+      <Enter from="below" delay={300 + rows.length * 140}>
         <Text style={styles.rule}>{t.rule}</Text>
       </Enter>
     </ScreenLayout>

@@ -6,6 +6,7 @@ import { Fragment, useState, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from "react-native";
 import Svg, { Circle, G, Line, Path, Rect } from "react-native-svg";
 import { colors, font, mix } from "../theme";
+import { usePrivatePlayer } from "../game/privatePlayer";
 import { BUILDING_INFO } from "./buildings";
 
 const W = 360;
@@ -20,6 +21,14 @@ const SLOTS: { id: BuildingId; cx: number }[] = [
   { id: "firm", cx: 186 },
   { id: "vault", cx: 262 },
   { id: "future", cx: 326 },
+];
+
+// Private persons (no company): 4 buildings, spread over the same strip.
+const SLOTS_PRIVATE: { id: BuildingId; cx: number }[] = [
+  { id: "shield", cx: 46 },
+  { id: "home", cx: 130 },
+  { id: "vault", cx: 230 },
+  { id: "future", cx: 318 },
 ];
 
 type Look = { night: boolean };
@@ -386,6 +395,7 @@ export function CityScene({
   decorate?: BuildingDecorator;
 }) {
   const [width, setWidth] = useState(0);
+  const slots = usePrivatePlayer() ? SLOTS_PRIVATE : SLOTS;
   const u = width / W;
   const look: Look = { night };
   const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
@@ -400,7 +410,7 @@ export function CityScene({
               <View style={[styles.road, { top: GROUND * u * 0.45, backgroundColor: night ? "rgba(255,255,255,0.12)" : "rgba(0,38,45,0.1)" }]} />
             </View>
           ) : null}
-          {SLOTS.map(({ id, cx }) => {
+          {slots.map(({ id, cx }) => {
             const level = city.levels[id];
             const info = BUILDING_INFO[id];
             let node: ReactNode;

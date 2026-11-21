@@ -1,8 +1,10 @@
 // Onboarding screens, ported from the artifact's welcome() / ageScreen() / typeScreen() / industry() /
 // explain() / firm() / question() / blockDone() / result().
+import { canEnterGame } from "../game/privatePlayer";
 import { setPlayerProfile } from "../game/profile";
 import {
   onboarding,
+  tutorial,
   type AccountId,
   type AgeBandId,
   type OnboardingQuestion,
@@ -622,14 +624,17 @@ export function ResultScreen({
             label={ctaNote ?? "Start game"}
             onPress={() => {
               buzz("light");
-              // Entrepreneurs with a playable industry go to the game; private persons: not built yet.
-              if (state.type !== "business" || !industry?.playable) {
-                setCtaNote("The game is for entrepreneurs for now: private persons coming soon");
+              // Entrepreneurs with a playable industry go to the game; private persons rated 3–5 too (investing
+              // and credit, no company); private beginners: not built yet.
+              const profile = buildProfile(state);
+              if (!canEnterGame(state.type, !!industry?.playable, profile.knowledge)) {
+                setCtaNote(state.type === "private" ? tutorial.privatePlayer.beginnerNote : "This industry isn't playable yet");
                 return;
               }
               try {
-                setPlayerProfile(buildProfile(state));
-                router.push({ pathname: "/game", params: { industry: industry.id } });
+                setPlayerProfile(profile);
+                if (state.type === "private") router.push({ pathname: "/game", params: { player: "private" } });
+                else router.push({ pathname: "/game", params: { industry: industry!.id } });
               } catch (e) {
                 setCtaNote(`Could not start the game: ${e instanceof Error ? e.message : String(e)}`);
               }

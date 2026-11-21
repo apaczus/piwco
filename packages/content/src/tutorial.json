@@ -132,5 +132,13 @@
     ],
     "rule": "Good decisions build your city. Bad debt cracks it.",
     "cta": "How it works ›"
+  },
+  "privatePlayer": {
+    "businessOnly": "For entrepreneurs",
+    "businessCta": "🔒 {month}: for entrepreneurs",
+    "knownNote": "January to March are for people with a company (budget, cushion and insurance for a business). Your path: investing and credit.",
+    "investIntro": "You saved {amount} you don't need for a year. What do you do with it?",
+    "beginnerNote": "For private persons we start from level 3 of 5: the basics are coming soon",
+    "welcomeSub": "Your money, your future: no company needed. Here's what you start with:"
   }
 }

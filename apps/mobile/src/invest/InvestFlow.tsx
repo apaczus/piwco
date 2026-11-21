@@ -2,7 +2,8 @@
 // ‹ back, transitions and sounds). Built only from the existing components; the line chart is the one new element.
 // Try 1: intro → split → one year fast → result; the swipe lesson; Try 2: horizon → split → top-up → years fast →
 // Try 1 vs Try 2. The city (step 5) is a placeholder for now.
-import { invest, levels, type InvestInstrument } from "@piwco/content";
+import { invest, levels, tutorial, type InvestInstrument } from "@piwco/content";
+import { usePrivatePlayer } from "../game/privatePlayer";
 import { fillCards } from "../game/lesson";
 import { SwipeLesson } from "../game/SwipeLesson";
 import { investLessonValues } from "./lessonValues";
@@ -51,11 +52,17 @@ function StepEyebrow({ state }: { state: InvestState }) {
 // ---------- Screen 1: intro ----------
 
 function IntroScreen({ state, dir, onNext }: { state: InvestState; dir: Dir; onNext: () => void }) {
+  // Private persons have no company: the money is their savings.
+  const priv = usePrivatePlayer();
   return (
     <ScreenLayout dir={dir} footer={<Cta label="Choose your investments" onPress={onNext} />}>
       <StepEyebrow state={state} />
       <Title>Your first investment</Title>
-      <Sub>{`Your company had a good quarter. You have ${formatPln(START)} you don't need for a year. What do you do with it?`}</Sub>
+      <Sub>
+        {priv
+          ? tutorial.privatePlayer.investIntro.replace("{amount}", formatPln(START))
+          : `Your company had a good quarter. You have ${formatPln(START)} you don't need for a year. What do you do with it?`}
+      </Sub>
       <View style={[notifyStyles.outcome, { borderColor: colors.yellow, alignItems: "center" }]}>
         <Text style={styles.bigLabel}>TO INVEST</Text>
         <Text style={styles.big}>{formatPln(START)}</Text>

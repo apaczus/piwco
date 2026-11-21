@@ -1,7 +1,8 @@
 // After "End month": lesson card (success) or "what went wrong" + replay (failure). Plus the year roadmap.
 import { MyPlan } from "../city/MyPlan";
 import type { PlanItem } from "./session";
-import { levels, type Level } from "@piwco/content";
+import { levels, tutorial, type Level } from "@piwco/content";
+import { usePrivatePlayer } from "./privatePlayer";
 import type { GoalReason, GoalResult, MonthReport } from "@piwco/engine";
 import { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -133,11 +134,13 @@ export function MonthResult({
   );
 }
 
-// "Skipped: you know this" on the year maps (months the player's level skips).
+// "Skipped: you know this" on the year maps (months the player's level skips); private persons: January–March
+// are "For entrepreneurs".
 export function SkippedBadge() {
+  const priv = usePrivatePlayer();
   return (
     <View style={styles.skipped}>
-      <Text style={styles.skippedText}>Skipped: you know this</Text>
+      <Text style={styles.skippedText}>{priv ? tutorial.privatePlayer.businessOnly : "Skipped: you know this"}</Text>
     </View>
   );
 }

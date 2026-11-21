@@ -44,6 +44,7 @@ import {
   closeLesson,
   openLesson,
   monthStartPhase,
+  newPrivateSession,
   newSession,
   openInvest,
   randomSeed,
@@ -61,6 +62,7 @@ import { EventScreen } from "./EventScreen";
 import { EventLesson } from "./EventLesson";
 import { buildEventLesson, hasEventLesson } from "./eventLesson";
 import { getPlayerProfile, householdAnswers, playerKnowledge } from "./profile";
+import { isBusinessMonth, PRIVATE_CARRIER_INDUSTRY, PrivatePlayerContext } from "./privatePlayer";
 import { skipsMonth, startMonthFor } from "./startMonth";
 import { WelcomeToGame } from "./WelcomeToGame";
 import { HowItWorks } from "./HowItWorks";
@@ -98,9 +100,13 @@ function timeOfDay(phase: Phase): TimeOfDay {
 }
 
 // A new game for the industry, with the onboarding profile (if the player came through the onboarding).
-function startSession(industryId: string | null): Session | null {
-  if (!industryId) return null;
+// Private persons (no company) play on a hidden carrier company and start on "The goal + your city".
+function startSession(industryId: string | null, privatePlayer = false): Session | null {
   const profile = getPlayerProfile();
+  if (privatePlayer) {
+    return newPrivateSession(PRIVATE_CARRIER_INDUSTRY, randomSeed(), householdAnswers(profile), profile?.flags ?? []);
+  }
+  if (!industryId) return null;
   const s = newSession(industryId, randomSeed(), householdAnswers(profile), profile?.flags ?? []);
   // Players who skip the basics first see how the game works (decided 2026-11-21).
   return s && startMonthFor(playerKnowledge(), levels).month === INVEST_MONTH ? { ...s, phase: "skipBasics" } : s;
@@ -118,9 +124,9 @@ const isLessonMonth = (m: number) => {
 // The investing chapter's month (it isn't a simulated month: its own screens, then ✓ on the year map).
 const INVEST_MONTH = 8;
 
-export function GameFlow({ industryId }: { industryId: string | null }) {
+export function GameFlow({ industryId, privatePlayer = false }: { industryId: string | null; privatePlayer?: boolean }) {
   const insets = useSafeAreaInsets();
-  const [session, setSession] = useState<Session | null>(() => startSession(industryId));
+  const [session, setSession] = useState<Session | null>(() => startSession(industryId, privatePlayer));
   // Finance knowledge from the survey ("Skip to game" = intermediate): months it skips get a badge on the maps.
   const knowledge = playerKnowledge();
   const skipped = (month: number) => {
@@ -272,7 +278,8 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
             // Startable now: January (the basics, nothing played yet) and the investing chapter.
             done={session.chaptersDone}
             // Startable now: January (the basics, nothing played yet), the investing chapter and lesson-only months.
-            canStart={(m) => (m === 1 && session.completedMonth === 0) || m === INVEST_MONTH || isLessonMonth(m)}
+            canStart={(m) => (m === 1 && session.completedMonth === 0 && !privatePlayer) || m === INVEST_MONTH || isLessonMonth(m)}
+            businessOnly={privatePlayer ? isBusinessMonth : undefined}
             onStart={(m) => {
               if (isLessonMonth(m)) {
                 go((s) => openLesson(s, m, "howItWorks"));
@@ -447,7 +454,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
                 level={hubLevel}
                 next={nextLevel}
                 onPlayBasics={
-                  afterChapter
+                  afterChapter && !privatePlayer
                     ? () => {
                         buzz("light");
                         toPhase(monthStartPhase(session.game));
@@ -601,7 +608,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
               }}
               onPlayBasics={
                 // After the chapter, a player who skipped the basics can still play January.
-                session.completedMonth === 0 && session.chaptersDone.length > 0
+                session.completedMonth === 0 && session.chaptersDone.length > 0 && !privatePlayer
                   ? () => {
                       buzz("light");
                       toPhase(monthStartPhase(session.game));
@@ -622,7 +629,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
                 monthStartShown.current = {};
                 shownBeforeEnd.current = {};
                 lastBadge.current = 0;
-                go((s) => startSession(industryId) ?? s, -1);
+                go((s) => startSession(industryId, privatePlayer) ?? s, -1);
               }}
             />
             {sheetMonth !== null ? (
@@ -663,7 +670,8 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
         back = router.canGoBack() ? () => router.back() : null;
         break;
       case "yourCity":
-        back = () => toPhase("skipBasics", -1);
+        // Private persons start here (no "You skip" screen): back to the survey.
+        back = privatePlayer ? (router.canGoBack() ? () => router.back() : null) : () => toPhase("skipBasics", -1);
         break;
       case "howItWorks":
         back = () => toPhase("yourCity", -1);
@@ -719,6 +727,7 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
 
   const screenKey = session ? `${session.phase}-${navId}` : "none";
   return (
+    <PrivatePlayerContext.Provider value={privatePlayer}>
     <CoachProvider registry={coachRegistry}>
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <StatusBar style={night ? "light" : "dark"} />
@@ -767,5 +776,6 @@ export function GameFlow({ industryId }: { industryId: string | null }) {
       />
     ) : null}
     </CoachProvider>
+    </PrivatePlayerContext.Provider>
   );
 }

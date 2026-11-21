@@ -16,7 +16,10 @@ export function HowItWorks({
   done = [],
   canStart,
   onStart,
+  businessOnly,
 }: {
+  // Private persons: months that are a company simulation ("For entrepreneurs", locked).
+  businessOnly?: (month: number) => boolean;
   // Months the player can start from now (for the others the button shows "still being built").
   canStart: (month: number) => boolean;
   // Lessons already finished here (✓ on the tile).
@@ -29,6 +32,8 @@ export function HowItWorks({
   skipped: (month: number) => boolean;
 }) {
   const t = tutorial.howItWorks;
+  const p = tutorial.privatePlayer;
+  const forBusiness = (m: number) => !!businessOnly?.(m);
   const reduced = useReducedMotion();
   // The picked month (starts on the start month); the button below says what happens, or that it's locked.
   const [picked, setPicked] = useState(startMonth);
@@ -37,7 +42,9 @@ export function HowItWorks({
   const pickedName = pickedLevel?.monthName ?? "";
   const open = canStart(picked);
   const ctaLabel = !open
-    ? t.lockedCta
+    ? forBusiness(picked)
+      ? p.businessCta
+      : t.lockedCta
     : picked === startMonth
       ? t.cta
       : pickedLevel?.lessonOnly
@@ -97,7 +104,8 @@ export function HowItWorks({
             {levels.map((l) => {
               const start = l.month === startMonth;
               const finished = !start && done.includes(l.month);
-              const known = !start && !finished && skipped(l.month);
+              const business = !start && forBusiness(l.month);
+              const known = !start && !finished && !business && skipped(l.month);
               // A lesson-only month that opens from here.
               const lesson = !start && !finished && !!l.lessonOnly && !!l.lesson;
               return (
@@ -106,7 +114,7 @@ export function HowItWorks({
                   key={l.id}
                   onPress={() => tap(l.month)}
                   accessibilityRole="button"
-                  accessibilityLabel={canStart(l.month) ? `Start ${l.monthName}` : `${l.monthName}: coming soon`}
+                  accessibilityLabel={canStart(l.month) ? `Start ${l.monthName}` : `${l.monthName}: ${business ? p.businessOnly : "coming soon"}`}
                   style={({ pressed }) => [styles.monthCell, pressed ? { transform: [{ scale: 0.965 }] } : null]}
                 >
                 <View
@@ -123,14 +131,14 @@ export function HowItWorks({
                     style={[styles.monthState, start ? { color: colors.petrol950 } : known || finished ? { color: colors.success } : lesson ? { color: colors.yellow } : null]}
                     numberOfLines={1}
                   >
-                    {start ? t.start.toUpperCase() : finished ? "✓ Lesson done" : known ? `✓ ${t.known}` : lesson ? "LESSON ›" : l.title}
+                    {start ? t.start.toUpperCase() : finished ? "✓ Lesson done" : business ? p.businessOnly : known ? `✓ ${t.known}` : lesson ? "LESSON ›" : l.title}
                   </Text>
                 </View>
                 </Pressable>
               );
             })}
           </View>
-          <Text style={styles.note}>{t.knownNote}</Text>
+          <Text style={styles.note}>{businessOnly ? p.knownNote : t.knownNote}</Text>
         </View>
       </Enter>
     </ScreenLayout>

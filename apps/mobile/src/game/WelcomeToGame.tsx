@@ -1,6 +1,6 @@
 // "Welcome to the game": shown right after the onboarding. Confetti, the business badge,
 // the starter pack counting up, and the first mission.
-import type { Level } from "@piwco/content";
+import { tutorial, type Level } from "@piwco/content";
 import type { GameState } from "@piwco/engine";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, StyleSheet, Text, View } from "react-native";
@@ -11,6 +11,7 @@ import { Cta } from "../onboarding/ui";
 import { colors, font, springs } from "../theme";
 import { Confetti } from "./Confetti";
 import { formatPln } from "./format";
+import { usePrivatePlayer } from "./privatePlayer";
 
 const BUSINESS_NOUN: Record<string, string> = {
   gastronomy: "restaurant",
@@ -121,6 +122,8 @@ export function WelcomeToGame({
   warmUp?: boolean;
 }) {
   const industry = state.business.industry;
+  // Private persons have no company: no industry badge, home money and cushion instead.
+  const priv = usePrivatePlayer();
   const mission = level.mission;
   const fired = useRef(false);
   useEffect(() => {
@@ -137,16 +140,25 @@ export function WelcomeToGame({
         <Text style={styles.brandText}>PIWCO</Text>
       </View>
       <View style={styles.badgeWrap}>
-        <Badge industry={industry} />
+        {priv ? <View style={{ height: 8 }} /> : <Badge industry={industry} />}
         <Confetti delay={300} count={44} />
       </View>
       <Text style={styles.title}>Welcome to the game!</Text>
-      <Text style={styles.sub}>{`Your ${BUSINESS_NOUN[industry] ?? "business"} is open. Here's what you start with:`}</Text>
-      <View style={styles.stats}>
-        <Stat label="Company cash" value={state.business.cash} delay={500} />
-        <Stat label="Revenue / month" value={state.business.monthlyRevenue} delay={650} />
-        <Stat label="Home cash" value={state.personal.cash} delay={800} />
-      </View>
+      <Text style={styles.sub}>
+        {priv ? tutorial.privatePlayer.welcomeSub : `Your ${BUSINESS_NOUN[industry] ?? "business"} is open. Here's what you start with:`}
+      </Text>
+      {priv ? (
+        <View style={styles.stats}>
+          <Stat label="Home cash" value={state.personal.cash} delay={500} />
+          <Stat label="Cushion" value={state.personal.emergencyFund} delay={650} />
+        </View>
+      ) : (
+        <View style={styles.stats}>
+          <Stat label="Company cash" value={state.business.cash} delay={500} />
+          <Stat label="Revenue / month" value={state.business.monthlyRevenue} delay={650} />
+          <Stat label="Home cash" value={state.personal.cash} delay={800} />
+        </View>
+      )}
       {mission ? (
         <Enter from="below" distance={40} delay={900} spring={springs.lively} style={{ alignSelf: "stretch" }}>
           <View style={styles.missionShadow}>
