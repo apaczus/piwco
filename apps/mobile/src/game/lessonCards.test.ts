@@ -97,3 +97,45 @@ describe("September lesson: the numbers on the cards add up", () => {
     expect(a).toBeLessThan(b);
   });
 });
+
+describe("October lesson: the numbers on the cards add up", () => {
+  const oct = levels.find((l) => l.month === 10)!;
+  const all = JSON.stringify(oct.lesson);
+
+  it("is a lesson-only month with 8 cards, a quiz and a consolidation choice", () => {
+    expect(oct.lessonOnly).toBe(true);
+    expect(oct.lesson!.cards).toHaveLength(8);
+    expect(oct.lesson!.cards.some((c) => c.kind === "quiz")).toBe(true);
+  });
+
+  it("stress test: 8 000 of 40 000 = 20%, after −25% = 27%", () => {
+    expect(Math.round((8000 / 40000) * 100)).toBe(20);
+    expect(Math.round((8000 / 30000) * 100)).toBe(27);
+    expect(all).toContain("20% → 27%");
+  });
+
+  it("quiz: 200 000 over 15 years, 7% → 8% = +114 (about +115), about 20 500 over 15 years", () => {
+    const p7 = installment(200000, 0.07, 180);
+    const p8 = installment(200000, 0.08, 180);
+    expect(pln(p7)).toBe("1 798");
+    expect(pln(p8)).toBe("1 911");
+    expect(Math.round(p8 - p7)).toBe(114);
+    expect(Math.round(((p8 - p7) * 180) / 500) * 500).toBe(20500);
+    const quiz = oct.lesson!.cards.find((c) => c.kind === "quiz")!;
+    expect(quiz.kind === "quiz" && quiz.options[quiz.correct]).toBe("About +115 PLN");
+    expect(all).toContain("1 798 → 1 911");
+  });
+
+  it("consolidation: 50 400 now vs 60 000 (9 600 more), implied APR about 12% (decided)", () => {
+    expect(24 * (1200 + 900)).toBe(50400);
+    expect(60 * 1000).toBe(60000);
+    // What is left of the two loans if they run at 10%: about 45 500 PLN; 1 000 × 60 on that ≈ 12% APR.
+    const r = 0.1 / 12;
+    const left = (2100 * (1 - Math.pow(1 + r, -24))) / r;
+    expect(Math.round(left / 100) * 100).toBe(45500);
+    expect(Math.round(apr(left, 1000, 60) * 100)).toBe(12);
+    expect(all).toContain("50 400");
+    expect(all).toContain("60 000");
+    expect(all).toContain("9 600");
+  });
+});

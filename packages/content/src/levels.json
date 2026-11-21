@@ -456,7 +456,79 @@
       "Bank loan, leasing, overdraft or a bond issue: matching the instrument to the goal and the industry.",
       "How debt affects stability when sales drop or interest rates rise."
     ],
-    "challenge": "Finance new equipment or an expansion with debt while keeping safe liquidity."
+    "challenge": "Finance new equipment or an expansion with debt while keeping safe liquidity.",
+    "lessonOnly": true,
+    "lesson": {
+      "title": "Debt under pressure",
+      "cards": [
+        {
+          "kind": "info",
+          "title": "Stress-test your debt",
+          "text": "Before you borrow, ask two \"what ifs\": revenue drops 20–30%, or rates go up 1–2 points. Can you still pay every installment?",
+          "visual": {
+            "type": "number",
+            "value": "20% → 27%",
+            "label": "of revenue goes to an 8 000 PLN installment when 40 000 PLN revenue falls 25%"
+          }
+        },
+        {
+          "kind": "info",
+          "title": "Reference rates (WIBOR / NBP rate)",
+          "text": "A variable rate = the bank's margin + a reference rate (like WIBOR, which follows the NBP rate). When the central bank raises rates, your installment goes up at the next update, often every 3 or 6 months."
+        },
+        {
+          "kind": "quiz",
+          "question": "Your loan: 200 000 PLN for 15 years, variable rate 7%, about 1 800 PLN a month. The reference rate goes up by 1 point. How much does your installment go up?",
+          "options": [
+            "About +20 PLN",
+            "About +115 PLN",
+            "About +500 PLN"
+          ],
+          "correct": 1,
+          "explain": "+1 point sounds small: 1 798 → 1 911 PLN a month. Over 15 years that's about 20 500 PLN more."
+        },
+        {
+          "kind": "info",
+          "title": "Debt consolidation (konsolidacja)",
+          "text": "Several loans become one, usually with a lower installment. It helps when it also lowers the APR. It hurts when the lower installment only comes from more months: then you pay more in total."
+        },
+        {
+          "kind": "choice",
+          "question": "Two loans: 1 200 + 900 PLN a month, 24 months left. A consolidation offer: one installment of 1 000 PLN for 60 months.",
+          "left": {
+            "title": "Take it",
+            "text": "Pay 1 000 PLN a month instead of 2 100 PLN."
+          },
+          "right": {
+            "title": "Don't take it",
+            "text": "Keep paying 2 100 PLN a month for 2 more years."
+          },
+          "correct": "right",
+          "explain": "Now: 24 × 2 100 = 50 400 PLN. Consolidated: 60 × 1 000 = 60 000 PLN, about 9 600 PLN more and 3 extra years of debt. Take it only if you really can't pay 2 100 PLN a month."
+        },
+        {
+          "kind": "info",
+          "title": "Keep a safety buffer (liquidity)",
+          "text": "Keep cash for a few months of installments and costs. A simple check: what you can turn into cash soon should cover what you owe soon, with room to spare.",
+          "visual": {
+            "type": "number",
+            "value": "1.2–2",
+            "label": "current ratio: a usual safe range"
+          },
+          "readMore": "Current ratio: current assets ÷ short-term debts. Below 1, you can't cover what's due soon.\nQuick ratio: the same without stock, because stock can be hard to sell fast.\nCompanies can also borrow by issuing bonds: that's a topic for investors."
+        },
+        {
+          "statement": "If rates go up, only new loans get more expensive.",
+          "isFact": false,
+          "explain": "With a variable rate, your existing loan follows the reference rate too, so your installment goes up."
+        },
+        {
+          "statement": "A lower installment after consolidation always saves money.",
+          "isFact": false,
+          "explain": "If the lower installment comes from more months, you pay more in total. Check the total and the APR."
+        }
+      ]
+    }
   },
   {
     "id": "month_11",

@@ -341,7 +341,8 @@ function QuizFace({ card, number, onPick }: { card: QuizLessonCard; number: numb
   return (
     <>
       <CardTop chip="PICK ONE" number={number} />
-      <Text style={styles.question}>{card.question}</Text>
+      {/* Long questions get a smaller font so the answers stay on the card. */}
+      <Text style={[styles.question, card.question.length > 110 ? styles.questionLong : null]}>{card.question}</Text>
       <SkyToneContext.Provider value="day">
         <View style={styles.quizOptions}>
           {card.options.map((o, i) => (
@@ -850,6 +851,7 @@ const styles = StyleSheet.create({
   stampText: { fontFamily: font.extrabold, fontSize: 34, letterSpacing: 2 },
   stampTextSmall: { fontSize: 22, letterSpacing: 1 },
   quizOptions: { gap: 8, marginTop: 14, flex: 1 },
+  questionLong: { fontSize: 19, lineHeight: 25 },
   glow: { position: "absolute", top: 0, bottom: 0, width: 140 },
   footer: { minHeight: 68, justifyContent: "flex-end" },
   answers: { flexDirection: "row", gap: 14 },
