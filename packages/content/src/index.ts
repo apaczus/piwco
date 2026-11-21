@@ -82,18 +82,49 @@ export type LessonCard = {
   points: string[];
 };
 
-// One "myth or fact?" card. Texts may contain placeholders filled with the player's month report:
-// {revenue}, {costs}, {companyLeft}, {homeLeft} (see apps/mobile/src/game/lesson.ts).
+// Lesson cards (SwipeLesson). Texts may contain {placeholders}, filled by the app: January's lesson from the month
+// report ({revenue}, {costs}, {companyLeft}, {homeLeft}, apps/mobile/src/game/lesson.ts), the investing lesson from
+// Try 1 and the market (apps/mobile/src/invest/lessonValues.ts). An unknown placeholder is an error.
+
+// "Myth or fact?": swipe left = MYTH, right = FACT. `kind` is optional (January's cards have none).
 export type MythFactCard = {
+  kind?: "mythfact";
   statement: string;
   isFact: boolean;
   // Shown after the answer (right or wrong).
   explain: string;
 };
 
+// An explanation card: swipe either way or "Got it" = next, no score.
+export type InfoLessonCard = {
+  kind: "info";
+  title: string;
+  // 2–3 short sentences.
+  text: string;
+  // Optional mini visual: Return / Risk bars, one big number, or a few label + text rows.
+  visual?:
+    | { type: "bars"; returnLevel: number; riskLevel: number }
+    | { type: "number"; value: string; label: string }
+    | { type: "rows"; rows: { label: string; text: string }[] };
+  // Longer text behind a collapsed "Read more ▾" on the same card.
+  readMore?: string;
+};
+
+// Two options on one card (left half = A, right half = B): swipe towards the chosen one or tap it.
+export type ChoiceLessonCard = {
+  kind: "choice";
+  question: string;
+  left: { title: string; text: string };
+  right: { title: string; text: string };
+  correct: "left" | "right";
+  explain: string;
+};
+
+export type SwipeCard = MythFactCard | InfoLessonCard | ChoiceLessonCard;
+
 export type SwipeLesson = {
   title: string;
-  cards: MythFactCard[];
+  cards: SwipeCard[];
 };
 
 // The month's mission shown in the game: a title and steps the player ticks off.

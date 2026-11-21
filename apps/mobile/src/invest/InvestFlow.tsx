@@ -1,7 +1,10 @@
 // Investing chapter screens (month 8 "Stocks and bonds"). Rendered by GameFlow in phase "invest" (it keeps the sky,
 // ‹ back, transitions and sounds). Built only from the existing components; the line chart is the one new element.
-// Step 2 = Try 1: intro → split → one year fast → result. The lesson (step 3) is a placeholder for now.
-import { invest, type InvestInstrument } from "@piwco/content";
+// Try 1: intro → split → one year fast → result; then the swipe lesson. Try 2 (step 4) is a placeholder for now.
+import { invest, levels, type InvestInstrument } from "@piwco/content";
+import { fillCards } from "../game/lesson";
+import { SwipeLesson } from "../game/SwipeLesson";
+import { investLessonValues } from "./lessonValues";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { buzz, useReducedMotion } from "../onboarding/anim";
@@ -32,25 +35,12 @@ import {
   type RunEvent,
 } from "./investSession";
 import { LineChart, type ChartSeries } from "./LineChart";
+import { LevelBars } from "./LevelBars";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 function StepEyebrow({ state }: { state: InvestState }) {
   return <Eyebrow>{`Investing · Step ${stepOf(state.stage)} of ${INVEST_STEPS}`}</Eyebrow>;
-}
-
-// Return / Risk as 5 small bars (0–5).
-function LevelBars({ label, value, color }: { label: string; value: number; color: string }) {
-  return (
-    <View style={styles.levelRow}>
-      <Text style={styles.levelLabel}>{label}</Text>
-      <View style={styles.levelBars}>
-        {[1, 2, 3, 4, 5].map((i) => (
-          <View key={i} style={[styles.levelBar, { backgroundColor: i <= value ? color : colors.surface2 }]} />
-        ))}
-      </View>
-    </View>
-  );
 }
 
 // ---------- Screen 1: intro ----------
@@ -322,14 +312,35 @@ function LegendItem({ color, label, thick, dashed }: { color: string; label: str
   );
 }
 
-// ---------- Lesson: placeholder until step 3 ----------
+// ---------- Lesson (swipe cards, month 8 in levels.json, numbers from Try 1) ----------
 
-function LessonPlaceholder({ state, dir, onAgain }: { state: InvestState; dir: Dir; onAgain: () => void }) {
+function InvestLesson({ state, onDone }: { state: InvestState; onDone: () => void }) {
+  const [cards] = useState(() => {
+    const lesson = levels.find((l) => l.month === 8)?.lesson;
+    return lesson && state.try1 ? fillCards(lesson.cards, investLessonValues(state.try1)) : [];
+  });
+  const title = levels.find((l) => l.month === 8)?.lesson?.title ?? "Investing basics";
   return (
-    <ScreenLayout dir={dir} footer={<Cta label="Choose again" onPress={onAgain} />}>
+    <SwipeLesson
+      title={title}
+      monthName="August"
+      cards={cards}
+      eyebrow={`INVESTING · STEP ${stepOf(state.stage)} OF ${INVEST_STEPS}`}
+      doneSub="Now try again: you know more than a year ago."
+      doneLabel="Second try"
+      onDone={onDone}
+    />
+  );
+}
+
+// ---------- Try 2: placeholder until step 4 ----------
+
+function Try2Placeholder({ state, dir, onAgain }: { state: InvestState; dir: Dir; onAgain: () => void }) {
+  return (
+    <ScreenLayout dir={dir} footer={<Cta label="Play try 1 again" onPress={onAgain} />}>
       <StepEyebrow state={state} />
-      <Title>The lesson comes next</Title>
-      <Sub>Stocks, bonds, ETFs and diversification, card by card. It's being built in the next step.</Sub>
+      <Title>The second try comes next</Title>
+      <Sub>Horizon, monthly top-ups and the same market history. It's being built in the next step.</Sub>
     </ScreenLayout>
   );
 }
@@ -354,7 +365,9 @@ export function InvestScreen({
     case "result1":
       return <ResultScreen state={state} dir={dir} onNext={() => onChange({ ...state, stage: "lesson" })} />;
     case "lesson":
-      return <LessonPlaceholder state={state} dir={dir} onAgain={() => onChange({ ...state, stage: "split1" }, -1)} />;
+      return <InvestLesson state={state} onDone={() => onChange({ ...state, stage: "try2", lessonDone: true })} />;
+    case "try2":
+      return <Try2Placeholder state={state} dir={dir} onAgain={() => onChange({ ...state, stage: "split1" }, -1)} />;
   }
 }
 
@@ -370,10 +383,6 @@ const styles = StyleSheet.create({
   list: { gap: 10 },
   oneLiner: { fontFamily: font.regular, fontSize: 13.5, lineHeight: 19, color: colors.ink },
   levels: { flexDirection: "row", gap: 16 },
-  levelRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  levelLabel: { fontFamily: font.bold, fontSize: 11.5, color: colors.muted },
-  levelBars: { flexDirection: "row", gap: 3 },
-  levelBar: { width: 12, height: 6, borderRadius: 3 },
   chartCard: { backgroundColor: colors.surface, borderRadius: 16, padding: 14, gap: 10, borderWidth: 1.5, borderColor: colors.line },
   cardTitle: { fontFamily: font.extrabold, fontSize: 15, color: colors.petrol950 },
   runValue: { fontFamily: font.extrabold, fontSize: 24, fontVariant: ["tabular-nums"] },

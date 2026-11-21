@@ -1,5 +1,5 @@
 // Pure lesson helpers (no UI): fill the player's numbers into the "myth or fact?" cards.
-import type { MythFactCard, SwipeLesson } from "@piwco/content";
+import type { SwipeCard, SwipeLesson } from "@piwco/content";
 import type { MonthReport } from "@piwco/engine";
 import { formatPln } from "./format";
 
@@ -22,11 +22,38 @@ export function fillText(text: string, values: Record<string, string>): string {
   });
 }
 
-export function fillLesson(lesson: SwipeLesson, report: MonthReport): MythFactCard[] {
-  const values = lessonValues(report);
-  return lesson.cards.map((c) => ({
-    ...c,
-    statement: fillText(c.statement, values),
-    explain: fillText(c.explain, values),
-  }));
+// Fills every text of every card kind.
+export function fillCards(cards: SwipeCard[], values: Record<string, string>): SwipeCard[] {
+  const f = (t: string) => fillText(t, values);
+  return cards.map((c): SwipeCard => {
+    if (c.kind === "info") {
+      const v = c.visual;
+      return {
+        ...c,
+        title: f(c.title),
+        text: f(c.text),
+        readMore: c.readMore === undefined ? undefined : f(c.readMore),
+        visual:
+          v?.type === "number"
+            ? { ...v, value: f(v.value), label: f(v.label) }
+            : v?.type === "rows"
+              ? { ...v, rows: v.rows.map((r) => ({ label: f(r.label), text: f(r.text) })) }
+              : v,
+      };
+    }
+    if (c.kind === "choice") {
+      return {
+        ...c,
+        question: f(c.question),
+        left: { title: f(c.left.title), text: f(c.left.text) },
+        right: { title: f(c.right.title), text: f(c.right.text) },
+        explain: f(c.explain),
+      };
+    }
+    return { ...c, statement: f(c.statement), explain: f(c.explain) };
+  });
+}
+
+export function fillLesson(lesson: SwipeLesson, report: MonthReport): SwipeCard[] {
+  return fillCards(lesson.cards, lessonValues(report));
 }

@@ -175,7 +175,133 @@
       "Stocks (a share in a company's ownership and growth) and bonds (lending money to the issuer).",
       "Risk, liquidity, time horizon and diversification in personal and business portfolios."
     ],
-    "challenge": "Build a diversified portfolio with the capital you have and react to market swings."
+    "challenge": "Build a diversified portfolio with the capital you have and react to market swings.",
+    "lesson": {
+      "title": "Investing basics",
+      "cards": [
+        {
+          "kind": "info",
+          "title": "What is a stock?",
+          "text": "A stock is a small piece of a company. You earn when the company grows or pays out part of its profit (a dividend). The risk: the company can struggle, or even go bankrupt.",
+          "visual": {
+            "type": "bars",
+            "returnLevel": 5,
+            "riskLevel": 5
+          }
+        },
+        {
+          "kind": "info",
+          "title": "What is a bond?",
+          "text": "You lend money to the state or a company, and they pay you interest. Less risk than stocks, and less profit.",
+          "visual": {
+            "type": "bars",
+            "returnLevel": 2,
+            "riskLevel": 1
+          }
+        },
+        {
+          "kind": "info",
+          "title": "What is an ETF?",
+          "text": "One purchase, a whole basket of companies: for example the 500 biggest US companies. Low fees, and no single company can sink you.",
+          "visual": {
+            "type": "bars",
+            "returnLevel": 4,
+            "riskLevel": 3
+          }
+        },
+        {
+          "kind": "info",
+          "title": "Diversification",
+          "text": "Don't put all your eggs in one basket. When one company drops, it hurts much less if you own hundreds of them. {yourNovatech}"
+        },
+        {
+          "kind": "choice",
+          "question": "Which one gives you better diversification?",
+          "left": {
+            "title": "NovaTech",
+            "text": "One young company with one product, 3 years on the stock exchange."
+          },
+          "right": {
+            "title": "S&P 500 ETF",
+            "text": "500 of the biggest US companies in one fund."
+          },
+          "correct": "right",
+          "explain": "The ETF spreads your money over 500 companies, so one product recall is a tiny part of it. With NovaTech, its bad news is all your bad news."
+        },
+        {
+          "kind": "info",
+          "title": "The big ETFs",
+          "text": "Most people start with an index ETF: one fund that follows a whole market. Four of the best known:",
+          "visual": {
+            "type": "rows",
+            "rows": [
+              {
+                "label": "S&P 500",
+                "text": "500 biggest US companies"
+              },
+              {
+                "label": "Nasdaq-100",
+                "text": "US tech giants"
+              },
+              {
+                "label": "Dow Jones",
+                "text": "30 US blue chips"
+              },
+              {
+                "label": "Russell 2000",
+                "text": "2 000 smaller US companies"
+              }
+            ]
+          },
+          "readMore": "Liquidity: how fast you can buy or sell without losing on the price; big ETFs are very liquid.\nVolume: how much is traded every day; high volume usually means good liquidity.\nPrice: what one share costs right now.\nMarket cap: the price × all shares, so what the whole company is worth.\nP/E (price to earnings): how many years of today's profit the price equals; high means expensive or big hopes.\nDividend yield: the yearly dividend as a % of the price.\nVolatility: how much the price swings; higher means bigger ups and downs."
+        },
+        {
+          "kind": "info",
+          "title": "Short term vs long term",
+          "text": "Over one year anything can happen: big swings, real losses. Over 10 years the good and bad years even out.",
+          "visual": {
+            "type": "number",
+            "value": "{etf1y} → {etf10y}",
+            "label": "{start} in the S&P 500 ETF after 1 year and after 10 years, on the same market as your try"
+          }
+        },
+        {
+          "kind": "info",
+          "title": "Doing nothing costs money",
+          "text": "Prices rise about 5% a year, so money that sits still buys less every year. The account or a deposit is fine for a short time, but over the long run inflation wins.",
+          "visual": {
+            "type": "number",
+            "value": "{cashReal10y}",
+            "label": "what {start} on the account can buy after 10 years"
+          }
+        },
+        {
+          "kind": "info",
+          "title": "Start small, start now",
+          "text": "You don't need a lot of money or the right age. 100 PLN a month in a balanced mix grows the same way whether you start at 25, 45 or 65.",
+          "visual": {
+            "type": "number",
+            "value": "{monthly10y}",
+            "label": "100 PLN a month for 10 years ({monthlyPaid} paid in)"
+          }
+        },
+        {
+          "statement": "Investing is only for rich people.",
+          "isFact": false,
+          "explain": "You can start with 100 PLN a month. Time and regular top-ups matter more than a big start."
+        },
+        {
+          "statement": "Keeping money on the account is the safest choice in the long run.",
+          "isFact": false,
+          "explain": "It never drops, but inflation eats it: after 10 years {start} buys what {cashReal10y} buys today."
+        },
+        {
+          "statement": "A 12% drop means you lost that money for good.",
+          "isFact": false,
+          "explain": "Only if you sell. In your try the S&P 500 ETF fell 12% in July and won most of it back by December. Over 10 years it more than doubled."
+        }
+      ]
+    }
   },
   {
     "id": "month_09",

@@ -1,7 +1,11 @@
-// Interactive lesson after a completed month: a full-screen stack of "myth or fact?" cards.
-// Swipe left = MYTH, right = FACT, or tap the two symmetric buttons below the card (they react to the drag).
+// Interactive lesson: a full-screen stack of cards. Three kinds (same card, background, progress and buttons):
+// - "myth or fact?": swipe left = MYTH, right = FACT, or tap the two symmetric buttons (they react to the drag);
+// - info: an explanation (+ optional visual and "Read more ▾"); swipe either way or "Got it" = next, no score;
+// - choice: two options on the card's left / right half; swipe towards one or tap it.
 // Every answer gets an explanation; no penalty. Ends with a "Lesson complete" screen.
-import type { MythFactCard } from "@piwco/content";
+import type { ChoiceLessonCard, InfoLessonCard, SwipeCard } from "@piwco/content";
+import { ScrollView } from "react-native";
+import { LevelBars } from "../invest/LevelBars";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
@@ -14,12 +18,22 @@ import {
   View,
 } from "react-native";
 import { buzz, Enter, PressScale, useMountSpring, useReducedMotion } from "../onboarding/anim";
-import { Cta } from "../onboarding/ui";
+import { Cta, SkyToneContext } from "../onboarding/ui";
 import { colors, font, mix, springs } from "../theme";
 import { Confetti } from "./Confetti";
 import { SoundToggle } from "./SoundToggle";
 
 type Stage = "card" | "feedback" | "done";
+// Per card: right / wrong answer, "seen" (info card), or not reached yet.
+type Res = boolean | "seen" | null;
+
+const graded = (c: SwipeCard) => c.kind !== "info";
+// Swiped / tapped towards the right?
+function isCorrect(c: SwipeCard, right: boolean): boolean {
+  if (c.kind === "choice") return (c.correct === "right") === right;
+  if (c.kind === "info") return true;
+  return c.isFact === right;
+}
 
 // Pops in with a springy scale (used for segments, verdict marks, the final check).
 function Pop({ children, delay = 0, style }: { children?: ReactNode; delay?: number; style?: object }) {
@@ -32,13 +46,13 @@ function Pop({ children, delay = 0, style }: { children?: ReactNode; delay?: num
 }
 
 // One segment per card: answered right (green), wrong (orange), current (white outline), upcoming (dim).
-function Progress({ results, index }: { results: (boolean | null)[]; index: number }) {
+function Progress({ results, index }: { results: Res[]; index: number }) {
   return (
     <View style={styles.progress}>
       {results.map((r, i) => (
         <View key={i} style={[styles.segment, i === index && r === null ? styles.segmentCurrent : null]}>
           {r !== null ? (
-            <Pop style={[StyleSheet.absoluteFill, { borderRadius: 4, backgroundColor: r ? colors.success : colors.danger }]} />
+            <Pop style={[StyleSheet.absoluteFill, { borderRadius: 4, backgroundColor: r === "seen" ? colors.yellow : r ? colors.success : colors.danger }]} />
           ) : null}
         </View>
       ))}
@@ -61,14 +75,17 @@ function CardFace({
   threshold,
   reduced,
   panHandlers,
+  onPick,
 }: {
-  card: MythFactCard;
+  card: SwipeCard;
   number: number;
   pan: Animated.Value;
   width: number;
   threshold: number;
   reduced: boolean;
   panHandlers: object;
+  // Choice card: a half was tapped (true = right).
+  onPick: (right: boolean) => void;
 }) {
   const enter = useMountSpring(springs.lively);
   const rotate = pan.interpolate({
@@ -94,6 +111,12 @@ function CardFace({
         },
       ]}
     >
+      {card.kind === "info" ? (
+        <InfoFace card={card} number={number} />
+      ) : card.kind === "choice" ? (
+        <ChoiceFace card={card} number={number} right={fact} left={myth} onPick={onPick} />
+      ) : (
+        <>
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.tint, { backgroundColor: colors.success, opacity: Animated.multiply(fact, 0.14) }]} />
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.tint, { backgroundColor: colors.danger, opacity: Animated.multiply(myth, 0.14) }]} />
       <View style={styles.cardTop}>
@@ -112,7 +135,123 @@ function CardFace({
       <Animated.View pointerEvents="none" style={[styles.stamp, styles.stampMyth, { opacity: myth, transform: [{ rotate: "12deg" }, { scale: myth.interpolate({ inputRange: [0, 1], outputRange: [1.4, 1] }) }] }]}>
         <Text style={[styles.stampText, { color: colors.danger }]}>MYTH</Text>
       </Animated.View>
+        </>
+      )}
     </Animated.View>
+  );
+}
+
+function CardTop({ chip, number }: { chip: string; number: number }) {
+  return (
+    <View style={styles.cardTop}>
+      <View style={styles.chip}>
+        <Text style={styles.chipText}>{chip}</Text>
+      </View>
+      <Text style={styles.cardNo}>{`#${number}`}</Text>
+    </View>
+  );
+}
+
+function InfoVisual({ visual }: { visual: NonNullable<InfoLessonCard["visual"]> }) {
+  if (visual.type === "bars") {
+    return (
+      <View style={styles.visual}>
+        <LevelBars big label="Return" value={visual.returnLevel} color={colors.success} />
+        <LevelBars big label="Risk" value={visual.riskLevel} color={colors.danger} />
+      </View>
+    );
+  }
+  if (visual.type === "number") {
+    return (
+      <View style={[styles.visual, { alignItems: "flex-start" }]}>
+        <Text style={styles.visualNumber}>{visual.value}</Text>
+        <Text style={styles.visualLabel}>{visual.label}</Text>
+      </View>
+    );
+  }
+  return (
+    <View style={[styles.visual, { gap: 8 }]}>
+      {visual.rows.map((r) => (
+        <View key={r.label} style={styles.visualRow}>
+          <Text style={styles.visualRowLabel}>{r.label}</Text>
+          <Text style={styles.visualRowText}>{r.text}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+// Info card: title, 2–3 sentences, optional visual, optional "Read more ▾" (scrolls inside the card when open).
+function InfoFace({ card, number }: { card: InfoLessonCard; number: number }) {
+  const [more, setMore] = useState(false);
+  return (
+    <>
+      <CardTop chip="GOOD TO KNOW" number={number} />
+      <ScrollView style={{ flex: 1, marginVertical: 12 }} contentContainerStyle={styles.infoBody} showsVerticalScrollIndicator={false}>
+        <Text style={styles.infoTitle}>{card.title}</Text>
+        <Text style={styles.infoText}>{card.text}</Text>
+        {card.visual ? <InfoVisual visual={card.visual} /> : null}
+        {card.readMore ? (
+          <SkyToneContext.Provider value="day">
+            <PressScale
+              onPress={() => {
+                buzz("tick");
+                setMore((m) => !m);
+              }}
+              accessibilityLabel={more ? "Read less" : "Read more"}
+              style={{ alignSelf: "flex-start", paddingVertical: 6 }}
+            >
+              <Text style={styles.readMore}>{more ? "Read less ▴" : "Read more ▾"}</Text>
+            </PressScale>
+            {more ? (
+              <Enter from="below" distance={8}>
+                <Text style={styles.readMoreText}>{card.readMore}</Text>
+              </Enter>
+            ) : null}
+          </SkyToneContext.Provider>
+        ) : null}
+      </ScrollView>
+      <Text style={styles.swipeHint}>← swipe to continue →</Text>
+    </>
+  );
+}
+
+// Choice card: the question, then option A (left half) and B (right half); the half the card is dragged towards lights up.
+function ChoiceFace({
+  card,
+  number,
+  left,
+  right,
+  onPick,
+}: {
+  card: ChoiceLessonCard;
+  number: number;
+  left: Animated.AnimatedInterpolation<number>;
+  right: Animated.AnimatedInterpolation<number>;
+  onPick: (right: boolean) => void;
+}) {
+  const half = (side: "left" | "right") => {
+    const o = card[side];
+    const glow = side === "right" ? right : left;
+    return (
+      <PressScale key={side} onPress={() => onPick(side === "right")} accessibilityLabel={o.title} style={styles.half}>
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.halfGlow, { opacity: glow }]} />
+        <Text style={styles.halfTag}>{side === "left" ? "← A" : "B →"}</Text>
+        <Text style={styles.halfTitle}>{o.title}</Text>
+        <Text style={styles.halfText}>{o.text}</Text>
+      </PressScale>
+    );
+  };
+  return (
+    <>
+      <CardTop chip="WHICH ONE?" number={number} />
+      <Text style={styles.question}>{card.question}</Text>
+      <View style={styles.halves}>
+        {half("left")}
+        {half("right")}
+      </View>
+      <Text style={styles.swipeHint}>← swipe or tap →</Text>
+    </>
   );
 }
 
@@ -150,29 +289,41 @@ function AnswerButton({
   pan,
   threshold,
   onPress,
+  label,
+  color,
 }: {
   side: "myth" | "fact";
   pan: Animated.Value;
   threshold: number;
   onPress: () => void;
+  // Choice cards: the option's name and a neutral colour (the button mustn't give the answer away).
+  label?: string;
+  color?: string;
 }) {
-  const tint = side === "fact" ? colors.success : colors.danger;
+  const tint = color ?? (side === "fact" ? colors.success : colors.danger);
   const pull =
     side === "fact"
       ? pan.interpolate({ inputRange: [0, threshold], outputRange: [0, 1], extrapolate: "clamp" })
       : pan.interpolate({ inputRange: [-threshold, 0], outputRange: [1, 0], extrapolate: "clamp" });
   return (
     <Animated.View style={{ flex: 1, transform: [{ scale: pull.interpolate({ inputRange: [0, 1], outputRange: [1, 1.07] }) }] }}>
-      <PressScale onPress={onPress} accessibilityLabel={side === "fact" ? "Fact" : "Myth"} style={[styles.answer, { borderColor: mix(tint, colors.petrol900, 70) }]}>
+      <PressScale onPress={onPress} accessibilityLabel={label ?? (side === "fact" ? "Fact" : "Myth")} style={[styles.answer, { borderColor: mix(tint, colors.petrol900, 70) }]}>
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: tint, opacity: pull }]} />
-        <Text style={styles.answerText}>{side === "fact" ? "FACT  →" : "←  MYTH"}</Text>
+        <Text style={[styles.answerText, label ? styles.answerTextSmall : null]} numberOfLines={1} adjustsFontSizeToFit>
+          {label ? (side === "fact" ? `${label}  →` : `←  ${label}`) : side === "fact" ? "FACT  →" : "←  MYTH"}
+        </Text>
       </PressScale>
     </Animated.View>
   );
 }
 
 // Shown in place of the card after an answer: right or wrong, the real answer and why.
-function Feedback({ card, correct, reduced }: { card: MythFactCard; correct: boolean; reduced: boolean }) {
+function Feedback({ card, correct, reduced }: { card: SwipeCard; correct: boolean; reduced: boolean }) {
+  const choice = card.kind === "choice" ? card : null;
+  const fact = card.kind !== "info" && card.kind !== "choice" && card.isFact;
+  const chipTint = choice || fact ? colors.success : colors.danger;
+  const chipText = choice ? `ANSWER: ${choice[choice.correct].title.toUpperCase()}` : fact ? "IT'S A FACT" : "IT'S A MYTH";
+  const quoted = card.kind === "choice" ? card.question : card.kind === "info" ? card.title : card.statement;
   const tint = correct ? colors.success : colors.danger;
   const shake = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -197,16 +348,14 @@ function Feedback({ card, correct, reduced }: { card: MythFactCard; correct: boo
           </Animated.View>
           <View style={{ flex: 1, gap: 4 }}>
             <Text style={[styles.verdict, { color: tint }]}>{correct ? "Correct!" : "Not quite"}</Text>
-            <View style={[styles.answerChip, { backgroundColor: mix(card.isFact ? colors.success : colors.danger, colors.surface, 14) }]}>
-              <Text style={[styles.answerChipText, { color: card.isFact ? colors.success : colors.danger }]}>
-                {`IT'S A ${card.isFact ? "FACT" : "MYTH"}`}
-              </Text>
+            <View style={[styles.answerChip, { backgroundColor: mix(chipTint, colors.surface, 14) }]}>
+              <Text style={[styles.answerChipText, { color: chipTint }]}>{chipText}</Text>
             </View>
           </View>
         </View>
-        <Text style={styles.quoted}>{`“${card.statement}”`}</Text>
+        <Text style={styles.quoted}>{`“${quoted}”`}</Text>
         <View style={styles.divider} />
-        <Text style={styles.explain}>{card.explain}</Text>
+        <Text style={styles.explain}>{card.kind === "info" ? card.text : card.explain}</Text>
       </View>
     </Enter>
   );
@@ -253,7 +402,7 @@ export function SwipeLesson({
 }: {
   title: string;
   monthName: string;
-  cards: MythFactCard[];
+  cards: SwipeCard[];
   onDone: () => void;
   // Defaults: the month's lesson ("LESSON · JANUARY", "See your year").
   eyebrow?: string;
@@ -265,7 +414,7 @@ export function SwipeLesson({
   const threshold = width * 0.26;
   const [index, setIndex] = useState(0);
   const [stage, setStage] = useState<Stage>("card");
-  const [results, setResults] = useState<(boolean | null)[]>(() => cards.map(() => null));
+  const [results, setResults] = useState<Res[]>(() => cards.map(() => null));
   const pan = useRef(new Animated.Value(0)).current;
 
   // Refs so the (created once) pan responder always sees the current card.
@@ -289,7 +438,14 @@ export function SwipeLesson({
     }).start(() => {
       const card = l.cards[l.index];
       if (!card) return;
-      const correct = card.isFact === pickedFact;
+      // Info card: no score, straight to the next card.
+      if (!graded(card)) {
+        setResults((rs) => rs.map((r, i) => (i === l.index ? "seen" : r)));
+        pan.setValue(0);
+        goNext.current();
+        return;
+      }
+      const correct = isCorrect(card, pickedFact);
       buzz(correct ? "success" : "medium", correct ? "success" : "error");
       setResults((rs) => rs.map((r, i) => (i === l.index ? correct : r)));
       setStage("feedback");
@@ -342,8 +498,11 @@ export function SwipeLesson({
   }, [pan, reduced]);
 
   const card = cards[index];
-  if (!card) return null;
   const last = index === cards.length - 1;
+  // Latest `next` for the (created once) answer callback.
+  const goNext = useRef(() => {});
+  goNext.current = next;
+  if (!card) return null;
 
   function next() {
     if (last) {
@@ -364,7 +523,7 @@ export function SwipeLesson({
     return (
       <View style={{ flex: 1 }}>
         <Done
-          results={results.map((r) => r === true)}
+          results={results.filter((_, i) => graded(cards[i]!)).map((r) => r === true)}
           sub={doneSub ?? `${monthName}'s lesson is yours. You know where the cash goes.`}
           reduced={reduced}
         />
@@ -375,13 +534,17 @@ export function SwipeLesson({
 
   return (
     <View style={{ flex: 1 }}>
-      {/* Edge glows: the side the card is dragged towards lights up. */}
-      <Animated.View pointerEvents="none" style={[styles.glow, { left: -18, opacity: glowMyth }]}>
-        <LinearGradient colors={[mix(colors.danger, colors.petrol900, 75), "transparent"]} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
-      </Animated.View>
-      <Animated.View pointerEvents="none" style={[styles.glow, { right: -18, opacity: glowFact }]}>
-        <LinearGradient colors={["transparent", mix(colors.success, colors.petrol900, 75)]} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
-      </Animated.View>
+      {/* Edge glows (myth / fact only): the side the card is dragged towards lights up. */}
+      {card.kind !== "info" && card.kind !== "choice" ? (
+        <>
+          <Animated.View pointerEvents="none" style={[styles.glow, { left: -18, opacity: glowMyth }]}>
+            <LinearGradient colors={[mix(colors.danger, colors.petrol900, 75), "transparent"]} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
+          </Animated.View>
+          <Animated.View pointerEvents="none" style={[styles.glow, { right: -18, opacity: glowFact }]}>
+            <LinearGradient colors={["transparent", mix(colors.success, colors.petrol900, 75)]} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
+          </Animated.View>
+        </>
+      ) : null}
 
       <View style={styles.header}>
         <Text style={styles.eyebrow}>{eyebrow ?? `LESSON · ${monthName.toUpperCase()}`}</Text>
@@ -406,6 +569,7 @@ export function SwipeLesson({
               threshold={threshold}
               reduced={reduced}
               panHandlers={responder.panHandlers}
+              onPick={answer}
             />
           </>
         ) : (
@@ -414,7 +578,14 @@ export function SwipeLesson({
       </View>
 
       <View style={styles.footer}>
-        {stage === "card" ? (
+        {stage === "card" && card.kind === "info" ? (
+          <Cta label="Got it" onPress={() => answer(true)} />
+        ) : stage === "card" && card.kind === "choice" ? (
+          <View style={styles.answers}>
+            <AnswerButton side="myth" pan={pan} threshold={threshold} onPress={() => answer(false)} label={card.left.title} color={colors.petrol700} />
+            <AnswerButton side="fact" pan={pan} threshold={threshold} onPress={() => answer(true)} label={card.right.title} color={colors.petrol700} />
+          </View>
+        ) : stage === "card" ? (
           <View style={styles.answers}>
             <AnswerButton side="myth" pan={pan} threshold={threshold} onPress={() => answer(false)} />
             <AnswerButton side="fact" pan={pan} threshold={threshold} onPress={() => answer(true)} />
@@ -481,6 +652,25 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   answerText: { fontFamily: font.extrabold, fontSize: 18, letterSpacing: 1.6, color: colors.onPetrol },
+  answerTextSmall: { fontSize: 15, letterSpacing: 0.4, paddingHorizontal: 10 },
+  infoBody: { gap: 12, flexGrow: 1, justifyContent: "center" },
+  infoTitle: { fontFamily: font.extrabold, fontSize: 27, lineHeight: 34, color: colors.petrol950 },
+  infoText: { fontFamily: font.medium, fontSize: 17, lineHeight: 25, color: colors.ink },
+  visual: { backgroundColor: colors.surface2, borderRadius: 16, padding: 14, gap: 10 },
+  visualNumber: { fontFamily: font.extrabold, fontSize: 34, color: colors.petrol950, fontVariant: ["tabular-nums"] },
+  visualLabel: { fontFamily: font.semibold, fontSize: 14, lineHeight: 20, color: colors.muted },
+  visualRow: { gap: 1 },
+  visualRowLabel: { fontFamily: font.extrabold, fontSize: 15, color: colors.petrol900 },
+  visualRowText: { fontFamily: font.medium, fontSize: 14, color: colors.muted },
+  readMore: { fontFamily: font.extrabold, fontSize: 14.5, color: colors.petrol700 },
+  readMoreText: { fontFamily: font.regular, fontSize: 14.5, lineHeight: 21, color: colors.ink },
+  question: { fontFamily: font.extrabold, fontSize: 24, lineHeight: 31, color: colors.petrol950, marginTop: 14 },
+  halves: { flex: 1, flexDirection: "row", gap: 10, marginVertical: 14 },
+  half: { flex: 1, borderRadius: 18, borderWidth: 1.5, borderColor: colors.line, padding: 12, gap: 6, overflow: "hidden" },
+  halfGlow: { backgroundColor: colors.petrol100 },
+  halfTag: { fontFamily: font.extrabold, fontSize: 12, letterSpacing: 1, color: colors.petrol700 },
+  halfTitle: { fontFamily: font.extrabold, fontSize: 18, lineHeight: 23, color: colors.petrol950 },
+  halfText: { fontFamily: font.medium, fontSize: 13.5, lineHeight: 19, color: colors.muted },
   feedback: { flex: 1, overflow: "hidden", gap: 16, paddingTop: 30 },
   feedbackBand: { position: "absolute", left: 0, right: 0, top: 0, height: 8 },
   verdictRow: { flexDirection: "row", alignItems: "center", gap: 16 },

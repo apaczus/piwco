@@ -1,14 +1,14 @@
 // Investing chapter (month 8): pure chapter state (no UI). Kept in the game Session, in memory only (not in GameState).
-// Stages so far (step 2): intro → split1 → run1 → result1 → lesson (placeholder until step 3).
+// Stages so far: intro → split1 → run1 → result1 → lesson → try2 (placeholder until step 4).
 import { invest } from "@piwco/content";
 import { compareAlternatives, marketPath, simulatePortfolio, splitByShares, type Alternatives, type SimulateResult } from "@piwco/engine";
 import { formatPln } from "../game/format";
 
-export type InvestStage = "intro" | "split1" | "run1" | "result1" | "lesson";
+export type InvestStage = "intro" | "split1" | "run1" | "result1" | "lesson" | "try2";
 
 // The chapter has 11 screens in total ("INVESTING · Step n of 11").
 export const INVEST_STEPS = 11;
-const STEP_OF: Record<InvestStage, number> = { intro: 1, split1: 2, run1: 3, result1: 4, lesson: 5 };
+const STEP_OF: Record<InvestStage, number> = { intro: 1, split1: 2, run1: 3, result1: 4, lesson: 5, try2: 6 };
 export const stepOf = (stage: InvestStage) => STEP_OF[stage];
 
 export type InvestTry = {
@@ -24,6 +24,8 @@ export type InvestState = {
   // Slider amounts (PLN) for the instruments other than cash; cash = the rest.
   draft: Record<string, number>;
   try1: InvestTry | null;
+  // The swipe lesson was finished (Future tower level 2, step 5).
+  lessonDone: boolean;
 };
 
 // One market history for the whole chapter (deterministic, the same for every player).
@@ -32,7 +34,7 @@ export const START = invest.startAmount;
 export const TRY1_MONTHS = 12;
 
 export function newInvest(): InvestState {
-  return { stage: "intro", draft: {}, try1: null };
+  return { stage: "intro", draft: {}, try1: null, lessonDone: false };
 }
 
 // Placed on the sliders (everything except cash).
@@ -87,12 +89,15 @@ export function backStage(stage: InvestStage): InvestStage | null {
       return "split1";
     case "lesson":
       return "result1";
+    case "try2":
+      return "lesson";
   }
 }
 
 // Tries by day, results and the lesson at night (decided).
 export function investNight(stage: InvestStage): boolean {
   return stage === "result1" || stage === "lesson";
+  // try2: day (the second try is played in daylight, like the first).
 }
 
 export function instrumentName(id: string): string {
