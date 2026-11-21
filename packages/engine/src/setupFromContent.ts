@@ -80,6 +80,7 @@ export function buildInitialSetup(
       policies: { liability: false, property: false, equipment: false },
     },
     personal: {
+      income: answers ? answers.income : household.referenceIncome,
       cash: answers ? round50(household.startingCash * scale) : household.startingCash,
       emergencyFund: answers ? round50(Math.max(0, answers.cushionMonths) * monthlyBills) : household.emergencyFund,
       monthlySpending,

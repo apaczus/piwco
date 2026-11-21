@@ -13,6 +13,7 @@ export function makeSetup(): InitialSetup {
       policies: { liability: false, property: false, equipment: false },
     },
     personal: {
+      income: 5_500,
       cash: 3_000,
       emergencyFund: 0,
       monthlySpending: {

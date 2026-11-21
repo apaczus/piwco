@@ -38,6 +38,8 @@ export type BusinessState = {
 };
 
 export type PersonalState = {
+  // Monthly net income D from the onboarding (scales personal event amounts).
+  income: number;
   cash: number;
   emergencyFund: number;
   // The player's household budget for the month (set with the "set_household_budget" action).
@@ -75,6 +77,22 @@ export type GameState = {
   personal: PersonalState;
   // Every successful action, in order. The server replays this log.
   log: LogEntry[];
+  // Onboarding profile flags (car_ac, home_insured, payday_loan, ...): which events hit and how.
+  flags: string[];
+  // The random event drawn at the start of the current month (null = none drawn / none applies).
+  event: ActiveEvent | null;
+};
+
+export type ActiveEvent = {
+  id: string;
+  month: number;
+  side: "personal" | "business";
+  effect: "cost" | "late_payment";
+  // PLN, already scaled to the player's income or the company's revenue.
+  amount: number;
+  // "full" = the player has to deal with it; "prepared" = a policy / earlier decision absorbs it.
+  variant: "full" | "prepared";
+  coveredBy: "policy" | "flag" | null;
 };
 
 export type ActionResult =

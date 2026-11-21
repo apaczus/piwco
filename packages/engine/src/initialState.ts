@@ -5,6 +5,8 @@ import type { BusinessState, GameState, PersonalState } from "./state";
 // (industry content + onboarding answers); the engine has no amounts of its own.
 export type InitialSetup = {
   seed: number;
+  // Onboarding profile flags (optional; none = baseline player).
+  flags?: string[];
   business: Omit<BusinessState, "arrears">;
   personal: Omit<PersonalState, "arrears">;
 };
@@ -30,5 +32,7 @@ export function createInitialState(setup: InitialSetup): GameState {
       arrears: 0,
     },
     log: [],
+    flags: [...(setup.flags ?? [])],
+    event: null,
   };
 }

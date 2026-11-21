@@ -114,6 +114,7 @@ export function buildProfile(s: OnboardingState): OnboardingProfile {
   if (a.car === "oc") flags.push("car_oc_only");
   else if (a.car === "ac") flags.push("car_ac");
   if (a.home === "own_no") flags.push("home_uninsured");
+  else if (a.home === "own_ins") flags.push("home_insured");
   if (a.life === "yes") flags.push("life_insurance");
   if (a.health === "yes") flags.push("health_insurance");
   if (a.separate === "no") flags.push("mixed_accounts");

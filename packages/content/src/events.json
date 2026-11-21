@@ -1,0 +1,89 @@
+[
+  {
+    "id": "client_pays_late",
+    "side": "business",
+    "title": "Your client pays late",
+    "notification": "A key client just moved this month's invoice to next month. Part of your revenue won't arrive on time.",
+    "months": [1],
+    "weight": 1,
+    "effect": "late_payment",
+    "amount": { "base": "revenue", "share": 0.06, "min": 2000, "max": 12000 }
+  },
+  {
+    "id": "equipment_failure",
+    "side": "business",
+    "title": "Your key equipment broke down",
+    "notification": "The machine your company relies on stopped mid-order. The repair can't wait.",
+    "months": [1, 3],
+    "weight": 1,
+    "effect": "cost",
+    "amount": { "base": "revenue", "share": 0.06, "min": 2000, "max": 12000 },
+    "protectedBy": { "policy": "equipment" }
+  },
+  {
+    "id": "washing_machine",
+    "side": "personal",
+    "title": "Your washing machine died",
+    "notification": "It stopped mid-cycle. A repair or a new one: either way, you pay this month.",
+    "months": [2],
+    "weight": 1,
+    "effect": "cost",
+    "amount": { "base": "income", "share": 0.33, "min": 850, "max": 2500 }
+  },
+  {
+    "id": "dental_emergency",
+    "side": "personal",
+    "title": "Toothache that can't wait",
+    "notification": "Sharp pain at night. The dentist says root canal, this week.",
+    "months": [2],
+    "weight": 1,
+    "effect": "cost",
+    "amount": { "base": "income", "share": 0.25, "min": 800, "max": 2500 },
+    "protectedBy": { "policy": "health", "flag": "health_insurance" }
+  },
+  {
+    "id": "broken_phone",
+    "side": "personal",
+    "title": "Your phone is broken",
+    "notification": "It slipped, the screen is dead, and it's the phone you run your business on.",
+    "months": [2],
+    "weight": 1,
+    "effect": "cost",
+    "amount": { "base": "income", "share": 0.4, "min": 1200, "max": 4000 }
+  },
+  {
+    "id": "car_damage",
+    "side": "personal",
+    "title": "You damaged your car",
+    "notification": "A parking manoeuvre went wrong. The bumper and a headlight need a workshop.",
+    "months": [3],
+    "weight": 1,
+    "effect": "cost",
+    "amount": { "base": "income", "share": 0.6, "min": 1800, "max": 6000 },
+    "requires": "car",
+    "protectedBy": { "flag": "car_ac" }
+  },
+  {
+    "id": "apartment_damage",
+    "side": "personal",
+    "title": "A pipe burst at home",
+    "notification": "Water on the floor, a soaked wall and a plumber who can come today, for a price.",
+    "months": [3],
+    "weight": 1,
+    "effect": "cost",
+    "amount": { "base": "income", "share": 1.0, "min": 3000, "max": 10000 },
+    "requires": "own_house",
+    "protectedBy": { "flag": "home_insured" }
+  },
+  {
+    "id": "medical_emergency",
+    "side": "personal",
+    "title": "You need a doctor now",
+    "notification": "A sudden illness: private consultation and tests, results needed fast.",
+    "months": [3],
+    "weight": 1,
+    "effect": "cost",
+    "amount": { "base": "income", "share": 0.5, "min": 2000, "max": 6000 },
+    "protectedBy": { "policy": "health", "flag": "health_insurance" }
+  }
+]

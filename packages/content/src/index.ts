@@ -1,6 +1,7 @@
 import householdData from "./household.json";
 import industriesData from "./industries.json";
 import cityData from "./city.json";
+import eventsData from "./events.json";
 import levelsData from "./levels.json";
 import onboardingData from "./onboarding.json";
 
@@ -182,3 +183,28 @@ export type CityThresholds = {
 };
 
 export const cityThresholds: CityThresholds = cityData;
+
+// Random events (MVP pool, Claude's numbers for team review). Drawn by the engine at the start of a month.
+export type GameEventDef = {
+  id: string;
+  side: "personal" | "business";
+  title: string;
+  // The push-notification sentence.
+  notification: string;
+  // Months in which it can be drawn.
+  months: number[];
+  // Relative chance among the month's candidates.
+  weight: number;
+  // "cost" = a one-off bill; "late_payment" = part of this month's revenue arrives next month.
+  effect: "cost" | "late_payment";
+  // Size: share of the player's monthly income D (personal) or of the company's monthly revenue (business),
+  // clamped to [min, max] PLN.
+  amount: { base: "income" | "revenue"; share: number; min: number; max: number };
+  // Not drawn for a player without a car / own house.
+  requires?: "car" | "own_house";
+  // Already covered by a policy in the game state or by an onboarding flag ("Prepared" shortcut).
+  protectedBy?: { policy?: string; flag?: string };
+};
+
+// The JSON is not validated at runtime; this cast gives the literal types (side, effect, base).
+export const gameEvents = eventsData as GameEventDef[];
