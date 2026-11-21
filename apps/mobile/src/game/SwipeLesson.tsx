@@ -350,7 +350,17 @@ function Feedback({ card, correct, reduced }: { card: SwipeCard; correct: boolea
   return (
     <Enter from="below" spring={springs.lively} style={StyleSheet.absoluteFill}>
       <View style={[styles.card, styles.feedback]}>
-        <View style={[styles.feedbackBand, { backgroundColor: tint }]} />
+        {choice || card.kind === "info" ? (
+          <View style={[styles.feedbackBand, { backgroundColor: tint }]} />
+        ) : (
+          // Myth or fact, impossible to miss: a full-width banner in the answer's colour (the same as its button).
+          <View style={[styles.truthBanner, { backgroundColor: fact ? colors.success : colors.danger }]}>
+            <Text style={styles.truthSmall}>{"IT'S A"}</Text>
+            <Pop delay={60}>
+              <Text style={styles.truthBig}>{fact ? "FACT" : "MYTH"}</Text>
+            </Pop>
+          </View>
+        )}
         <View style={styles.verdictRow}>
           <Animated.View style={{ transform: [{ translateX: shake }] }}>
             <Pop delay={80} style={[styles.verdictMark, { backgroundColor: tint }]}>
@@ -360,9 +370,13 @@ function Feedback({ card, correct, reduced }: { card: SwipeCard; correct: boolea
           </Animated.View>
           <View style={{ flex: 1, gap: 4 }}>
             <Text style={[styles.verdict, { color: tint }]}>{correct ? "Correct!" : "Not quite"}</Text>
-            <View style={[styles.answerChip, { backgroundColor: mix(chipTint, colors.surface, 14) }]}>
-              <Text style={[styles.answerChipText, { color: chipTint }]}>{chipText}</Text>
-            </View>
+            {choice ? (
+              <View style={[styles.answerChip, { backgroundColor: mix(chipTint, colors.surface, 14) }]}>
+                <Text style={[styles.answerChipText, { color: chipTint }]}>{chipText}</Text>
+              </View>
+            ) : (
+              <Text style={styles.youSaid}>{`You said ${(correct ? fact : !fact) ? "FACT" : "MYTH"}`}</Text>
+            )}
           </View>
         </View>
         <Text style={styles.quoted}>{`“${quoted}”`}</Text>
@@ -685,11 +699,15 @@ const styles = StyleSheet.create({
   halfTitle: { fontFamily: font.extrabold, fontSize: 18, lineHeight: 23, color: colors.petrol950 },
   halfText: { fontFamily: font.medium, fontSize: 13.5, lineHeight: 19, color: colors.muted },
   feedback: { flex: 1, overflow: "hidden", gap: 16, paddingTop: 30 },
+  truthBanner: { marginHorizontal: -24, marginTop: -30, paddingVertical: 14, alignItems: "center", borderTopLeftRadius: 28, borderTopRightRadius: 28 },
+  truthSmall: { fontFamily: font.extrabold, fontSize: 13, letterSpacing: 2, color: colors.surface, opacity: 0.85 },
+  truthBig: { fontFamily: font.extrabold, fontSize: 54, lineHeight: 62, letterSpacing: 6, color: colors.surface },
+  youSaid: { fontFamily: font.bold, fontSize: 14, color: colors.muted },
   feedbackBand: { position: "absolute", left: 0, right: 0, top: 0, height: 8 },
   verdictRow: { flexDirection: "row", alignItems: "center", gap: 16 },
-  verdictMark: { width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center" },
-  verdictMarkText: { fontFamily: font.extrabold, fontSize: 36, color: colors.surface },
-  verdict: { fontFamily: font.extrabold, fontSize: 30, lineHeight: 36 },
+  verdictMark: { width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" },
+  verdictMarkText: { fontFamily: font.extrabold, fontSize: 28, color: colors.surface },
+  verdict: { fontFamily: font.extrabold, fontSize: 24, lineHeight: 30 },
   answerChip: { alignSelf: "flex-start", borderRadius: 99, paddingVertical: 4, paddingHorizontal: 10 },
   answerChipText: { fontFamily: font.extrabold, fontSize: 12, letterSpacing: 1 },
   quoted: { fontFamily: font.semibold, fontSize: 15, lineHeight: 22, color: colors.muted },

@@ -12,6 +12,10 @@ import {
   setDraft,
   START,
   startTry1,
+  startTry2,
+  retryTry2,
+  try2Better,
+  try2Edge,
 } from "./investSession";
 
 describe("investing chapter: try 1", () => {
@@ -71,5 +75,53 @@ describe("investing chapter: try 1", () => {
     expect(backStage("split1")).toBe("intro");
     expect(backStage("result1")).toBe("split1");
     expect(backStage("intro")).toBeNull();
+  });
+});
+
+describe("investing chapter: try 2", () => {
+  const afterTry1 = (draft: Record<string, number>) => startTry1(Object.entries(draft).reduce((s, [id, v]) => setDraft(s, id, v), newInvest()));
+  const try2 = (s: ReturnType<typeof newInvest>, horizon: number, draft2: Record<string, number>, topUp: number) =>
+    startTry2({ ...s, horizon, draft2, topUp });
+
+  it("(a) all NovaTech for a year, then 10 years 60% ETF + 40% bonds + 100 PLN/month: clearly better", () => {
+    const s = try2(afterTry1({ stock: 10000 }), 10, { etf: 6000, bonds: 4000 }, 100);
+    expect(s.stage).toBe("run2");
+    expect(s.try2!.result.nominal).toBe(38073);
+    expect(s.try2!.result.contributed).toBe(22000);
+    expect(try2Edge(s)).toBeGreaterThan(5000);
+    expect(try2Better(s)).toBe(true);
+    // The bad years of what the player holds show up during the run.
+    expect(runEvents(s.try2!).map((e) => e.month)).toEqual([7, 72, 120]);
+  });
+
+  it("(b) all on the account in both tries: a real loss both times, and longer is worse", () => {
+    const s = try2(afterTry1({}), 10, {}, 0);
+    expect(s.try1!.result.realGain).toBeLessThan(0);
+    expect(s.try2!.result.realGain).toBeLessThan(0);
+    expect(try2Better(s)).toBe(false);
+  });
+
+  it("(c) a balanced mix in try 1, the same mix for 5 years beats it", () => {
+    const mix = { etf: 6000, bonds: 3000, deposit: 1000 };
+    const s = try2(afterTry1(mix), 5, mix, 0);
+    expect(try2Better(s)).toBe(true);
+  });
+
+  it("all NovaTech again for 1 year is not better (honest), and Try again keeps the choices", () => {
+    const s = try2(afterTry1({ stock: 10000 }), 1, { stock: 10000 }, 0);
+    expect(try2Better(s)).toBe(false);
+    const r = retryTry2(s);
+    expect(r.stage).toBe("horizon");
+    expect(r.try2).toBeNull();
+    expect(r.horizon).toBe(1);
+    expect(r.draft2).toEqual({ stock: 10000 });
+    expect(try2({ ...r }, 10, { etf: 6000, bonds: 4000 }, 100).attempts).toBe(2);
+  });
+
+  it("back goes one screen at a time through try 2", () => {
+    expect(backStage("horizon")).toBe("lesson");
+    expect(backStage("split2")).toBe("horizon");
+    expect(backStage("topup")).toBe("split2");
+    expect(backStage("result2")).toBe("topup");
   });
 });

@@ -1,14 +1,37 @@
 // Investing chapter (month 8): pure chapter state (no UI). Kept in the game Session, in memory only (not in GameState).
-// Stages so far: intro → split1 → run1 → result1 → lesson → try2 (placeholder until step 4).
+// Stages: intro → split1 → run1 → result1 → lesson → horizon → split2 → topup → run2 → result2 → city (step 5 placeholder).
 import { invest } from "@piwco/content";
 import { compareAlternatives, marketPath, simulatePortfolio, splitByShares, type Alternatives, type SimulateResult } from "@piwco/engine";
 import { formatPln } from "../game/format";
 
-export type InvestStage = "intro" | "split1" | "run1" | "result1" | "lesson" | "try2";
+export type InvestStage =
+  | "intro"
+  | "split1"
+  | "run1"
+  | "result1"
+  | "lesson"
+  | "horizon"
+  | "split2"
+  | "topup"
+  | "run2"
+  | "result2"
+  | "city";
 
 // The chapter has 11 screens in total ("INVESTING · Step n of 11").
 export const INVEST_STEPS = 11;
-const STEP_OF: Record<InvestStage, number> = { intro: 1, split1: 2, run1: 3, result1: 4, lesson: 5, try2: 6 };
+const STEP_OF: Record<InvestStage, number> = {
+  intro: 1,
+  split1: 2,
+  run1: 3,
+  result1: 4,
+  lesson: 5,
+  horizon: 6,
+  split2: 7,
+  topup: 8,
+  run2: 9,
+  result2: 10,
+  city: 11,
+};
 export const stepOf = (stage: InvestStage) => STEP_OF[stage];
 
 export type InvestTry = {
@@ -26,6 +49,13 @@ export type InvestState = {
   try1: InvestTry | null;
   // The swipe lesson was finished (Future tower level 2, step 5).
   lessonDone: boolean;
+  // Try 2 choices: horizon in years, sliders (start from Try 1's), monthly top-up in PLN.
+  horizon: number | null;
+  draft2: Record<string, number> | null;
+  topUp: number | null;
+  try2: InvestTry | null;
+  // Try 2 attempts so far (no limit; "Try again" starts a new one).
+  attempts: number;
 };
 
 // One market history for the whole chapter (deterministic, the same for every player).
@@ -34,7 +64,7 @@ export const START = invest.startAmount;
 export const TRY1_MONTHS = 12;
 
 export function newInvest(): InvestState {
-  return { stage: "intro", draft: {}, try1: null, lessonDone: false };
+  return { stage: "intro", draft: {}, try1: null, lessonDone: false, horizon: null, draft2: null, topUp: null, try2: null, attempts: 0 };
 }
 
 // Placed on the sliders (everything except cash).
@@ -76,6 +106,29 @@ export function startTry1(s: InvestState): InvestState {
   return { ...s, stage: "run1", try1: runTry(allocationOf(s.draft), TRY1_MONTHS, 0) };
 }
 
+// Try 2: "Invest for N years".
+export function startTry2(s: InvestState): InvestState {
+  const years = s.horizon ?? 1;
+  return { ...s, stage: "run2", try2: runTry(allocationOf(s.draft2 ?? s.draft), years * 12, s.topUp ?? 0), attempts: s.attempts + 1 };
+}
+
+// How much better Try 2 did than Try 1: the gain in today's money after what was paid in (top-ups don't count as
+// a win by themselves). Positive = better.
+export function try2Edge(s: InvestState): number {
+  if (!s.try1 || !s.try2) return 0;
+  return s.try2.result.realGain - s.try1.result.realGain;
+}
+
+// Try 2 beat Try 1 in real terms (Future tower level 3, decided).
+export function try2Better(s: InvestState): boolean {
+  return try2Edge(s) > 0;
+}
+
+// "Try again": back to the horizon, the last choices stay selected.
+export function retryTry2(s: InvestState): InvestState {
+  return { ...s, stage: "horizon", try2: null };
+}
+
 // ‹ back, one screen at a time. null = leave the chapter (handled by the game).
 export function backStage(stage: InvestStage): InvestStage | null {
   switch (stage) {
@@ -89,15 +142,24 @@ export function backStage(stage: InvestStage): InvestStage | null {
       return "split1";
     case "lesson":
       return "result1";
-    case "try2":
+    case "horizon":
       return "lesson";
+    case "split2":
+      return "horizon";
+    case "topup":
+      return "split2";
+    case "run2":
+      return "topup";
+    case "result2":
+      return "topup";
+    case "city":
+      return "result2";
   }
 }
 
 // Tries by day, results and the lesson at night (decided).
 export function investNight(stage: InvestStage): boolean {
-  return stage === "result1" || stage === "lesson";
-  // try2: day (the second try is played in daylight, like the first).
+  return stage === "result1" || stage === "lesson" || stage === "result2" || stage === "city";
 }
 
 export function instrumentName(id: string): string {
@@ -120,6 +182,23 @@ export function runEvents(t: InvestTry): RunEvent[] {
       drop: e.change < 0,
     });
   }
+  // Longer runs: the bad years of what the player holds (from year 2; year 1 has the pinned events above).
+  for (const inst of invest.instruments) {
+    if (!(t.allocation[inst.id] > 0)) continue;
+    inst.market.yearly.forEach((r, y) => {
+      const end = (y + 1) * 12;
+      if (y === 0 || end > t.months || r > -0.12) return;
+      const before = t.result.byInstrument[inst.id]?.[end - 12] ?? 0;
+      const after = t.result.byInstrument[inst.id]?.[end] ?? 0;
+      const name = instrumentName(inst.id).replace(/ \(.*\)$/, "");
+      out.push({
+        month: end,
+        title: `Year ${y + 1}: ${name} ${Math.round(r * 100)}%`.replace("-", "−"),
+        text: `Your ${name}: ${formatPln(before)} → ${formatPln(after)}. Hold on: the market has bad years too.`,
+        drop: true,
+      });
+    });
+  }
   const years = Math.round(t.months / 12);
   const pct = Math.round(invest.inflation * 100);
   out.push({
@@ -128,6 +207,7 @@ export function runEvents(t: InvestTry): RunEvent[] {
     text: `What cost 100 PLN at the start now costs ${Math.round(100 * Math.pow(1 + invest.inflation, t.months / 12))} PLN.`,
     drop: true,
   });
+  // Stable: on the same month the market news comes before the inflation note.
   return out.sort((a, b) => a.month - b.month);
 }
 
