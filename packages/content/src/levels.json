@@ -124,30 +124,29 @@
     "id": "month_05",
     "month": 5,
     "monthName": "May",
-    "title": "Personal and business debt",
-    "subtitle": "When a loan helps and when it hurts",
+    "title": "Financial leverage",
+    "subtitle": "Multiplying profit and risk",
     "playable": false,
-    "skipFor": ["advanced"],
     "topics": [
-      "What to do when current funds are not enough.",
-      "\"Good\" debt (investing in growth or assets) vs. \"bad\" debt (paying for everyday spending or covering losses).",
-      "The cost of money over time: interest, APR, fees and the repayment schedule."
+      "Debt and financial assets combined in one mechanism.",
+      "Financial and operating leverage: how borrowed money or fixed costs boost returns in good times.",
+      "The dark side: the same mechanism speeds up losses in a downturn."
     ],
-    "challenge": "Compare two loan offers and pay an installment on a tight budget."
+    "challenge": "Use leverage in an investment or a business project and survive a market correction."
   },
   {
     "id": "month_06",
     "month": 6,
     "monthName": "June",
-    "title": "Debt financing",
-    "subtitle": "Loans, bonds and installments in business",
+    "title": "Dividends",
+    "subtitle": "Pay yourself or reinvest?",
     "playable": false,
     "topics": [
-      "Using debt as part of a growth strategy in the middle of the year.",
-      "Bank loan, leasing, overdraft or a bond issue: matching the instrument to the goal and the industry.",
-      "How debt affects stability when sales drop or interest rates rise."
+      "Where dividends come from and when a company may pay them.",
+      "Why not every profitable company pays a dividend.",
+      "The dilemma: pay the profit to yourself or keep it in the company for growth (R&D, expansion)."
     ],
-    "challenge": "Finance new equipment or an expansion with debt while keeping safe liquidity."
+    "challenge": "Decide how to split your company's profit between your own needs and competing on the market."
   },
   {
     "id": "month_07",
@@ -318,29 +317,30 @@
     "id": "month_09",
     "month": 9,
     "monthName": "September",
-    "title": "Financial leverage",
-    "subtitle": "Multiplying profit and risk",
+    "title": "Debt: what it really costs",
+    "subtitle": "When a loan helps and when it hurts",
     "playable": false,
+    "skipFor": ["advanced"],
     "topics": [
-      "Debt and financial assets combined in one mechanism.",
-      "Financial and operating leverage: how borrowed money or fixed costs boost returns in good times.",
-      "The dark side: the same mechanism speeds up losses in a downturn."
+      "What to do when current funds are not enough.",
+      "\"Good\" debt (investing in growth or assets) vs. \"bad\" debt (paying for everyday spending or covering losses).",
+      "The cost of money over time: interest, APR, fees and the repayment schedule."
     ],
-    "challenge": "Use leverage in an investment or a business project and survive a market correction."
+    "challenge": "Compare two loan offers and pay an installment on a tight budget."
   },
   {
     "id": "month_10",
     "month": 10,
     "monthName": "October",
-    "title": "Dividends",
-    "subtitle": "Pay yourself or reinvest?",
+    "title": "Debt under pressure",
+    "subtitle": "Loans, bonds and installments in business",
     "playable": false,
     "topics": [
-      "Where dividends come from and when a company may pay them.",
-      "Why not every profitable company pays a dividend.",
-      "The dilemma: pay the profit to yourself or keep it in the company for growth (R&D, expansion)."
+      "Using debt as part of a growth strategy in the middle of the year.",
+      "Bank loan, leasing, overdraft or a bond issue: matching the instrument to the goal and the industry.",
+      "How debt affects stability when sales drop or interest rates rise."
     ],
-    "challenge": "Decide how to split your company's profit between your own needs and competing on the market."
+    "challenge": "Finance new equipment or an expansion with debt while keeping safe liquidity."
   },
   {
     "id": "month_11",

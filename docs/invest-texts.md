@@ -158,6 +158,6 @@ Market notifications during the run (only for what the player holds):
 
 After the chapter (dashboard): "August done ✓" · "NEXT: September: …, coming soon" · "Play the basics anyway ›" · "See your year". Year map: "Want a quick warm-up?" · "You skipped the basics. Play January anyway: your budget, cash flow and first month in the city."
 
-## 8. Open question for the team: September (leverage)
+## 8. Open question for the team: May (leverage; moved from September)
 
 The lessons doc uses ×30 leverage on a single stock. EU retail clients can't get that (stocks 5:1, major indices 20:1, major FX pairs 30:1). Proposal: **EUR/USD ×30**, a −2% move = −60% of the margin, as an A–D quiz card.

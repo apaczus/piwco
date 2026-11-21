@@ -32,10 +32,10 @@ describe("startMonthFor", () => {
 });
 
 describe("skipFor in levels.json", () => {
-  it("intermediate skips January–March, advanced also May, beginner nothing", () => {
+  it("intermediate skips January–March, advanced also September (debt basics), beginner nothing", () => {
     const skipped = (k: "beginner" | "intermediate" | "advanced") => levels.filter((l) => skipsMonth(l, k)).map((l) => l.month);
     expect(skipped("beginner")).toEqual([]);
     expect(skipped("intermediate")).toEqual([1, 2, 3]);
-    expect(skipped("advanced")).toEqual([1, 2, 3, 5]);
+    expect(skipped("advanced")).toEqual([1, 2, 3, 9]);
   });
 });
