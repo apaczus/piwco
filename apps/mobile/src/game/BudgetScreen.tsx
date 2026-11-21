@@ -3,15 +3,14 @@
 // Below: a slider per category (drag or − / +). A slider glows red below its minimum ("Too little"), and the
 // bills the money won't reach (paid in order at the month end) get a red frame.
 import { HOUSEHOLD_CATEGORIES, type GameState, type HouseholdCategory } from "@piwco/engine";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { buzz, useReducedMotion } from "../onboarding/anim";
 import { ScreenLayout, type Dir } from "../onboarding/screens";
 import { Cta, Eyebrow, LinkButton, Title, Why } from "../onboarding/ui";
-import { colors, font, mix, shadow1, springs } from "../theme";
+import { colors, font, mix, shadow1 } from "../theme";
 import { BudgetSlider } from "./BudgetSlider";
 import { categoryLabel, formatPln } from "./format";
-import { RollingNumber } from "./RollingNumber";
 
 const COLORS: Record<HouseholdCategory, string> = {
   housing: colors.petrol700,
@@ -59,9 +58,18 @@ export function BudgetScreen({
   }
   if (draft.savings > rest) short.add("savings");
 
-  // Slider range: the money there is (rounded up), never less than twice a category's minimum.
-  const range = (c: HouseholdCategory) =>
-    Math.max(500, Math.ceil(Math.max(available, draft[c], state.personal.minimumSpending[c] * 2) / 500) * 500);
+  // Slider range, fixed for the screen (a range that moves while dragging feels jumpy): the money there is
+  // (rounded up), never less than the starting amount or twice a category's minimum.
+  const [ranges] = useState(() =>
+    Object.fromEntries(
+      HOUSEHOLD_CATEGORIES.map((c) => [
+        c,
+        Math.max(500, Math.ceil(Math.max(available, state.personal.monthlySpending[c], state.personal.minimumSpending[c] * 2) / 500) * 500),
+      ]),
+    ) as Record<HouseholdCategory, number>,
+  );
+  // Stable, so only the dragged slider re-renders (sliders are memoized).
+  const onSlide = useCallback((id: string, v: number) => setDraft((d) => ({ ...d, [id]: v })), []);
 
   // The summary bar flashes red when the plan tips into "Missing".
   const missing = left < 0;
@@ -106,19 +114,15 @@ export function BudgetScreen({
           <Text style={styles.summaryValue}>{formatPln(available)}</Text>
         </View>
         <View style={styles.bar}>
+          {/* Plain flex parts: they follow the finger directly (an animation per change would lag behind it). */}
           {HOUSEHOLD_CATEGORIES.filter((c) => draft[c] > 0).map((c) => (
-            <SpringSegment key={c} share={draft[c] / total} color={short.has(c) ? colors.danger : COLORS[c]} />
+            <View key={c} style={{ flex: draft[c] / total, backgroundColor: short.has(c) ? colors.danger : COLORS[c] }} />
           ))}
-          {left > 0 ? <SpringSegment share={left / total} color={mix(colors.success, colors.surface, 28)} /> : null}
+          {left > 0 ? <View style={{ flex: left / total, backgroundColor: mix(colors.success, colors.surface, 28) }} /> : null}
         </View>
         <View style={styles.summaryRow}>
           <Text style={[styles.leftLabel, { color: missing ? colors.danger : colors.success }]}>{missing ? "Missing" : "Left"}</Text>
-          <RollingNumber
-            value={left}
-            duration={220}
-            format={(n) => formatPln(Math.abs(n))}
-            style={[styles.leftValue, { color: missing ? colors.danger : colors.success }]}
-          />
+          <Text style={[styles.leftValue, { color: missing ? colors.danger : colors.success }]}>{formatPln(Math.abs(left))}</Text>
         </View>
         {missing ? <Text style={styles.tip}>Pay yourself more from the company, or move the sliders down.</Text> : null}
       </View>
@@ -130,28 +134,16 @@ export function BudgetScreen({
             label={categoryLabel(c)}
             hint={HINTS[c]}
             value={draft[c]}
-            max={range(c)}
+            id={c}
+            max={ranges[c]}
             minimum={state.personal.minimumSpending[c]}
             color={COLORS[c]}
             shortfall={short.has(c) && c !== "savings"}
-            onChange={(v) => setDraft((d) => ({ ...d, [c]: v }))}
+            onChange={onSlide}
           />
         ))}
       </View>
     </ScreenLayout>
-  );
-}
-
-// One coloured part of the summary bar; its width springs to the new share.
-function SpringSegment({ share, color }: { share: number; color: string }) {
-  const v = useRef(new Animated.Value(share)).current;
-  useEffect(() => {
-    Animated.spring(v, { toValue: share, ...springs.bar, useNativeDriver: false }).start();
-  }, [share, v]);
-  return (
-    <Animated.View
-      style={{ height: "100%", backgroundColor: color, width: v.interpolate({ inputRange: [0, 1], outputRange: ["0%", "100%"] }) }}
-    />
   );
 }
 
