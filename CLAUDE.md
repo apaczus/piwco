@@ -6,7 +6,7 @@
 ## Handoff: continuing the project (read first in a new session)
 
 - This file is the full memory of the first working session: every decision, the reasons, what is built, what is open. Setup and run commands for humans are in `README.md`.
-- **Where we stopped (2026-11-21):** onboarding (Finance Quest design) + playable January with the "dopamine" start (welcome screen, mission, HUD, budget), the interactive swipe lesson, rolling numbers, the settlement receipt and sounds are built (steps 11–18 below). The city + day/night plan (steps 19–24) is built and **confirmed on a phone by the user (2026-11-21): looks good**. Next: the team's random events and challenges; team review of the numbers (`industries.json`, `household.json`) and lesson cards; decisions listed under UNDECIDED.
+- **Where we stopped (2026-11-21):** onboarding (Finance Quest design) + playable January with the "dopamine" start (welcome screen, mission, HUD, budget), the interactive swipe lesson, rolling numbers, the settlement receipt and sounds are built (steps 11–18 below). The city + day/night plan (steps 19–24) is built and **confirmed on a phone by the user (2026-11-21): looks good**. Next: MVP of the team spec (events in months 1–3), see the plan in Progress; team review of the numbers (`industries.json`, `household.json`) and lesson cards; decisions listed under UNDECIDED.
 - **Open design problem:** in month 1 the company can't fail with the current numbers (see step 13 "Finding"). Proposed fix: random events at the start of the month (planned anyway), before February.
 - **In progress on the team side (2026-11-21):** the team is writing the **random events** and the **challenges** right now and will send them as prompts. Don't invent events or challenges; wait for their content, then propose how to implement it.
 - **Suggested next steps:** user feedback on the game start → random events → map onboarding answers to the starting state (personal side scales with income) → February (emergency fund) and March (insurance) → city → server recomputation + leaderboard.
@@ -31,7 +31,7 @@ Also:
 - Commands for the user always include `cd` to the project folder, or say clearly where to run them.
 - Chat with the user in Polish. This file, code and in-game texts are in English.
 - The team has one programmer; the rest of the team doesn't code.
-- Commit only on explicit request. The repo is local; push to GitHub only on request.
+- **Commit locally after every finished step** (decided 2026-11-21): one commit per step, message names the step; also commit decision-only changes to CLAUDE.md. **Push to GitHub only on request.**
 
 ## About the project
 
@@ -111,7 +111,7 @@ Three sheets:
 - Project name (working): **Piwco**.
 - Package manager / monorepo: **npm workspaces**.
 - Engine tests: **Vitest** (choice was open, so the recommendation was taken).
-- Git: branch `master`. **Pushed to GitHub on the user's request (2026-11-21): private repo https://github.com/apaczus/piwco** (account `apaczus`, the one logged in with `gh` on the developer laptop), so someone else can clone the project and continue. Commit / push only on explicit request.
+- Git: branch `master`. **Pushed to GitHub on the user's request (2026-11-21): private repo https://github.com/apaczus/piwco** (account `apaczus`, the one logged in with `gh` on the developer laptop), so someone else can clone the project and continue. Local commit after every step; push only on explicit request.
 - Money in the engine: **integers, whole PLN** (no grosze).
 - Engine model:
   - **random events are drawn at the start of the month**, the player reacts with actions. Month 3 (insurance) keeps this rule: an event may hit before the player is insured, the player buys insurance afterwards and **learns from the mistake**;
@@ -179,6 +179,16 @@ Three sheets:
   - **completed months on the year map are tappable** → a card with **"Review"** (receipt → result → lesson → city of that pass again, nothing in the game changes, ends with "Back to your year") and **"Replay month"** (confirmation first, then **time rewinds** to that month's start, same seed; later months must be played again; the city goes back to its state at that start; sunrise);
   - the map's footer link "Play January again" becomes **"Start a new game"** (new seed, everything from zero).
 - **Brand = PIWCO = "Please Invest With Confidence"** (user, 2026-11-21): the app shows PIWCO everywhere (replaces "FINANCE QUEST"); an animated **brand intro** opens the app **on every start** before the onboarding (tap to skip), dopamine-style.
+- **Team spec "Finance Quest implementation specification"** (received 2026-11-21: 8-step lesson loop, 10 lessons, 40 random events, 12-month curriculum). Analysed against the project; user decisions (2026-11-21):
+  - **backbone = the 12-month calendar** (1 month = 1 topic, as built). The spec's **8-step loop is the structure of a random event inside a month**: push notification at the month start → 2–4 decision cards with an upfront cost/impact preview → consequence (money flows, city building damaged / glowing) → plot twist if the chosen funds are short → micro-lesson → quiz → "Add to my plan" (repairs/builds the building + a real-world checklist item). The "10 lessons" become a pool of events assigned to months; profile gaps decide the variant: **full / "Prepared" shortcut ("Your past decision just paid off", ~10 s) / skipped** (e.g. no car);
+  - **lesson format:** the spec's **3 swipeable info cards** ("What happened" / "What is X" / "The math", with the player's numbers and a counterfactual line) **then 2–3 myth/fact cards as the quiz** (the swipe stays);
+  - **Health Score:** the team provides the formula; until then no Health Score, month failure stays "new arrears";
+  - **player = entrepreneur:** step 1 = the company's revenue comes in (tap + animation); employee events are translated ("job loss" → "loss of a key client", "delayed salary" → "client pays late"); employee events come back with the private-person path;
+  - **event numbers:** Claude proposes (amount as a share of the player's income with PLN min/max, which policy / the cushion absorbs it, months, onboarding influence) in JSON, the team reviews (like the industries);
+  - **shortfall rule ("plot twist"):** when the cushion isn't enough the player picks a second funding card (credit card / cash loan / payday loan); each becomes an engine loan with 3–6 installments and simple interest (payday the most expensive). Debt carries into later months;
+  - **January input stays** the big number + ±100/±500 buttons (no sliders);
+  - **March stays "learn from the mistake"** (the event can hit before the player is insured), not the spec's "choose policies before the event";
+  - not taken from the spec (for now): the spec's name "Finance Quest" (brand is PIWCO), sliders, the Office building unlocking later (the company exists from January), analytics/pre-post questions (needs storage, later with the server).
 - Playable industries: **Gastronomy, IT & Software Development, Manufacturing**.
 - PLN amounts for industries: **Claude proposes them** from the market-analysis descriptions, the team reviews.
 - Startup survival data: used as a **hook on the start screen** ("1 in 5 businesses closes in its first year") **and in the summary**, NOT as a bankruptcy probability in the engine.
@@ -223,6 +233,8 @@ Three sheets:
 - Source of the startup survival data (needed before showing it to the jury).
 - What a "private person" (no company) actually plays in the game.
 - Exact effect of each onboarding answer on the starting state (numbers).
+- Health Score formula (the team provides it).
+- Files referenced by the team spec that are not in the repo: the "economy model" Excel with numbers, `PROMPT_Finance_Quest_game.md` (mission template).
 - Real personal-finance onboarding questions (the team's sheet has none yet).
 - Auth details (decided only: nickname, no passwords).
 - Anything else not listed under DECIDED.
@@ -373,4 +385,13 @@ Three sheets:
   - `app/index.tsx`: intro on top, onboarding mounted underneath when the intro starts fading (its entrance plays during the fade);
   - checked: typecheck, bundles built. **Confirmed on a phone by the user: looks good.**
 - [x] Commit (user request, 2026-11-21): steps 15–27 committed on `master` (not pushed).
+- [ ] **MVP plan for the team spec (proposed 2026-11-21, each step approved separately):**
+  - 28: onboarding profile → game: the profile (income D, flags like `car_oc_only`, `cushion`, `loans`) is passed to `/game`; the household side scales with D (decided earlier); the company stays the industry package;
+  - 29: events as data + engine: `events.json` (8 MVP events, Claude's numbers for team review), drawn at the month start from the seed, filtered by month and profile (full / prepared / skipped), protection by policy / cushion; Vitest;
+  - 30: paying an event: funding cards (cushion, personal, company, credit card / cash loan / payday loan → loan with installments + simple interest), shortfall = plot twist; Vitest;
+  - 31: event UI: push notification at the month start, decision cards with cost previews, consequence on the city (damaged / glowing building), plot twist card;
+  - 32: event lesson (3 info cards + myth/fact quiz) and "Add to my plan" (repairs the building + real-world checklist item, in memory); "Prepared" shortcut;
+  - 33: month advance + February playable (goal: first cushion tranche + bills + event covered), content for February;
+  - 34: March: insurance action (recurring premium), goal, big event, lesson;
+  - Health Score once the team gives the formula; analytics / checklist storage later with the server.
 - [ ] Next (proposal): → month flow → month 1 logic + budget screen → game screen (HUD, action bar) → months 2–3 → city → server recomputation + leaderboard. Onboarding questions from the "Pytania do przedsiębiorcy" sheet get swapped in.
