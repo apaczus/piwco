@@ -1,10 +1,10 @@
 // The investing chapter's line chart (the only new visual element): flat lines in theme colours, no grid and no
 // shadows, like the onboarding illustrations. One faint reference line at the start amount. Labels are RN Text
 // laid over the drawing (never react-native-svg Text).
-import { useState } from "react";
+import { memo, useState } from "react";
 import { StyleSheet, Text, View, type LayoutChangeEvent } from "react-native";
 import Svg, { Line, Path } from "react-native-svg";
-import { DrawPath } from "../onboarding/anim";
+import { DrawPath, useReducedMotion } from "../onboarding/anim";
 import { colors, font } from "../theme";
 import { formatPln } from "../game/format";
 
@@ -19,7 +19,7 @@ export type ChartSeries = {
 
 const PAD_Y = 10;
 
-export function LineChart({
+export const LineChart = memo(function LineChart({
   series,
   height = 170,
   reveal,
@@ -40,6 +40,8 @@ export function LineChart({
   endLabel?: string;
 }) {
   const [w, setW] = useState(0);
+  // Reduced motion: summary lines appear at once instead of drawing themselves.
+  const reduced = useReducedMotion();
   const n = Math.max(...series.map((s) => s.values.length));
   // The scale uses all values (not only the revealed ones), so the chart doesn't jump while it grows.
   const all = series.flatMap((s) => s.values).concat(baseline !== undefined ? [baseline] : []);
@@ -70,7 +72,7 @@ export function LineChart({
                 fill: "none",
               };
               if (s.dashed) return <Path key={s.key} {...common} strokeDasharray={[6, 6]} />;
-              return draw ? <DrawPath key={s.key} {...common} length={length} duration={1100} /> : <Path key={s.key} {...common} />;
+              return draw && !reduced ? <DrawPath key={s.key} {...common} length={length} duration={1100} /> : <Path key={s.key} {...common} />;
             })}
           </Svg>
         ) : null}
@@ -86,7 +88,7 @@ export function LineChart({
       ) : null}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   baseLabel: { position: "absolute", left: 0, fontFamily: font.semibold, fontSize: 11, color: colors.muted, fontVariant: ["tabular-nums"] },

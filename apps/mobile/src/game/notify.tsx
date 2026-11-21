@@ -2,7 +2,7 @@
 // the top, and the bordered "outcome" card style.
 import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
-import { buzz } from "../onboarding/anim";
+import { buzz, useReducedMotion } from "../onboarding/anim";
 import type { SoundName } from "../sound";
 import { colors, font, shadow2, springs } from "../theme";
 
@@ -18,12 +18,14 @@ export function Notification({
   // Sound with the haptic when it lands (e.g. "error" for a market drop).
   sound?: SoundName;
 }) {
-  const v = useRef(new Animated.Value(0)).current;
+  const reduced = useReducedMotion();
+  const v = useRef(new Animated.Value(reduced ? 1 : 0)).current;
   useEffect(() => {
     const t = setTimeout(() => buzz("medium", sound), delay + 120);
-    Animated.sequence([Animated.delay(delay), Animated.spring(v, { toValue: 1, ...springs.lively, useNativeDriver: true })]).start();
+    // Reduced motion: no slide-in, the notification is just there.
+    if (!reduced) Animated.sequence([Animated.delay(delay), Animated.spring(v, { toValue: 1, ...springs.lively, useNativeDriver: true })]).start();
     return () => clearTimeout(t);
-  }, [v, delay, sound]);
+  }, [v, delay, sound, reduced]);
   return (
     <Animated.View
       style={[

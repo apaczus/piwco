@@ -227,12 +227,22 @@ function RunScreen({ state, t, dir, onDone }: { state: InvestState; t: InvestTry
     setNotice(events[events.length - 1] ?? null);
     setK(months);
   };
+  // Stable series: the memoized chart only redraws when `reveal` moves.
+  const runSeries = useMemo<ChartSeries[]>(() => [{ key: "you", values: t.result.total, color: colors.petrol950, width: 3.5 }], [t]);
   const value = t.result.total[k] ?? 0;
   // Green while above what was paid in so far.
   const up = value >= t.result.total[0] + t.monthlyTopUp * k;
 
   return (
-    <ScreenLayout dir={dir} footer={done ? <Cta appear label="See the result" onPress={onDone} /> : <Text style={styles.tapHint}>Tap to skip</Text>}>
+    <ScreenLayout dir={dir} footer={
+        done ? (
+          <Cta appear label="See the result" onPress={onDone} />
+        ) : (
+          // Skip (decided for step 6): to the end at once, with the last notification (the inflation note).
+          <LinkButton label="Skip to the end ›" onPress={skip} />
+        )
+      }
+    >
       <StepEyebrow state={state} />
       <Title>{years === 1 ? "One year, fast" : `${years} years, fast`}</Title>
       <Pressable onPress={skip} accessibilityLabel="Skip to the end">
@@ -241,10 +251,10 @@ function RunScreen({ state, t, dir, onDone }: { state: InvestState; t: InvestTry
             <Text style={styles.summaryLabel}>
               {k === 0 ? "Start" : months <= 12 ? `${MONTHS[(k - 1) % 12]} · month ${k}` : `Year ${Math.ceil(k / 12)} · month ${k}`}
             </Text>
-            <RollingNumber value={value} duration={220} style={[styles.runValue, { color: up ? colors.success : colors.danger }]} />
+            <RollingNumber value={value} duration={Math.min(220, Math.round(frame * 0.8))} style={[styles.runValue, { color: up ? colors.success : colors.danger }]} />
           </View>
           <LineChart
-            series={[{ key: "you", values: t.result.total, color: colors.petrol950, width: 3.5 }]}
+            series={runSeries}
             reveal={k}
             baseline={START}
             startLabel={months <= 12 ? "Jan" : "Start"}
@@ -609,7 +619,6 @@ const styles = StyleSheet.create({
   chartCard: { backgroundColor: colors.surface, borderRadius: 16, padding: 14, gap: 10, borderWidth: 1.5, borderColor: colors.line },
   cardTitle: { fontFamily: font.extrabold, fontSize: 15, color: colors.petrol950 },
   runValue: { fontFamily: font.extrabold, fontSize: 24, fontVariant: ["tabular-nums"] },
-  tapHint: { textAlign: "center", fontFamily: font.semibold, fontSize: 13, color: colors.muted, paddingVertical: 14 },
   legend: { flexDirection: "row", flexWrap: "wrap", columnGap: 14, rowGap: 6 },
   legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
   swatch: { width: 16, height: 2.5, borderRadius: 2 },
