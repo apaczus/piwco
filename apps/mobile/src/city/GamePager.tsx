@@ -3,7 +3,11 @@
 // The side pages get a "back to the month" button through PagerContext. Built on a paging ScrollView: the vertical scroll inside LEARN keeps working,
 // iOS gives a rubber band at the edges, and the switch indicator follows the finger (native-driver scroll event).
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { Animated, Pressable, StyleSheet, Text, View, type LayoutChangeEvent, type ScrollViewInstance } from "react-native";
+import { Animated, Platform, Pressable, StyleSheet, Text, View, type LayoutChangeEvent, type ScrollViewInstance } from "react-native";
+
+// The web version (react-native-web) doesn't lay the pages out in a row by itself and has no momentum events:
+// the pages get an explicit row and size there, and when the scroll stops it snaps to the nearest page.
+const WEB = Platform.OS === "web";
 import { buzz, useMountSpring } from "../onboarding/anim";
 import { colors, font, shadow1, springs } from "../theme";
 import { CoachTarget } from "../game/coach";
@@ -49,6 +53,10 @@ export function GamePager({
   onPage?: (page: PagerPage) => void;
 }) {
   const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
+  const settle = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Web: page the switch is scrolling to (the snap waits for it; if the smooth scroll stalls, it jumps there).
+  const target = useRef<{ x: number; at: number } | null>(null);
   const [switchWidth, setSwitchWidth] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
   const scroller = useRef<ScrollViewInstance>(null);
@@ -78,6 +86,17 @@ export function GamePager({
 
   const goTo = (p: PagerPage) => {
     scroller.current?.scrollTo({ x: p * width, animated: true });
+    if (WEB) {
+      const t = { x: p * width, at: Date.now() };
+      target.current = t;
+      // Safety net: if the smooth scroll didn't get there, jump.
+      setTimeout(() => {
+        if (target.current === t) {
+          scroller.current?.scrollTo({ x: t.x, animated: false });
+          target.current = null;
+        }
+      }, 800);
+    }
     setPage(p);
   };
   if (controlRef) controlRef.current = { goTo };
@@ -115,20 +134,55 @@ export function GamePager({
         <Animated.ScrollView
           ref={scroller}
           horizontal
-          pagingEnabled
+          // Web: CSS snapping would only see the row (it snapped back to YEAR), so the page is snapped by hand.
+          pagingEnabled={!WEB}
           bounces
           overScrollMode="always"
           showsHorizontalScrollIndicator={false}
           scrollEventThrottle={16}
-          onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: true })}
+          onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
+            useNativeDriver: true,
+            listener: WEB
+              ? (e: { nativeEvent: { contentOffset: { x: number } } }) => {
+                  const x = e.nativeEvent.contentOffset.x;
+                  if (settle.current) clearTimeout(settle.current);
+                  settle.current = setTimeout(() => {
+                    const t = target.current;
+                    if (t) {
+                      // Scrolling to a page picked on the switch: done, or stalled → jump there.
+                      if (Math.abs(x - t.x) > 1) scroller.current?.scrollTo({ x: t.x, animated: Date.now() - t.at < 700 });
+                      else target.current = null;
+                      return;
+                    }
+                    const p = Math.max(0, Math.min(2, Math.round(x / width))) as PagerPage;
+                    if (Math.abs(x - p * width) > 1) {
+                      target.current = { x: p * width, at: Date.now() };
+                      scroller.current?.scrollTo({ x: p * width, animated: true });
+                    }
+                    setPage(p);
+                  }, 140);
+                }
+              : undefined,
+          })}
+          onLayout={WEB ? (e: LayoutChangeEvent) => setHeight(e.nativeEvent.layout.height) : undefined}
           contentOffset={{ x: LEARN_PAGE * width, y: 0 }}
           onMomentumScrollEnd={(e) => setPage(Math.max(0, Math.min(2, Math.round(e.nativeEvent.contentOffset.x / width))) as PagerPage)}
           style={{ flex: 1 }}
         >
           <PagerContext.Provider value={{ goTo }}>
-            <View style={[styles.page, { width }]}>{year}</View>
-            <View style={[styles.page, { width }]}>{learn}</View>
-            <View style={[styles.page, { width }]}>{city}</View>
+            {WEB ? (
+              <View style={{ flexDirection: "row", width: 3 * width, height }}>
+                <View style={[styles.webPage, { width, height }]}>{year}</View>
+                <View style={[styles.webPage, { width, height }]}>{learn}</View>
+                <View style={[styles.webPage, { width, height }]}>{city}</View>
+              </View>
+            ) : (
+              <>
+                <View style={[styles.page, { width }]}>{year}</View>
+                <View style={[styles.page, { width }]}>{learn}</View>
+                <View style={[styles.page, { width }]}>{city}</View>
+              </>
+            )}
           </PagerContext.Provider>
         </Animated.ScrollView>
       ) : null}
@@ -164,4 +218,5 @@ const styles = StyleSheet.create({
   },
   badgeText: { fontFamily: font.extrabold, fontSize: 11.5, color: colors.surface },
   page: { flex: 1, paddingHorizontal: 18 },
+  webPage: { paddingHorizontal: 18 },
 });
