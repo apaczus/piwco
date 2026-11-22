@@ -37,7 +37,7 @@ You can play a full investing chapter: split 10 000 PLN between different instru
 Everything runs on our own deterministic engine, so the same decisions always give the same results and every number in the lessons is checked by tests. We built it during the hackathon with Expo so the whole team could test it on their phones, using Claude Code as a coding assistant.
 
 ### Challenges and discoveries
-The jury told us the basics were too easy and the first screen was too busy, so we added a knowledge level that skips the basics and switched to simple one-decision screens with swipe cards. We also learned that a fair "you could have done better" moment needs a fixed market model, not random luck.
+Experienced players found the basics too easy and the first screen too busy, so we added a knowledge level that skips the basics and switched to simple one-decision screens with swipe cards. We also learned that a fair "you could have done better" moment needs a fixed market model, not random luck.
 
 ### Results and next steps
 We're proudest of the investing loop, where players see with their own numbers how inflation, diversification and small monthly top-ups change the outcome. Next we want to save progress, unlock the remaining months and add a leaderboard checked by the server.
