@@ -16,6 +16,36 @@ Collabothon 2026 · Commerzbank challenge **"Finance Quest"** · theme **"Innova
 
 ---
 
+## Collabothon 2026 project card
+
+**Project name:** PIWCO – Please Invest With Confidence
+
+**One-line summary:** A mobile game that teaches entrepreneurs investing and credit by letting them make real money decisions, see the results in their own city and try again smarter.
+
+**Technology stack:** Languages: TypeScript (strict), JSON for all game content. Mobile app: React Native 0.88 + Expo SDK 58, Expo Router, React 19; built-in Animated API (springs, native driver), react-native-svg (city, charts, illustrations), expo-haptics, expo-audio (synthetic sound effects), expo-linear-gradient, expo-font + Google Fonts Manrope; react-native-web for the browser version. Game engine: pure TypeScript package (no UI, no I/O) – deterministic month simulation with a seeded RNG (mulberry32), month-end settlement, loans with interest, random events, portfolio simulation with inflation; 130 Vitest unit tests (+55 tests for the app's pure logic). Content: separate JSON package (curriculum for 12 months, lessons, events, industries, investment instruments, loan products, city thresholds) – editable without code. Monorepo: npm workspaces (apps/mobile, apps/server, packages/engine, packages/content), Node.js 24. Web: static build published by GitHub Actions on GitHub Pages. Backend (prepared): Fastify 5 server + PostgreSQL 18 in Docker Compose – currently only a health check, ready for server-side replay and a leaderboard. Testing & devices: Expo Go on 3 Android and 3 iOS phones, connected to the dev laptop over Tailscale, and the browser. Tools: Git/GitHub, VS Code, Claude Code (AI pair programming). No paid cloud services or external APIs.
+
+### The problem
+Small business owners often mix company and private money, pick loans by the lowest installment and leave their savings to lose value to inflation. Financial courses are boring, so the people who need this knowledge the most never start learning.
+
+### Our solution
+PIWCO is a mobile game where you learn finance by making real decisions first and then seeing why they worked or not. Your choices build (or damage) your own little city, and a short survey decides whether you start with the basics or jump straight to investing and credit.
+
+### The working prototype
+You can play a full investing chapter: split 10 000 PLN between different instruments, watch a year go by, learn from a short swipe lesson and try again to beat your first result. There are also two lessons about credit (APR, good vs bad debt, interest rates, consolidation) and a basic month about budgeting and paying yourself from the company.
+
+### Behind the build
+Everything runs on our own deterministic engine, so the same decisions always give the same results and every number in the lessons is checked by tests. We built it during the hackathon with Expo so the whole team could test it on their phones, using Claude Code as a coding assistant.
+
+### Challenges and discoveries
+The jury told us the basics were too easy and the first screen was too busy, so we added a knowledge level that skips the basics and switched to simple one-decision screens with swipe cards. We also learned that a fair "you could have done better" moment needs a fixed market model, not random luck.
+
+### Results and next steps
+We're proudest of the investing loop, where players see with their own numbers how inflation, diversification and small monthly top-ups change the outcome. Next we want to save progress, unlock the remaining months and add a leaderboard checked by the server.
+
+**Source code repository:** https://github.com/apaczus/piwco
+
+---
+
 ## The challenge and our answer
 
 Commerzbank asked how to make financial learning **engaging, relevant and actionable**, so that self-directed investors don't just read about finance but feel confident enough to **take the first step**.
@@ -83,7 +113,7 @@ The results are honest: the market is a fixed, deterministic 10-year path, so **
 | Other months (February–July, November, December) | 🔒 visible on the year map, locked |
 | Saving progress between launches, server-side result check, leaderboard | ⏳ next steps |
 
-Quality: **130 engine tests + 55 app tests** (Vitest). Every number shown in the lessons (APR, installments, inflation, portfolio results) is checked by a test. Played on the team's Android and iOS phones (Expo Go) during development.
+Quality: **130 engine tests + 55 app tests** (Vitest). Every number shown in the lessons (APR, installments, inflation, portfolio results) is checked by a test. Played by the team in Expo Go on Android and iOS phones and in the browser.
 
 ## Technology
 
